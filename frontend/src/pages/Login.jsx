@@ -34,17 +34,22 @@ export default function Login() {
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-form-side">
-        <form className="auth-card" onSubmit={handleSubmit}>
-          <div className="auth-logo">
-            <Logo size={32} wordmark />
-          </div>
+    <div className="auth-page-split">
+      <div className="auth-side-dark">
+        <div className="auth-side-dark-top">
+          <Logo size={26} wordmark />
+        </div>
+        <div className="auth-side-dark-bottom">
+          <h2>
+            Monitor your <span className="highlight">entire fleet</span> in real time.
+          </h2>
+          <p>Connect devices over MQTT, track live telemetry, and manage everything from one dashboard.</p>
+        </div>
+      </div>
 
-          <h1>{mode === "login" ? "Sign in to Oark" : "Create your organization"}</h1>
-          <p className="subtitle">
-            {mode === "login" ? "Sign in to pick up where you left off." : "Start monitoring your devices."}
-          </p>
+      <div className="auth-side-light">
+        <form className="auth-card-plain" onSubmit={handleSubmit}>
+          <h1>{mode === "login" ? "Log in to Oark" : "Create your organization"}</h1>
 
           {mode === "register" && (
             <label className="field">
@@ -93,7 +98,7 @@ export default function Login() {
           {error && <div className="error">{error}</div>}
 
           <button type="submit" className="primary-button" disabled={loading}>
-            {loading ? "Please wait..." : mode === "login" ? "Sign in" : "Create account"}
+            {loading ? "Please wait..." : mode === "login" ? "Log in" : "Create account"}
           </button>
 
           <button
@@ -101,7 +106,7 @@ export default function Login() {
             className="link-button centered"
             onClick={() => setMode(mode === "login" ? "register" : "login")}
           >
-            {mode === "login" ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+            {mode === "login" ? "Sign up" : "Already have an account? Log in"}
           </button>
         </form>
       </div>
