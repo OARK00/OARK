@@ -35,6 +35,8 @@ export default function Login() {
   return (
     <div className="auth-page">
       <div className="auth-branding">
+        <div className="glow-orb orb-cyan" />
+        <div className="glow-orb orb-violet" />
         <div className="auth-branding-content">
           <div className="auth-logo">
             <Logo size={40} wordmark />
@@ -49,6 +51,43 @@ export default function Login() {
             <li>Org-scoped, multi-tenant from day one</li>
             <li>Secure per-device credentials</li>
           </ul>
+
+          <div className="preview-card">
+            <div className="preview-card-header">
+              <span>Live fleet</span>
+              <span>Now</span>
+            </div>
+            <div className="preview-row">
+              <span className="preview-dot on" />
+              <span className="preview-row-name">Warehouse Temp Sensor</span>
+              <span className="preview-bars">
+                <span style={{ height: "6px" }} />
+                <span style={{ height: "10px" }} />
+                <span style={{ height: "14px" }} />
+                <span style={{ height: "8px" }} />
+              </span>
+            </div>
+            <div className="preview-row">
+              <span className="preview-dot on" />
+              <span className="preview-row-name">Line 3 Vibration</span>
+              <span className="preview-bars">
+                <span style={{ height: "12px" }} />
+                <span style={{ height: "6px" }} />
+                <span style={{ height: "9px" }} />
+                <span style={{ height: "16px" }} />
+              </span>
+            </div>
+            <div className="preview-row">
+              <span className="preview-dot off" />
+              <span className="preview-row-name">EV Battery Monitor</span>
+              <span className="preview-bars">
+                <span style={{ height: "3px" }} />
+                <span style={{ height: "3px" }} />
+                <span style={{ height: "3px" }} />
+                <span style={{ height: "3px" }} />
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 

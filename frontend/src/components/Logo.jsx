@@ -1,20 +1,35 @@
+let gradientId = 0;
+
 export default function Logo({ size = 32, wordmark = false }) {
+  const id = `oark-chip-gradient-${gradientId++}`;
+
   const mark = (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* connection lines from hub to each device node */}
+      <defs>
+        <linearGradient id={id} x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#22d3ee" />
+          <stop offset="1" stopColor="#8b5cf6" />
+        </linearGradient>
+      </defs>
+      {/* chip pins */}
       <path
-        d="M16 16 L7 9 M16 16 L25 9 M16 16 L8 23 M16 16 L24 24"
-        stroke="#38bdf8"
+        d="M11 2v3M16 2v3M21 2v3M11 27v3M16 27v3M21 27v3M2 11h3M2 16h3M2 21h3M27 11h3M27 16h3M27 21h3"
+        stroke={`url(#${id})`}
         strokeWidth="1.6"
         strokeLinecap="round"
       />
-      {/* device nodes */}
-      <circle cx="7" cy="9" r="3" fill="#0b1220" stroke="#38bdf8" strokeWidth="1.6" />
-      <circle cx="25" cy="9" r="3" fill="#0b1220" stroke="#38bdf8" strokeWidth="1.6" />
-      <circle cx="8" cy="23" r="3" fill="#0b1220" stroke="#38bdf8" strokeWidth="1.6" />
-      <circle cx="24" cy="24" r="3" fill="#0b1220" stroke="#38bdf8" strokeWidth="1.6" />
-      {/* central hub */}
-      <circle cx="16" cy="16" r="4.5" fill="#38bdf8" />
+      {/* chip body */}
+      <rect x="7" y="7" width="18" height="18" rx="3" fill={`url(#${id})`} fillOpacity="0.15" stroke={`url(#${id})`} strokeWidth="1.6" />
+      {/* circuit trace */}
+      <path
+        d="M12 16h3v-3h6v6h-3v3"
+        stroke={`url(#${id})`}
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="16" r="1.4" fill={`url(#${id})`} />
+      <circle cx="20" cy="19" r="1.4" fill={`url(#${id})`} />
     </svg>
   );
 
