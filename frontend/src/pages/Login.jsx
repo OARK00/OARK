@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import Logo from "../components/Logo";
 
 export default function Login() {
   const [mode, setMode] = useState("login"); // "login" | "register"
@@ -33,51 +34,81 @@ export default function Login() {
 
   return (
     <div className="auth-page">
-      <form className="auth-card" onSubmit={handleSubmit}>
-        <h1>Oark</h1>
-        <p className="subtitle">
-          {mode === "login" ? "Sign in to your dashboard" : "Create your organization"}
-        </p>
+      <div className="auth-branding">
+        <div className="auth-branding-content">
+          <div className="auth-logo">
+            <Logo size={40} />
+            <span>Oark</span>
+          </div>
+          <h2>Industrial IoT, done right.</h2>
+          <p>
+            Connect devices over MQTT, monitor live telemetry, and manage your
+            fleet from one dashboard — built for real deployments, not demos.
+          </p>
+          <ul className="auth-features">
+            <li>Real-time device status &amp; telemetry</li>
+            <li>Org-scoped, multi-tenant from day one</li>
+            <li>Secure per-device credentials</li>
+          </ul>
+        </div>
+      </div>
 
-        {mode === "register" && (
-          <input
-            type="text"
-            placeholder="Organization name"
-            value={orgName}
-            onChange={(e) => setOrgName(e.target.value)}
-            required
-          />
-        )}
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          minLength={8}
-        />
+      <div className="auth-form-side">
+        <form className="auth-card" onSubmit={handleSubmit}>
+          <h1>{mode === "login" ? "Welcome back" : "Create your organization"}</h1>
+          <p className="subtitle">
+            {mode === "login" ? "Sign in to your dashboard" : "Start monitoring your devices"}
+          </p>
 
-        {error && <div className="error">{error}</div>}
+          {mode === "register" && (
+            <label className="field">
+              <span>Organization name</span>
+              <input
+                type="text"
+                placeholder="Acme Manufacturing"
+                value={orgName}
+                onChange={(e) => setOrgName(e.target.value)}
+                required
+              />
+            </label>
+          )}
+          <label className="field">
+            <span>Email</span>
+            <input
+              type="email"
+              placeholder="you@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </label>
+          <label className="field">
+            <span>Password</span>
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={8}
+            />
+          </label>
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Please wait..." : mode === "login" ? "Sign in" : "Create account"}
-        </button>
+          {error && <div className="error">{error}</div>}
 
-        <button
-          type="button"
-          className="link-button"
-          onClick={() => setMode(mode === "login" ? "register" : "login")}
-        >
-          {mode === "login" ? "Need an account? Register" : "Already have an account? Sign in"}
-        </button>
-      </form>
+          <button type="submit" className="primary-button" disabled={loading}>
+            {loading ? "Please wait..." : mode === "login" ? "Sign in" : "Create account"}
+          </button>
+
+          <button
+            type="button"
+            className="link-button"
+            onClick={() => setMode(mode === "login" ? "register" : "login")}
+          >
+            {mode === "login" ? "Need an account? Register" : "Already have an account? Sign in"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
