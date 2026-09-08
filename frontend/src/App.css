@@ -1,23 +1,13 @@
 :root {
-  --bg: #05060a;
-  --panel: #12131c;
-  --panel-alt: #0d0e16;
-  --border: #262838;
-  --text: #f4f5f9;
-  --muted: #8f93a8;
-  --accent: #22d3ee;
-  --accent-2: #8b5cf6;
-  --accent-gradient: linear-gradient(135deg, var(--accent), var(--accent-2));
-  --accent-dark: #0891b2;
+  --bg: #0b0f14;
+  --panel: #10161c;
+  --panel-alt: #0d1218;
+  --border: #1f2c33;
+  --text: #eaf6f8;
+  --muted: #6d7f87;
+  --accent: #00e5ff;
+  --accent-dark: #00b8cc;
   --danger: #f87171;
-}
-
-.glow-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.35;
-  pointer-events: none;
 }
 
 * {
@@ -50,43 +40,60 @@
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
   background-size: 40px 40px;
   mask-image: radial-gradient(circle at 30% 30%, black 0%, transparent 75%);
 }
 
-.orb-cyan {
-  width: 380px;
-  height: 380px;
-  background: var(--accent);
-  top: -80px;
-  left: -100px;
+.corner-mark {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-color: var(--accent);
+  opacity: 0.6;
 }
 
-.orb-violet {
-  width: 320px;
-  height: 320px;
-  background: var(--accent-2);
-  bottom: -60px;
-  right: -60px;
+.corner-mark.tl {
+  top: 24px;
+  left: 24px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+}
+
+.corner-mark.br {
+  bottom: 24px;
+  right: 24px;
+  border-bottom: 2px solid;
+  border-right: 2px solid;
 }
 
 .auth-branding-content {
   position: relative;
   z-index: 1;
+  max-width: 420px;
 }
 
 /* ---------- Mock device preview card ---------- */
 
 .preview-card {
   margin-top: 2rem;
-  background: rgba(18, 19, 28, 0.8);
+  background: var(--panel-alt);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 1rem;
-  backdrop-filter: blur(6px);
-  box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.6);
+  position: relative;
+  overflow: hidden;
+}
+
+.preview-card::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 20px;
+  right: 20px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
 }
 
 .preview-card-header {
@@ -97,10 +104,10 @@
 }
 
 .preview-card-header span {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
 .preview-row {
@@ -117,19 +124,18 @@
 }
 
 .preview-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .preview-dot.on {
   background: #4ade80;
-  box-shadow: 0 0 6px #4ade80;
 }
 
 .preview-dot.off {
-  background: #64748b;
+  background: #4b5a62;
 }
 
 .preview-row-name {
@@ -149,10 +155,6 @@
   background: var(--accent);
   border-radius: 1px;
   opacity: 0.8;
-}
-
-.auth-branding-content {
-  max-width: 420px;
 }
 
 .auth-logo {
@@ -263,8 +265,8 @@
   padding: 0.7rem;
   border-radius: 8px;
   border: none;
-  background: var(--accent-gradient);
-  color: #04101a;
+  background: var(--accent);
+  color: #04161a;
   font-weight: 700;
   cursor: pointer;
   transition: filter 0.15s ease, transform 0.1s ease;
@@ -320,10 +322,7 @@
 .app-shell {
   min-height: 100vh;
   display: flex;
-  background:
-    radial-gradient(circle at 10% -10%, rgba(34, 211, 238, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 100% 0%, rgba(139, 92, 246, 0.06) 0%, transparent 40%),
-    var(--bg);
+  background: var(--bg);
   color: var(--text);
 }
 
@@ -364,7 +363,7 @@
 }
 
 .sidebar-item.active {
-  background: rgba(34, 211, 238, 0.1);
+  background: rgba(0, 229, 255, 0.08);
   color: var(--text);
   box-shadow: inset 2px 0 0 var(--accent);
 }
@@ -436,8 +435,8 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--accent-gradient);
-  opacity: 0.7;
+  background: var(--accent);
+  opacity: 0.6;
 }
 
 .stat-label {
@@ -448,6 +447,7 @@
 .stat-value {
   font-size: 1.6rem;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-online {
@@ -509,6 +509,7 @@
   background: var(--bg);
   padding: 0.5rem;
   border-radius: 4px;
+  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
 }
 
 .device-table {

@@ -35,8 +35,8 @@ export default function Login() {
   return (
     <div className="auth-page">
       <div className="auth-branding">
-        <div className="glow-orb orb-cyan" />
-        <div className="glow-orb orb-violet" />
+        <span className="corner-mark tl" />
+        <span className="corner-mark br" />
         <div className="auth-branding-content">
           <div className="auth-logo">
             <Logo size={40} wordmark />
