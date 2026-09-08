@@ -23,7 +23,7 @@ body {
 .auth-page {
   min-height: 100vh;
   display: flex;
-  background: var(--surface);
+  background: var(--bg);
   color: var(--text);
 }
 
@@ -37,10 +37,15 @@ body {
 
 .auth-card {
   width: 100%;
-  max-width: 340px;
+  max-width: 360px;
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 2.25rem 2rem;
+  box-shadow: 0 1px 3px rgba(18, 20, 28, 0.04);
 }
 
 .auth-logo {
@@ -187,41 +192,6 @@ body {
 
 .muted {
   color: var(--muted);
-}
-
-/* ---------- Auth branding panel ---------- */
-
-.auth-branding {
-  flex: 1;
-  display: flex;
-  align-items: flex-end;
-  background: var(--bg);
-  background-image:
-    linear-gradient(rgba(18, 20, 28, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(18, 20, 28, 0.05) 1px, transparent 1px);
-  background-size: 32px 32px;
-  padding: 3rem;
-}
-
-.auth-branding-content {
-  max-width: 340px;
-}
-
-.eyebrow {
-  display: block;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 0.6rem;
-}
-
-.auth-branding-content p {
-  color: var(--muted);
-  line-height: 1.6;
-  margin: 0;
-  font-size: 0.95rem;
 }
 
 /* ---------- App shell (sidebar + main) ---------- */

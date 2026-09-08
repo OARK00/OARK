@@ -38,10 +38,10 @@ export default function Login() {
       <div className="auth-form-side">
         <form className="auth-card" onSubmit={handleSubmit}>
           <div className="auth-logo">
-            <Logo size={28} wordmark />
+            <Logo size={32} wordmark />
           </div>
 
-          <h1>{mode === "login" ? "Welcome back" : "Create your organization"}</h1>
+          <h1>{mode === "login" ? "Sign in to Oark" : "Create your organization"}</h1>
           <p className="subtitle">
             {mode === "login" ? "Sign in to pick up where you left off." : "Start monitoring your devices."}
           </p>
@@ -104,16 +104,6 @@ export default function Login() {
             {mode === "login" ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
           </button>
         </form>
-      </div>
-
-      <div className="auth-branding">
-        <div className="auth-branding-content">
-          <span className="eyebrow">Industrial IoT platform</span>
-          <p>
-            Connect devices over MQTT, monitor live telemetry, and manage your
-            fleet from one dashboard.
-          </p>
-        </div>
       </div>
     </div>
   );
