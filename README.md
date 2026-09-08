@@ -33,3 +33,10 @@ cd frontend
 npm install
 npm run dev
 ```
+
+## Deployment (Render)
+
+Backend and frontend are deployed as separate Render services (Web Service + Static Site).
+
+- Backend needs `DATABASE_URL` (use Supabase's **session pooler** connection string, not the direct IPv6-only one — Render has no IPv4 egress) and `JWT_SECRET` set in Render's Environment tab.
+- Frontend needs `VITE_API_URL` set to the backend's Render URL, and a **Rewrite** rule under Redirects/Rewrites (`/*` → `/index.html`) so React Router routes don't 404 on direct navigation/refresh — Render does not support Netlify-style `_redirects` files, this must be configured in the dashboard.
