@@ -37,8 +37,7 @@ export default function Login() {
       <div className="auth-branding">
         <div className="auth-branding-content">
           <div className="auth-logo">
-            <Logo size={40} />
-            <span>Oark</span>
+            <Logo size={40} wordmark />
           </div>
           <h2>Industrial IoT, done right.</h2>
           <p>

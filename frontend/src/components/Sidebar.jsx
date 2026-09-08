@@ -46,8 +46,7 @@ export default function Sidebar({ active = "devices" }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <Logo size={28} />
-        <span>Oark</span>
+        <Logo size={28} wordmark />
       </div>
       <nav className="sidebar-nav">
         {navItems.map((item) => (
