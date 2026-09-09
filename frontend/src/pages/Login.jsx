@@ -120,18 +120,7 @@ export default function Login() {
             />
           </label>
           <label className="field">
-            <div className="field-label-row">
-              <span>Password</span>
-              {mode === "login" && (
-                <button
-                  type="button"
-                  className="link-button small"
-                  onClick={() => setShowForgotNotice(true)}
-                >
-                  Forgot password?
-                </button>
-              )}
-            </div>
+            <span>Password</span>
             <div className="password-input">
               <input
                 type={showPassword ? "text" : "password"}
@@ -150,6 +139,15 @@ export default function Login() {
                 {showPassword ? "Hide" : "Show"}
               </button>
             </div>
+            {mode === "login" && (
+              <button
+                type="button"
+                className="link-button small forgot-link"
+                onClick={() => setShowForgotNotice(true)}
+              >
+                Forgot password?
+              </button>
+            )}
           </label>
 
           {showForgotNotice && (

@@ -329,10 +329,9 @@ body {
   font-weight: 600;
 }
 
-.field-label-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+.forgot-link {
+  align-self: flex-end;
+  margin-top: 0.35rem;
 }
 
 .notice {
