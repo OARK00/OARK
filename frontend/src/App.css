@@ -75,6 +75,62 @@ body {
   max-width: 320px;
 }
 
+.iso-stack {
+  position: relative;
+  width: 240px;
+  height: 200px;
+  align-self: center;
+}
+
+.iso-card {
+  position: absolute;
+  width: 92px;
+  height: 42px;
+  background: #12181e;
+  border: 1px solid #26323c;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #cfd8dc;
+  transform: perspective(600px) rotateX(50deg) rotateZ(-45deg);
+  box-shadow: 0 18px 26px -12px rgba(0, 0, 0, 0.65);
+}
+
+.iso-card-1 {
+  left: 4px;
+  bottom: 6px;
+}
+
+.iso-card-2 {
+  left: 74px;
+  bottom: 56px;
+}
+
+.iso-card-3 {
+  left: 144px;
+  bottom: 106px;
+}
+
+.iso-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.iso-dot-on {
+  background: #4ade80;
+  box-shadow: 0 0 6px #4ade80;
+}
+
+.iso-dot-off {
+  background: #5b6770;
+}
+
 .auth-side-light {
   flex: 1;
   background: var(--surface);

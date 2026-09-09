@@ -39,6 +39,22 @@ export default function Login() {
         <div className="auth-side-dark-top">
           <Logo size={26} wordmark />
         </div>
+
+        <div className="iso-stack">
+          <div className="iso-card iso-card-1">
+            <span className="iso-dot iso-dot-on" />
+            <span>Sensor</span>
+          </div>
+          <div className="iso-card iso-card-2">
+            <span className="iso-dot iso-dot-on" />
+            <span>Gateway</span>
+          </div>
+          <div className="iso-card iso-card-3">
+            <span className="iso-dot iso-dot-off" />
+            <span>Cloud</span>
+          </div>
+        </div>
+
         <div className="auth-side-dark-bottom">
           <h2>
             Monitor your <span className="highlight">entire fleet</span> in real time.
