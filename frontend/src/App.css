@@ -82,13 +82,42 @@ body {
   align-self: center;
 }
 
-.iso-card {
+.iso-box {
   position: absolute;
-  width: 92px;
-  height: 42px;
+  width: 96px;
+  transform: perspective(700px) rotateX(52deg) rotateZ(-45deg);
+  transform-style: preserve-3d;
+}
+
+.iso-box-1 {
+  left: 2px;
+  bottom: 4px;
+}
+
+.iso-box-2 {
+  left: 74px;
+  bottom: 58px;
+}
+
+.iso-box-3 {
+  left: 146px;
+  bottom: 112px;
+}
+
+.iso-face-top {
+  height: 10px;
+  background: linear-gradient(135deg, #33424f, #1c262e);
+  border: 1px solid #3c4c58;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+}
+
+.iso-face-front {
+  height: 34px;
   background: #12181e;
   border: 1px solid #26323c;
-  border-radius: 8px;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -96,39 +125,30 @@ body {
   font-size: 0.72rem;
   font-weight: 500;
   color: #cfd8dc;
-  transform: perspective(600px) rotateX(50deg) rotateZ(-45deg);
-  box-shadow: 0 18px 26px -12px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 22px 30px -14px rgba(0, 0, 0, 0.7);
 }
 
-.iso-card-1 {
-  left: 4px;
-  bottom: 6px;
-}
-
-.iso-card-2 {
-  left: 74px;
-  bottom: 56px;
-}
-
-.iso-card-3 {
-  left: 144px;
-  bottom: 106px;
-}
-
-.iso-dot {
-  width: 6px;
-  height: 6px;
+.iso-shadow {
+  position: absolute;
+  width: 70px;
+  height: 18px;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.55) 0%, transparent 75%);
   border-radius: 50%;
-  flex-shrink: 0;
 }
 
-.iso-dot-on {
-  background: #4ade80;
-  box-shadow: 0 0 6px #4ade80;
+.iso-shadow-1 {
+  left: 8px;
+  bottom: -14px;
 }
 
-.iso-dot-off {
-  background: #5b6770;
+.iso-shadow-2 {
+  left: 80px;
+  bottom: 40px;
+}
+
+.iso-shadow-3 {
+  left: 152px;
+  bottom: 94px;
 }
 
 .auth-side-light {
@@ -302,6 +322,44 @@ body {
 .link-button.centered {
   align-self: center;
   margin-top: 0.4rem;
+}
+
+.link-button.small {
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.field-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.notice {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.checkbox-field input {
+  margin-top: 0.2rem;
+  accent-color: var(--accent);
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
 }
 
 .error {
