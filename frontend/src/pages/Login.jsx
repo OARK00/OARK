@@ -3,67 +3,70 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Logo from "../components/Logo";
 
-// Draws one isometric cube (3 real faces, not a CSS-skewed rectangle) plus a
-// horizontal, unrotated label so it stays legible at small sizes.
-function IsoCube({ cx, cy, label, dotColor, delay = 0 }) {
-  const hw = 34; // half-width of the top diamond
-  const hh = 17; // half-height of the top diamond
-  const depth = 32; // how far the cube extrudes downward
-
-  const T = [cx, cy - hh];
-  const R = [cx + hw, cy];
-  const B = [cx, cy + hh];
-  const L = [cx - hw, cy];
-
-  const pt = (p) => p.join(",");
-
+// A pulsing status dot, reused for each device inside the building and for
+// the cloud itself.
+function PulseDot({ cx, cy, color, delay = 0 }) {
   return (
     <g>
-      <ellipse cx={cx} cy={cy + hh + depth + 6} rx={hw * 0.75} ry="7" fill="#000" opacity="0.35" />
-
-      {/* left face (darkest) */}
-      <polygon
-        points={`${pt(L)} ${pt(B)} ${B[0]},${B[1] + depth} ${L[0]},${L[1] + depth}`}
-        fill="#12181e"
-        stroke="#26323c"
-        strokeWidth="1"
-      />
-      {/* right face (medium) */}
-      <polygon
-        points={`${pt(B)} ${pt(R)} ${R[0]},${R[1] + depth} ${B[0]},${B[1] + depth}`}
-        fill="#1c242c"
-        stroke="#26323c"
-        strokeWidth="1"
-      />
-      {/* top face (lightest) */}
-      <polygon
-        points={`${pt(T)} ${pt(R)} ${pt(B)} ${pt(L)}`}
-        fill="#33424f"
-        stroke="#44566450"
-        strokeWidth="1"
-      />
-      <circle
-        cx={cx}
-        cy={cy}
-        r="7"
-        fill={dotColor}
-        opacity="0.35"
-        className="iso-pulse"
-        style={{ animationDelay: `${delay}s` }}
-      />
-      <circle cx={cx} cy={cy} r="4" fill={dotColor} />
-
-      <text
-        x={cx + hw + 12}
-        y={cy + hh - depth / 2 + 4}
-        fill="#dbe3e8"
-        fontSize="14"
-        fontWeight="600"
-        fontFamily="Manrope, sans-serif"
-      >
-        {label}
-      </text>
+      <circle cx={cx} cy={cy} r="6" fill={color} opacity="0.35" className="iso-pulse" style={{ animationDelay: `${delay}s` }} />
+      <circle cx={cx} cy={cy} r="3.2" fill={color} />
     </g>
+  );
+}
+
+// One scene: a building with several connected devices inside it, each
+// broadcasting wirelessly up to the cloud -- the three most basic IoT ideas
+// (a device, a network of them, a real environment) shown together.
+function IotScene() {
+  return (
+    <>
+      {/* building silhouette */}
+      <path
+        d="M40 190 V120 L95 85 L150 120 V190 Z"
+        fill="#12181e"
+        stroke="#2c3844"
+        strokeWidth="1.5"
+      />
+      <rect x="82" y="160" width="26" height="30" fill="#0d1218" stroke="#2c3844" strokeWidth="1.5" />
+      <rect x="52" y="140" width="16" height="16" fill="#0d1218" stroke="#2c3844" strokeWidth="1.5" />
+      <rect x="120" y="140" width="16" height="16" fill="#0d1218" stroke="#2c3844" strokeWidth="1.5" />
+
+      {/* devices inside the building */}
+      <PulseDot cx={60} cy={148} color="#4ade80" delay={0} />
+      <PulseDot cx={95} cy={130} color="#4ade80" delay={0.3} />
+      <PulseDot cx={128} cy={148} color="#4ade80" delay={0.6} />
+
+      {/* wifi arcs broadcasting from the roof */}
+      <path d="M85 82 a14 14 0 0 1 20 0" stroke="#2dd4bf" strokeWidth="2" fill="none" opacity="0.7" />
+      <path d="M78 72 a25 25 0 0 1 34 0" stroke="#2dd4bf" strokeWidth="2" fill="none" opacity="0.45" />
+
+      {/* signal flowing up to the cloud */}
+      <line
+        className="iso-flow-line"
+        x1="95"
+        y1="80"
+        x2="225"
+        y2="65"
+        stroke="#2dd4bf"
+        strokeWidth="2"
+        strokeDasharray="6 6"
+        opacity="0.7"
+      />
+
+      {/* cloud (platform) */}
+      <circle cx="207" cy="70" r="15" fill="#1c242c" stroke="#2c3844" strokeWidth="1.5" />
+      <circle cx="227" cy="60" r="19" fill="#1c242c" stroke="#2c3844" strokeWidth="1.5" />
+      <circle cx="247" cy="70" r="14" fill="#1c242c" stroke="#2c3844" strokeWidth="1.5" />
+      <rect x="197" y="68" width="60" height="20" rx="10" fill="#1c242c" stroke="#2c3844" strokeWidth="1.5" />
+      <PulseDot cx={227} cy={78} color="#2dd4bf" delay={0.9} />
+
+      <text x="40" y="210" fill="#dbe3e8" fontSize="14" fontWeight="600" fontFamily="Manrope, sans-serif">
+        Connected facility
+      </text>
+      <text x="197" y="105" fill="#dbe3e8" fontSize="14" fontWeight="600" fontFamily="Manrope, sans-serif">
+        Oark platform
+      </text>
+    </>
   );
 }
 
@@ -107,11 +110,7 @@ export default function Login() {
         </div>
 
         <svg className="iso-stack" viewBox="0 0 320 230">
-          <line className="iso-flow-line" x1="70" y1="180" x2="150" y2="125" stroke="#2dd4bf" strokeWidth="2" strokeDasharray="6 6" opacity="0.7" />
-          <line className="iso-flow-line" x1="150" y1="125" x2="230" y2="70" stroke="#2dd4bf" strokeWidth="2" strokeDasharray="6 6" opacity="0.7" />
-          <IsoCube cx={70} cy={180} label="Sensor" dotColor="#4ade80" delay={0} />
-          <IsoCube cx={150} cy={125} label="Gateway" dotColor="#4ade80" delay={0.4} />
-          <IsoCube cx={230} cy={70} label="Cloud" dotColor="#2dd4bf" delay={0.8} />
+          <IotScene />
         </svg>
 
         <div className="auth-side-dark-bottom">
