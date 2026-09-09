@@ -82,6 +82,44 @@ body {
   align-self: center;
 }
 
+.iso-flow-line {
+  stroke-dashoffset: 0;
+  animation: iso-flow 1.2s linear infinite;
+}
+
+@keyframes iso-flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+.iso-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: iso-pulse 2.2s ease-out infinite;
+}
+
+@keyframes iso-pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  70% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iso-flow-line,
+  .iso-pulse {
+    animation: none;
+  }
+}
+
 .auth-side-light {
   flex: 1;
   background: var(--surface);
@@ -167,12 +205,14 @@ body {
   color: var(--text);
   font-size: 0.95rem;
   font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .field input:focus,
 .add-device input:focus {
   outline: none;
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
 }
 
 .password-input {

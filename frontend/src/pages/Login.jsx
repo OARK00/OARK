@@ -5,7 +5,7 @@ import Logo from "../components/Logo";
 
 // Draws one isometric cube (3 real faces, not a CSS-skewed rectangle) plus a
 // horizontal, unrotated label so it stays legible at small sizes.
-function IsoCube({ cx, cy, label, dotColor }) {
+function IsoCube({ cx, cy, label, dotColor, delay = 0 }) {
   const hw = 34; // half-width of the top diamond
   const hh = 17; // half-height of the top diamond
   const depth = 32; // how far the cube extrudes downward
@@ -41,6 +41,15 @@ function IsoCube({ cx, cy, label, dotColor }) {
         fill="#33424f"
         stroke="#44566450"
         strokeWidth="1"
+      />
+      <circle
+        cx={cx}
+        cy={cy}
+        r="7"
+        fill={dotColor}
+        opacity="0.35"
+        className="iso-pulse"
+        style={{ animationDelay: `${delay}s` }}
       />
       <circle cx={cx} cy={cy} r="4" fill={dotColor} />
 
@@ -98,11 +107,11 @@ export default function Login() {
         </div>
 
         <svg className="iso-stack" viewBox="0 0 320 230">
-          <line x1="70" y1="180" x2="150" y2="125" stroke="#0f766e" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.5" />
-          <line x1="150" y1="125" x2="230" y2="70" stroke="#0f766e" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.5" />
-          <IsoCube cx={70} cy={180} label="Sensor" dotColor="#4ade80" />
-          <IsoCube cx={150} cy={125} label="Gateway" dotColor="#4ade80" />
-          <IsoCube cx={230} cy={70} label="Cloud" dotColor="#2dd4bf" />
+          <line className="iso-flow-line" x1="70" y1="180" x2="150" y2="125" stroke="#2dd4bf" strokeWidth="2" strokeDasharray="6 6" opacity="0.7" />
+          <line className="iso-flow-line" x1="150" y1="125" x2="230" y2="70" stroke="#2dd4bf" strokeWidth="2" strokeDasharray="6 6" opacity="0.7" />
+          <IsoCube cx={70} cy={180} label="Sensor" dotColor="#4ade80" delay={0} />
+          <IsoCube cx={150} cy={125} label="Gateway" dotColor="#4ade80" delay={0.4} />
+          <IsoCube cx={230} cy={70} label="Cloud" dotColor="#2dd4bf" delay={0.8} />
         </svg>
 
         <div className="auth-side-dark-bottom">
