@@ -76,79 +76,10 @@ body {
 }
 
 .iso-stack {
-  position: relative;
-  width: 240px;
-  height: 200px;
+  width: 100%;
+  max-width: 320px;
+  height: auto;
   align-self: center;
-}
-
-.iso-box {
-  position: absolute;
-  width: 96px;
-  transform: perspective(700px) rotateX(52deg) rotateZ(-45deg);
-  transform-style: preserve-3d;
-}
-
-.iso-box-1 {
-  left: 2px;
-  bottom: 4px;
-}
-
-.iso-box-2 {
-  left: 74px;
-  bottom: 58px;
-}
-
-.iso-box-3 {
-  left: 146px;
-  bottom: 112px;
-}
-
-.iso-face-top {
-  height: 10px;
-  background: linear-gradient(135deg, #33424f, #1c262e);
-  border: 1px solid #3c4c58;
-  border-bottom: none;
-  border-radius: 8px 8px 0 0;
-}
-
-.iso-face-front {
-  height: 34px;
-  background: #12181e;
-  border: 1px solid #26323c;
-  border-top: none;
-  border-radius: 0 0 8px 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 10px;
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: #cfd8dc;
-  box-shadow: 0 22px 30px -14px rgba(0, 0, 0, 0.7);
-}
-
-.iso-shadow {
-  position: absolute;
-  width: 70px;
-  height: 18px;
-  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.55) 0%, transparent 75%);
-  border-radius: 50%;
-}
-
-.iso-shadow-1 {
-  left: 8px;
-  bottom: -14px;
-}
-
-.iso-shadow-2 {
-  left: 80px;
-  bottom: 40px;
-}
-
-.iso-shadow-3 {
-  left: 152px;
-  bottom: 94px;
 }
 
 .auth-side-light {

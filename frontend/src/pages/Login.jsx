@@ -3,6 +3,61 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Logo from "../components/Logo";
 
+// Draws one isometric cube (3 real faces, not a CSS-skewed rectangle) plus a
+// horizontal, unrotated label so it stays legible at small sizes.
+function IsoCube({ cx, cy, label, dotColor }) {
+  const hw = 34; // half-width of the top diamond
+  const hh = 17; // half-height of the top diamond
+  const depth = 32; // how far the cube extrudes downward
+
+  const T = [cx, cy - hh];
+  const R = [cx + hw, cy];
+  const B = [cx, cy + hh];
+  const L = [cx - hw, cy];
+
+  const pt = (p) => p.join(",");
+
+  return (
+    <g>
+      <ellipse cx={cx} cy={cy + hh + depth + 6} rx={hw * 0.75} ry="7" fill="#000" opacity="0.35" />
+
+      {/* left face (darkest) */}
+      <polygon
+        points={`${pt(L)} ${pt(B)} ${B[0]},${B[1] + depth} ${L[0]},${L[1] + depth}`}
+        fill="#12181e"
+        stroke="#26323c"
+        strokeWidth="1"
+      />
+      {/* right face (medium) */}
+      <polygon
+        points={`${pt(B)} ${pt(R)} ${R[0]},${R[1] + depth} ${B[0]},${B[1] + depth}`}
+        fill="#1c242c"
+        stroke="#26323c"
+        strokeWidth="1"
+      />
+      {/* top face (lightest) */}
+      <polygon
+        points={`${pt(T)} ${pt(R)} ${pt(B)} ${pt(L)}`}
+        fill="#33424f"
+        stroke="#44566450"
+        strokeWidth="1"
+      />
+      <circle cx={cx} cy={cy} r="4" fill={dotColor} />
+
+      <text
+        x={cx + hw + 12}
+        y={cy + hh - depth / 2 + 4}
+        fill="#dbe3e8"
+        fontSize="14"
+        fontWeight="600"
+        fontFamily="Manrope, sans-serif"
+      >
+        {label}
+      </text>
+    </g>
+  );
+}
+
 export default function Login() {
   const [mode, setMode] = useState("login"); // "login" | "register"
   const [orgName, setOrgName] = useState("");
@@ -42,48 +97,13 @@ export default function Login() {
           <Logo size={26} wordmark />
         </div>
 
-        <div className="iso-stack">
-          <div className="iso-shadow iso-shadow-1" />
-          <div className="iso-shadow iso-shadow-2" />
-          <div className="iso-shadow iso-shadow-3" />
-
-          <div className="iso-box iso-box-1">
-            <div className="iso-face-top" />
-            <div className="iso-face-front">
-              <svg viewBox="0 0 16 16" width="13" height="13">
-                <circle cx="8" cy="8" r="2" fill="#4ade80" />
-                <path d="M4 8a4 4 0 0 1 8 0M2 8a6 6 0 0 1 12 0" stroke="#4ade80" strokeWidth="1.2" fill="none" opacity="0.6" />
-              </svg>
-              <span>Sensor</span>
-            </div>
-          </div>
-
-          <div className="iso-box iso-box-2">
-            <div className="iso-face-top" />
-            <div className="iso-face-front">
-              <svg viewBox="0 0 16 16" width="13" height="13">
-                <rect x="2" y="6" width="12" height="5" rx="1" fill="none" stroke="#4ade80" strokeWidth="1.2" />
-                <path d="M5 6V4M8 6V4M11 6V4" stroke="#4ade80" strokeWidth="1.2" />
-              </svg>
-              <span>Gateway</span>
-            </div>
-          </div>
-
-          <div className="iso-box iso-box-3">
-            <div className="iso-face-top" />
-            <div className="iso-face-front">
-              <svg viewBox="0 0 16 16" width="13" height="13">
-                <path
-                  d="M4.5 11a2.5 2.5 0 0 1-.3-4.98A3.5 3.5 0 0 1 11 5.05 2.5 2.5 0 0 1 11.5 11h-7Z"
-                  fill="none"
-                  stroke="#8b98a3"
-                  strokeWidth="1.2"
-                />
-              </svg>
-              <span>Cloud</span>
-            </div>
-          </div>
-        </div>
+        <svg className="iso-stack" viewBox="0 0 320 230">
+          <line x1="70" y1="180" x2="150" y2="125" stroke="#0f766e" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.5" />
+          <line x1="150" y1="125" x2="230" y2="70" stroke="#0f766e" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.5" />
+          <IsoCube cx={70} cy={180} label="Sensor" dotColor="#4ade80" />
+          <IsoCube cx={150} cy={125} label="Gateway" dotColor="#4ade80" />
+          <IsoCube cx={230} cy={70} label="Cloud" dotColor="#2dd4bf" />
+        </svg>
 
         <div className="auth-side-dark-bottom">
           <h2>
