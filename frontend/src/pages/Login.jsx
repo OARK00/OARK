@@ -60,11 +60,33 @@ function IotScene() {
       <rect x="197" y="68" width="60" height="20" rx="10" fill="#1c242c" stroke="#2c3844" strokeWidth="1.5" />
       <PulseDot cx={227} cy={78} color="#2dd4bf" delay={0.9} />
 
+      {/* signal from the cloud down to the controller */}
+      <line
+        className="iso-flow-line"
+        x1="240"
+        y1="88"
+        x2="262"
+        y2="148"
+        stroke="#2dd4bf"
+        strokeWidth="2"
+        strokeDasharray="6 6"
+        opacity="0.7"
+      />
+
+      {/* controller (the app/remote a person uses) */}
+      <rect x="250" y="148" width="24" height="42" rx="4" fill="#12181e" stroke="#2c3844" strokeWidth="1.5" />
+      <rect x="253" y="152" width="18" height="27" rx="2" fill="#0d1218" stroke="#26323c" strokeWidth="1" />
+      <circle cx="262" cy="184" r="1.6" fill="#2c3844" />
+      <PulseDot cx={262} cy={165} color="#2dd4bf" delay={1.2} />
+
       <text x="40" y="210" fill="#dbe3e8" fontSize="14" fontWeight="600" fontFamily="Manrope, sans-serif">
         Connected facility
       </text>
       <text x="197" y="105" fill="#dbe3e8" fontSize="14" fontWeight="600" fontFamily="Manrope, sans-serif">
         Oark platform
+      </text>
+      <text x="219" y="207" fill="#dbe3e8" fontSize="14" fontWeight="600" fontFamily="Manrope, sans-serif">
+        Your controller
       </text>
     </>
   );
@@ -109,7 +131,7 @@ export default function Login() {
           <Logo size={26} wordmark />
         </div>
 
-        <svg className="iso-stack" viewBox="0 0 320 230">
+        <svg className="iso-stack" viewBox="0 0 340 230">
           <IotScene />
         </svg>
 
