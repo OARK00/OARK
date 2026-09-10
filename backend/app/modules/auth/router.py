@@ -15,7 +15,8 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == payload.email).first():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
-    org = Organization(name=payload.org_name)
+    org_name = payload.org_name or f"{payload.email.split('@')[0]}'s workspace"
+    org = Organization(name=org_name)
     db.add(org)
     db.flush()
 

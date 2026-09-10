@@ -1,0 +1,409 @@
+<title>Oark Visual Directions</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --page-bg: #f4f2ec;
+    --page-surface: #ffffff;
+    --page-border: #dedad0;
+    --page-text: #1c1b18;
+    --page-muted: #6b675e;
+    --page-accent: #0f6b62;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --page-bg: #15140f;
+      --page-surface: #1c1b16;
+      --page-border: #34322a;
+      --page-text: #f1efe8;
+      --page-muted: #a29d8e;
+      --page-accent: #4fd1c5;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --page-bg: #15140f;
+    --page-surface: #1c1b16;
+    --page-border: #34322a;
+    --page-text: #f1efe8;
+    --page-muted: #a29d8e;
+    --page-accent: #4fd1c5;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--page-bg);
+    color: var(--page-text);
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  .intro {
+    max-width: 640px;
+    margin-bottom: 2.75rem;
+  }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--page-accent);
+    margin: 0 0 0.75rem;
+  }
+
+  .intro h1 {
+    font-size: clamp(1.6rem, 3vw, 2.1rem);
+    line-height: 1.2;
+    margin: 0 0 0.75rem;
+    text-wrap: balance;
+  }
+
+  .intro p {
+    color: var(--page-muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+
+  @media (max-width: 880px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .option {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  .option-label {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+
+  .option-letter {
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--page-accent);
+  }
+
+  .option-name {
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  .option-desc {
+    color: var(--page-muted);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin: -0.4rem 0 0;
+  }
+
+  .frame {
+    border: 1px solid var(--page-border);
+    border-radius: 10px;
+    background: var(--page-surface);
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+
+  .frame-chrome {
+    display: flex;
+    gap: 5px;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--page-border);
+  }
+
+  .frame-chrome span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--page-border);
+  }
+
+  .frame-body {
+    padding: 2rem 1.75rem;
+    min-height: 340px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* ===== shared mock-form primitives (recolored per concept via CSS vars scoped to each .mock) ===== */
+
+  .mock-logo {
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .mock-heading {
+    font-weight: 700;
+    font-size: 1.35rem;
+    margin: 0 0 0.3rem;
+  }
+
+  .mock-sub {
+    font-size: 0.82rem;
+    margin: 0 0 1.4rem;
+  }
+
+  .mock-field-label {
+    font-size: 0.72rem;
+    display: block;
+    margin-bottom: 0.3rem;
+  }
+
+  .mock-input {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .mock-button {
+    width: 100%;
+    padding: 0.6rem;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    text-align: center;
+    border: none;
+  }
+
+  /* ===== A: Blueprint / Schematic ===== */
+
+  .mock-a {
+    background: #0d3b58;
+    color: #dff1f7;
+    margin: -2rem -1.75rem;
+    padding: 2rem 1.75rem;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px);
+    background-size: 22px 22px;
+    font-family: "IBM Plex Mono", monospace;
+  }
+
+  .mock-a .mock-logo { color: #7fdcff; text-transform: uppercase; }
+  .mock-a .mock-sub, .mock-a .mock-field-label { color: #9fc7d6; }
+  .mock-a .mock-input {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid #3f7a95;
+    color: #dff1f7;
+  }
+  .mock-a .mock-button { background: #5fd4ff; color: #062230; }
+  .mock-a .titleblock {
+    margin-top: 1rem;
+    border-top: 1px solid #3f7a95;
+    padding-top: 0.6rem;
+    font-size: 0.65rem;
+    color: #7fa6b8;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ===== B: Control Room / SCADA ===== */
+
+  .mock-b {
+    background: #0a0a0a;
+    color: #ffb000;
+    margin: -2rem -1.75rem;
+    padding: 2rem 1.75rem;
+    font-family: "IBM Plex Mono", monospace;
+  }
+
+  .mock-b .mock-logo { color: #ffb000; }
+  .mock-b .mock-heading { color: #ffcf66; }
+  .mock-b .mock-sub, .mock-b .mock-field-label { color: #8a6b2a; text-transform: uppercase; letter-spacing: 0.05em; }
+  .mock-b .mock-input {
+    background: #141414;
+    border: 1px solid #4a3a10;
+    color: #ffcf66;
+  }
+  .mock-b .mock-button { background: #ffb000; color: #0a0a0a; }
+  .mock-b .statusbar {
+    margin-top: 1rem;
+    display: flex;
+    gap: 1rem;
+    font-size: 0.68rem;
+    border-top: 1px solid #2a2200;
+    padding-top: 0.6rem;
+  }
+  .mock-b .dot-ok { color: #00ff66; }
+  .mock-b .dot-warn { color: #ff3b3b; }
+
+  /* ===== C: Clean Enterprise ===== */
+
+  .mock-c {
+    background: #ffffff;
+    color: #0f1f3d;
+    margin: -2rem -1.75rem;
+    padding: 2rem 1.75rem;
+  }
+
+  .mock-c .mock-logo { color: #0f1f3d; }
+  .mock-c .mock-sub, .mock-c .mock-field-label { color: #64748b; }
+  .mock-c .mock-input {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #0f1f3d;
+  }
+  .mock-c .mock-button { background: #2563eb; color: #ffffff; }
+  .mock-c .finelinks {
+    margin-top: 0.9rem;
+    font-size: 0.72rem;
+    color: #2563eb;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ===== D: Refined Signal ===== */
+
+  .mock-d {
+    background: #0b0f14;
+    color: #eaf6f8;
+    margin: -2rem -1.75rem;
+    padding: 2rem 1.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .mock-d::before {
+    content: "";
+    position: absolute;
+    top: -1px; left: 24px; right: 24px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #00e5ff, transparent);
+  }
+  .mock-d .mock-logo { color: #00e5ff; }
+  .mock-d .mock-sub, .mock-d .mock-field-label { color: #6d7f87; }
+  .mock-d .mock-input {
+    background: #10161c;
+    border: 1px solid #1f2c33;
+    color: #eaf6f8;
+  }
+  .mock-d .mock-button { background: #00e5ff; color: #04161a; }
+  .mock-d .corner {
+    position: absolute;
+    width: 14px; height: 14px;
+    border-color: #00e5ff;
+    opacity: 0.7;
+  }
+  .mock-d .corner.tl { top: 10px; left: 10px; border-top: 1.5px solid; border-left: 1.5px solid; }
+  .mock-d .corner.br { bottom: 10px; right: 10px; border-bottom: 1.5px solid; border-right: 1.5px solid; }
+</style>
+
+<div class="wrap">
+  <div class="intro">
+    <p class="eyebrow">Direction Review</p>
+    <h1>Four different visual identities for the same login screen</h1>
+    <p>Same content, same product — different palette, type, and mood for each. Tell me the letter that feels right, or mix pieces from more than one.</p>
+  </div>
+
+  <div class="grid">
+
+    <div class="option">
+      <div class="option-label"><span class="option-letter">A</span><span class="option-name">Blueprint</span></div>
+      <p class="option-desc">Cyanotype-blue, construction grid lines, a real drafting title block. Ties directly to how industrial systems are actually documented.</p>
+      <div class="frame">
+        <div class="frame-chrome"><span></span><span></span><span></span></div>
+        <div class="frame-body">
+          <div class="mock-a">
+            <div class="mock-logo">◇ OARK</div>
+            <div class="mock-heading" style="color:#fff">Welcome back</div>
+            <p class="mock-sub">Sign in to your dashboard</p>
+            <span class="mock-field-label">EMAIL</span>
+            <div class="mock-input">you@company.com</div>
+            <span class="mock-field-label">PASSWORD</span>
+            <div class="mock-input">••••••••</div>
+            <div class="mock-button">Sign In</div>
+            <div class="titleblock"><span>DWG NO. OARK-001</span><span>REV A</span><span>SCALE NTS</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="option">
+      <div class="option-label"><span class="option-letter">B</span><span class="option-name">Control Room</span></div>
+      <p class="option-desc">Phosphor amber on black, monospace throughout — the aesthetic of real SCADA/HMI panels running a plant floor.</p>
+      <div class="frame">
+        <div class="frame-chrome"><span></span><span></span><span></span></div>
+        <div class="frame-body">
+          <div class="mock-b">
+            <div class="mock-logo">[OARK]</div>
+            <div class="mock-heading">LOGIN_</div>
+            <p class="mock-sub">AUTH REQUIRED</p>
+            <span class="mock-field-label">USER_ID</span>
+            <div class="mock-input">you@company.com</div>
+            <span class="mock-field-label">PASSCODE</span>
+            <div class="mock-input">••••••••</div>
+            <div class="mock-button">AUTHENTICATE</div>
+            <div class="statusbar"><span class="dot-ok">● 42 NOMINAL</span><span class="dot-warn">● 2 ALARM</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="option">
+      <div class="option-label"><span class="option-letter">C</span><span class="option-name">Clean Enterprise</span></div>
+      <p class="option-desc">White, navy, one confident blue — the Azure/AWS-console safe choice. Reads as trustworthy, unremarkable in a good way.</p>
+      <div class="frame">
+        <div class="frame-chrome"><span></span><span></span><span></span></div>
+        <div class="frame-body">
+          <div class="mock-c">
+            <div class="mock-logo">OARK</div>
+            <div class="mock-heading">Welcome back</div>
+            <p class="mock-sub">Sign in to your dashboard</p>
+            <span class="mock-field-label">Email</span>
+            <div class="mock-input">you@company.com</div>
+            <span class="mock-field-label">Password</span>
+            <div class="mock-input">••••••••</div>
+            <div class="mock-button">Sign in</div>
+            <div class="finelinks"><span>Forgot password?</span><span>Terms · Privacy</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="option">
+      <div class="option-label"><span class="option-letter">D</span><span class="option-name">Refined Signal</span></div>
+      <p class="option-desc">Evolves the last version you saw — but drops the purple-blue blur gradient (a very common AI-tool cliché right now) for one hard cyan line and sharp corner marks instead.</p>
+      <div class="frame">
+        <div class="frame-chrome"><span></span><span></span><span></span></div>
+        <div class="frame-body">
+          <div class="mock-d">
+            <span class="corner tl"></span><span class="corner br"></span>
+            <div class="mock-logo">◈ OARK</div>
+            <div class="mock-heading" style="color:#fff">Welcome back</div>
+            <p class="mock-sub">Sign in to your dashboard</p>
+            <span class="mock-field-label">EMAIL</span>
+            <div class="mock-input">you@company.com</div>
+            <span class="mock-field-label">PASSWORD</span>
+            <div class="mock-input">••••••••</div>
+            <div class="mock-button">Sign in</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

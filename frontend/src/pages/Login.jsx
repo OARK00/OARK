@@ -132,7 +132,6 @@ function IotScene() {
 
 export default function Login() {
   const [mode, setMode] = useState("login"); // "login" | "register"
-  const [orgName, setOrgName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -152,7 +151,7 @@ export default function Login() {
       if (mode === "login") {
         await login(email, password);
       } else {
-        await register(orgName, email, password);
+        await register(email, password);
       }
       navigate("/dashboard");
     } catch (err) {
@@ -183,20 +182,8 @@ export default function Login() {
 
       <div className="auth-side-light">
         <form className="auth-card-plain" onSubmit={handleSubmit}>
-          <h1>{mode === "login" ? "Log in to Oark" : "Create your organization"}</h1>
+          <h1>{mode === "login" ? "Log in to Oark" : "Create your account"}</h1>
 
-          {mode === "register" && (
-            <label className="field">
-              <span>Organization name</span>
-              <input
-                type="text"
-                placeholder="Acme Manufacturing"
-                value={orgName}
-                onChange={(e) => setOrgName(e.target.value)}
-                required
-              />
-            </label>
-          )}
           <label className="field">
             <span>Email</span>
             <input

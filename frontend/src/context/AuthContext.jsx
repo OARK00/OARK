@@ -12,12 +12,8 @@ export function AuthProvider({ children }) {
     setToken(data.access_token);
   }
 
-  async function register(orgName, email, password) {
-    const { data } = await api.post("/auth/register", {
-      org_name: orgName,
-      email,
-      password,
-    });
+  async function register(email, password) {
+    const { data } = await api.post("/auth/register", { email, password });
     localStorage.setItem("oark_token", data.access_token);
     setToken(data.access_token);
   }
