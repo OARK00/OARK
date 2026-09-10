@@ -1,16 +1,39 @@
 import uuid
 import enum
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import Column, String, DateTime, ForeignKey, func, Enum, Boolean
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 from app.core.database import Base
 
+ONLINE_WINDOW = timedelta(minutes=2)
+STALE_WINDOW = timedelta(minutes=15)
+
 
 class DeviceStatus(str, enum.Enum):
     online = "online"
     offline = "offline"
     stale = "stale"
+
+
+def compute_status(last_seen_at: datetime | None) -> DeviceStatus:
+    """A device's status is derived from when it was last heard from, not
+    stored as a fact someone has to remember to update. No report yet, or
+    nothing in a long while, reads as offline; a recent gap reads as stale
+    -- a warning before it drops fully offline."""
+    if last_seen_at is None:
+        return DeviceStatus.offline
+
+    if last_seen_at.tzinfo is None:
+        last_seen_at = last_seen_at.replace(tzinfo=timezone.utc)
+
+    age = datetime.now(timezone.utc) - last_seen_at
+    if age <= ONLINE_WINDOW:
+        return DeviceStatus.online
+    if age <= STALE_WINDOW:
+        return DeviceStatus.stale
+    return DeviceStatus.offline
 
 
 class Device(Base):

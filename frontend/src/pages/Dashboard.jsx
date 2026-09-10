@@ -81,6 +81,10 @@ export default function Dashboard() {
 
       <div className="main-column">
         <header className="topbar topbar-slim">
+          <div className="account-indicator">
+            <span className="account-avatar">{displayName.charAt(0).toUpperCase()}</span>
+            <span className="account-email">{email || "..."}</span>
+          </div>
           <button className="ghost-button" onClick={handleLogout}>
             Log out
           </button>

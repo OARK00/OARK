@@ -6,16 +6,28 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.core.security import generate_device_secret, hash_password
-from app.models.device import Device
+from app.models.device import Device, compute_status
 from app.models.user import User
 from app.modules.devices.schemas import DeviceCreate, DeviceCreateResponse, DeviceResponse
 
 router = APIRouter(prefix="/devices", tags=["devices"])
 
 
+def to_response(device: Device) -> DeviceResponse:
+    return DeviceResponse(
+        id=device.id,
+        name=device.name,
+        is_controllable=device.is_controllable,
+        status=compute_status(device.last_seen_at).value,
+        last_seen_at=device.last_seen_at,
+        reported_state=device.reported_state,
+    )
+
+
 @router.get("", response_model=list[DeviceResponse])
 def list_devices(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return db.query(Device).filter(Device.org_id == current_user.org_id).all()
+    devices = db.query(Device).filter(Device.org_id == current_user.org_id).all()
+    return [to_response(d) for d in devices]
 
 
 @router.post("", response_model=DeviceCreateResponse, status_code=status.HTTP_201_CREATED)
