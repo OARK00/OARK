@@ -10,6 +10,31 @@ function timeOfDayGreeting() {
   return "Good evening";
 }
 
+function LiveClock() {
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const time = now.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+
+  return (
+    <div className="live-clock">
+      <span className="live-clock-time">{time}</span>
+      <span className="live-pill">
+        <span className="live-dot" />
+        Live
+      </span>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -85,7 +110,10 @@ export default function Dashboard() {
       <div className="main-column">
         <div className="content">
           <section className="welcome-banner">
-            <span className="eyebrow">{timeOfDayGreeting()}</span>
+            <div className="welcome-banner-top">
+              <span className="eyebrow">{timeOfDayGreeting()}</span>
+              <LiveClock />
+            </div>
             <h1>Welcome back, {displayName}</h1>
 
             <div className="inline-stats">
