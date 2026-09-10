@@ -4,6 +4,13 @@ import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import Sidebar from "../components/Sidebar";
 
+function timeOfDayGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 export default function Dashboard() {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,7 +18,7 @@ export default function Dashboard() {
   const [newDeviceName, setNewDeviceName] = useState("");
   const [createdSecret, setCreatedSecret] = useState(null);
 
-  const { logout } = useAuth();
+  const { logout, email } = useAuth();
   const navigate = useNavigate();
 
   async function loadDevices() {
@@ -61,35 +68,41 @@ export default function Dashboard() {
     navigate("/login");
   }
 
+  const displayName = email ? email.split("@")[0] : "there";
+
   return (
     <div className="app-shell">
       <Sidebar active="devices" />
 
       <div className="main-column">
-        <header className="topbar">
-          <h1>Devices</h1>
+        <header className="topbar topbar-slim">
           <button className="ghost-button" onClick={handleLogout}>
             Log out
           </button>
         </header>
 
         <div className="content">
-          <section className="stats-row">
-            <div className="stat-card">
-              <span className="stat-label">Total devices</span>
-              <span className="stat-value">{stats.total}</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-label">Online</span>
-              <span className="stat-value stat-online">{stats.online}</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-label">Offline</span>
-              <span className="stat-value stat-offline">{stats.offline}</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-label">Stale</span>
-              <span className="stat-value stat-stale">{stats.stale}</span>
+          <section className="welcome-banner">
+            <span className="eyebrow">{timeOfDayGreeting()}</span>
+            <h1>Welcome back, {displayName}</h1>
+
+            <div className="inline-stats">
+              <div className="inline-stat">
+                <span className="inline-stat-value">{stats.total}</span>
+                <span className="inline-stat-label">Total devices</span>
+              </div>
+              <div className="inline-stat">
+                <span className="inline-stat-value stat-online">{stats.online}</span>
+                <span className="inline-stat-label">Online</span>
+              </div>
+              <div className="inline-stat">
+                <span className="inline-stat-value stat-offline">{stats.offline}</span>
+                <span className="inline-stat-label">Offline</span>
+              </div>
+              <div className="inline-stat">
+                <span className="inline-stat-value stat-stale">{stats.stale}</span>
+                <span className="inline-stat-label">Stale</span>
+              </div>
             </div>
           </section>
 

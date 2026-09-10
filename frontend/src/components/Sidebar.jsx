@@ -34,12 +34,20 @@ const icons = {
   ),
 };
 
-const navItems = [
-  { key: "overview", label: "Overview", icon: icons.overview, disabled: true },
-  { key: "devices", label: "Devices", icon: icons.devices, disabled: false },
-  { key: "analytics", label: "Analytics", icon: icons.analytics, disabled: true },
-  { key: "alerts", label: "Alerts", icon: icons.alerts, disabled: true },
-  { key: "settings", label: "Settings", icon: icons.settings, disabled: true },
+const navGroups = [
+  {
+    label: "Monitor",
+    items: [
+      { key: "overview", label: "Overview", icon: icons.overview, disabled: true },
+      { key: "devices", label: "Devices", icon: icons.devices, disabled: false },
+      { key: "analytics", label: "Analytics", icon: icons.analytics, disabled: true },
+      { key: "alerts", label: "Alerts", icon: icons.alerts, disabled: true },
+    ],
+  },
+  {
+    label: "Manage",
+    items: [{ key: "settings", label: "Settings", icon: icons.settings, disabled: true }],
+  },
 ];
 
 export default function Sidebar({ active = "devices" }) {
@@ -48,19 +56,24 @@ export default function Sidebar({ active = "devices" }) {
       <div className="sidebar-brand">
         <Logo size={28} wordmark />
       </div>
-      <nav className="sidebar-nav">
-        {navItems.map((item) => (
-          <div
-            key={item.key}
-            className={`sidebar-item ${active === item.key ? "active" : ""} ${item.disabled ? "disabled" : ""}`}
-            title={item.disabled ? "Coming soon" : undefined}
-          >
-            {item.icon}
-            <span>{item.label}</span>
-            {item.disabled && <span className="soon-badge">Soon</span>}
-          </div>
-        ))}
-      </nav>
+      {navGroups.map((group) => (
+        <div key={group.label} className="sidebar-group">
+          <div className="sidebar-group-label">{group.label}</div>
+          <nav className="sidebar-nav">
+            {group.items.map((item) => (
+              <div
+                key={item.key}
+                className={`sidebar-item ${active === item.key ? "active" : ""} ${item.disabled ? "disabled" : ""}`}
+                title={item.disabled ? "Coming soon" : undefined}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+                {item.disabled && <span className="soon-badge">Soon</span>}
+              </div>
+            ))}
+          </nav>
+        </div>
+      ))}
     </aside>
   );
 }

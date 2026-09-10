@@ -263,8 +263,17 @@ export default function Login() {
           >
             {mode === "login" ? "Sign up" : "Already have an account? Log in"}
           </button>
+
+          <p className="auth-footer">© {new Date().getFullYear()} Oark. Terms · Privacy</p>
         </form>
       </div>
+
+      <a className="support-fab" href="mailto:dev@oark.in" title="Contact support">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        <span>Need help?</span>
+      </a>
     </div>
   );
 }
