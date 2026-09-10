@@ -328,6 +328,66 @@ body {
   font-weight: 600;
 }
 
+.danger-button {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: none;
+  background: var(--danger);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.danger-button:hover {
+  background: #b91c1c;
+}
+
+.danger-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 17, 24, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 1rem;
+}
+
+.modal-card {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
+}
+
+.modal-card h3 {
+  margin: 0 0 0.6rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.modal-card p {
+  margin: 0 0 1.25rem;
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
 .forgot-link {
   align-self: flex-end;
   margin-top: 0.35rem;

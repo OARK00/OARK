@@ -17,6 +17,8 @@ export default function Dashboard() {
   const [newDeviceName, setNewDeviceName] = useState("");
   const [createdSecret, setCreatedSecret] = useState(null);
   const [addingDevice, setAddingDevice] = useState(false);
+  const [deviceToDelete, setDeviceToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const { email } = useAuth();
 
@@ -60,10 +62,18 @@ export default function Dashboard() {
     }
   }
 
-  async function handleDelete(id) {
-    if (!confirm("Delete this device?")) return;
-    await api.delete(`/devices/${id}`);
-    await loadDevices();
+  async function confirmDelete() {
+    if (!deviceToDelete) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/devices/${deviceToDelete.id}`);
+      await loadDevices();
+      setDeviceToDelete(null);
+    } catch (err) {
+      setError(err.response?.data?.detail || "Could not delete device");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   const displayName = email ? email.split("@")[0] : "there";
@@ -181,7 +191,7 @@ export default function Dashboard() {
                       </td>
                       <td>{d.last_seen_at ? new Date(d.last_seen_at).toLocaleString() : "Never"}</td>
                       <td>
-                        <button className="ghost-button" onClick={() => handleDelete(d.id)}>
+                        <button className="ghost-button" onClick={() => setDeviceToDelete(d)}>
                           Delete
                         </button>
                       </td>
@@ -193,6 +203,30 @@ export default function Dashboard() {
           </section>
         </div>
       </div>
+
+      {deviceToDelete && (
+        <div className="modal-overlay" onClick={() => !deleting && setDeviceToDelete(null)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h3>Delete device?</h3>
+            <p>
+              <strong>{deviceToDelete.name}</strong> will be permanently removed and its device
+              secret revoked. This can't be undone.
+            </p>
+            <div className="modal-actions">
+              <button
+                className="ghost-button"
+                onClick={() => setDeviceToDelete(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button className="danger-button" onClick={confirmDelete} disabled={deleting}>
+                {deleting ? "Deleting..." : "Delete device"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
