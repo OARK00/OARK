@@ -597,7 +597,9 @@ body {
 }
 
 .eyebrow {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;

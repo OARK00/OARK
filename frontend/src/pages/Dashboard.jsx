@@ -3,11 +3,24 @@ import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import Sidebar from "../components/Sidebar";
 
+const SunIcon = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="12" r="4.5" />
+    <path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8" />
+  </svg>
+);
+
+const MoonIcon = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" />
+  </svg>
+);
+
 function timeOfDayGreeting() {
   const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
+  if (hour < 12) return { text: "Good morning", icon: SunIcon };
+  if (hour < 17) return { text: "Good afternoon", icon: SunIcon };
+  return { text: "Good evening", icon: MoonIcon };
 }
 
 function LiveClock() {
@@ -102,6 +115,7 @@ export default function Dashboard() {
   }
 
   const displayName = email ? email.split("@")[0] : "there";
+  const greeting = timeOfDayGreeting();
 
   return (
     <div className="app-shell">
@@ -111,7 +125,10 @@ export default function Dashboard() {
         <div className="content">
           <section className="welcome-banner">
             <div className="welcome-banner-top">
-              <span className="eyebrow">{timeOfDayGreeting()}</span>
+              <span className="eyebrow">
+                {greeting.icon}
+                {greeting.text}
+              </span>
               <LiveClock />
             </div>
             <h1>Welcome back, {displayName}</h1>
