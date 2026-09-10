@@ -510,39 +510,72 @@ body {
 .inline-stats {
   display: flex;
   flex-wrap: wrap;
-  gap: 2.5rem;
+  gap: 0.75rem;
 }
 
 .inline-stat {
   display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 1.1rem;
+  border-radius: 10px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+}
+
+.inline-stat > div {
+  display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.1rem;
 }
 
 .inline-stat-value {
-  font-size: 1.9rem;
+  font-size: 1.4rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+  line-height: 1;
   color: var(--text);
 }
 
 .inline-stat-label {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.stat-online {
+.inline-stat-neutral svg {
+  color: var(--muted);
+}
+
+.inline-stat-online {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.inline-stat-online svg,
+.inline-stat-online .inline-stat-value {
   color: #16a34a;
 }
 
-.stat-offline {
+.inline-stat-offline {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.inline-stat-offline svg,
+.inline-stat-offline .inline-stat-value {
   color: #dc2626;
 }
 
-.stat-stale {
+.inline-stat-stale {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.inline-stat-stale svg,
+.inline-stat-stale .inline-stat-value {
   color: #d97706;
 }
 
