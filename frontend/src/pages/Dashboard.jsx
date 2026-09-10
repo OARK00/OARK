@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import Sidebar from "../components/Sidebar";
@@ -19,8 +18,7 @@ export default function Dashboard() {
   const [createdSecret, setCreatedSecret] = useState(null);
   const [addingDevice, setAddingDevice] = useState(false);
 
-  const { logout, email } = useAuth();
-  const navigate = useNavigate();
+  const { email } = useAuth();
 
   async function loadDevices() {
     setLoading(true);
@@ -68,11 +66,6 @@ export default function Dashboard() {
     await loadDevices();
   }
 
-  function handleLogout() {
-    logout();
-    navigate("/login");
-  }
-
   const displayName = email ? email.split("@")[0] : "there";
 
   return (
@@ -80,16 +73,6 @@ export default function Dashboard() {
       <Sidebar active="devices" />
 
       <div className="main-column">
-        <header className="topbar topbar-slim">
-          <div className="account-indicator">
-            <span className="account-avatar">{displayName.charAt(0).toUpperCase()}</span>
-            <span className="account-email">{email || "..."}</span>
-          </div>
-          <button className="ghost-button" onClick={handleLogout}>
-            Log out
-          </button>
-        </header>
-
         <div className="content">
           <section className="welcome-banner">
             <span className="eyebrow">{timeOfDayGreeting()}</span>

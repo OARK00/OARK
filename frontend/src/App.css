@@ -385,6 +385,7 @@ body {
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   padding: 1.5rem 1rem;
 }
 
@@ -454,24 +455,43 @@ body {
   min-width: 0;
 }
 
-.topbar {
+.sidebar-account {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.sidebar-account .account-indicator {
+  padding: 0 0.7rem;
+  margin-bottom: 0.6rem;
+}
+
+.sidebar-account .account-email {
+  font-size: 0.78rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-signout {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 1.25rem 2rem;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
 }
 
-.topbar h1 {
-  margin: 0;
-  font-size: 1.3rem;
-  font-weight: 800;
-}
-
-.topbar-slim {
-  justify-content: space-between;
-  padding: 1rem 2rem;
+.sidebar-signout:hover {
+  background: var(--bg);
+  color: var(--danger);
 }
 
 .account-indicator {

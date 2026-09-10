@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import Logo from "./Logo";
 
 const icons = {
@@ -51,29 +53,54 @@ const navGroups = [
 ];
 
 export default function Sidebar({ active = "devices" }) {
+  const { email, logout } = useAuth();
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    logout();
+    navigate("/login");
+  }
+
   return (
     <aside className="sidebar">
-      <div className="sidebar-brand">
-        <Logo size={28} wordmark />
-      </div>
-      {navGroups.map((group) => (
-        <div key={group.label} className="sidebar-group">
-          <div className="sidebar-group-label">{group.label}</div>
-          <nav className="sidebar-nav">
-            {group.items.map((item) => (
-              <div
-                key={item.key}
-                className={`sidebar-item ${active === item.key ? "active" : ""} ${item.disabled ? "disabled" : ""}`}
-                title={item.disabled ? "Coming soon" : undefined}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-                {item.disabled && <span className="soon-badge">Soon</span>}
-              </div>
-            ))}
-          </nav>
+      <div className="sidebar-main">
+        <div className="sidebar-brand">
+          <Logo size={28} wordmark />
         </div>
-      ))}
+        {navGroups.map((group) => (
+          <div key={group.label} className="sidebar-group">
+            <div className="sidebar-group-label">{group.label}</div>
+            <nav className="sidebar-nav">
+              {group.items.map((item) => (
+                <div
+                  key={item.key}
+                  className={`sidebar-item ${active === item.key ? "active" : ""} ${item.disabled ? "disabled" : ""}`}
+                  title={item.disabled ? "Coming soon" : undefined}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                  {item.disabled && <span className="soon-badge">Soon</span>}
+                </div>
+              ))}
+            </nav>
+          </div>
+        ))}
+      </div>
+
+      <div className="sidebar-account">
+        <div className="sidebar-group-label">Account</div>
+        <div className="account-indicator">
+          <span className="account-avatar">{(email || "?").charAt(0).toUpperCase()}</span>
+          <span className="account-email">{email || "..."}</span>
+        </div>
+        <button className="sidebar-signout" onClick={handleLogout}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <path d="M16 17l5-5-5-5M21 12H9" />
+          </svg>
+          Sign out
+        </button>
+      </div>
     </aside>
   );
 }
