@@ -55,3 +55,6 @@ async def run_mqtt_forever():
         except aiomqtt.MqttError as error:
             logger.warning("MQTT connection lost (%s); reconnecting in 5s", error)
             await asyncio.sleep(5)
+        except Exception:
+            logger.exception("Unexpected error in MQTT ingestion loop; reconnecting in 5s")
+            await asyncio.sleep(5)

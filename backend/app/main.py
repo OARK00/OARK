@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -7,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.modules.auth.router import router as auth_router
 from app.modules.devices.router import router as devices_router
 from app.modules.ingestion.mqtt_client import run_mqtt_forever
+
+logging.basicConfig(level=logging.INFO)
 
 
 @asynccontextmanager
