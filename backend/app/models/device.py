@@ -42,6 +42,8 @@ class Device(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     org_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
     name = Column(String, nullable=False)
+    category = Column(String, nullable=True)
+    description = Column(String, nullable=True)
     is_controllable = Column(Boolean, nullable=False, server_default="false")
     hashed_secret = Column(String, nullable=False)
     status = Column(Enum(DeviceStatus), nullable=False, default=DeviceStatus.offline)

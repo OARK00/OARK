@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../api/client";
+import { getErrorMessage } from "../api/errors";
 import { useAuth } from "../context/AuthContext";
 import Sidebar from "../components/Sidebar";
 
@@ -15,6 +16,15 @@ const MoonIcon = (
     <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" />
   </svg>
 );
+
+const CATEGORY_OPTIONS = [
+  { value: "sensor", label: "Sensor" },
+  { value: "controller", label: "Controller" },
+  { value: "gateway", label: "Gateway" },
+  { value: "other", label: "Other" },
+];
+
+const CATEGORY_LABELS = Object.fromEntries(CATEGORY_OPTIONS.map((c) => [c.value, c.label]));
 
 function timeOfDayGreeting() {
   const hour = new Date().getHours();
@@ -52,7 +62,10 @@ export default function Dashboard() {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showAddDevice, setShowAddDevice] = useState(false);
   const [newDeviceName, setNewDeviceName] = useState("");
+  const [newDeviceCategory, setNewDeviceCategory] = useState("sensor");
+  const [newDeviceDescription, setNewDeviceDescription] = useState("");
   const [createdSecret, setCreatedSecret] = useState(null);
   const [addingDevice, setAddingDevice] = useState(false);
   const [deviceToDelete, setDeviceToDelete] = useState(null);
@@ -66,7 +79,7 @@ export default function Dashboard() {
       const { data } = await api.get("/devices");
       setDevices(data);
     } catch (err) {
-      setError(err.response?.data?.detail || "Could not load devices");
+      setError(getErrorMessage(err, "Could not load devices"));
     } finally {
       setLoading(false);
     }
@@ -89,12 +102,19 @@ export default function Dashboard() {
     setError(null);
     setAddingDevice(true);
     try {
-      const { data } = await api.post("/devices", { name: newDeviceName });
+      const { data } = await api.post("/devices", {
+        name: newDeviceName,
+        category: newDeviceCategory,
+        description: newDeviceDescription || null,
+      });
       setCreatedSecret(data);
       setNewDeviceName("");
+      setNewDeviceCategory("sensor");
+      setNewDeviceDescription("");
+      setShowAddDevice(false);
       await loadDevices();
     } catch (err) {
-      setError(err.response?.data?.detail || "Could not create device");
+      setError(getErrorMessage(err, "Could not create device"));
     } finally {
       setAddingDevice(false);
     }
@@ -108,7 +128,7 @@ export default function Dashboard() {
       await loadDevices();
       setDeviceToDelete(null);
     } catch (err) {
-      setError(err.response?.data?.detail || "Could not delete device");
+      setError(getErrorMessage(err, "Could not delete device"));
     } finally {
       setDeleting(false);
     }
@@ -183,18 +203,9 @@ export default function Dashboard() {
           <section className="panel">
             <div className="panel-header">
               <h2>Fleet</h2>
-              <form className="add-device" onSubmit={handleAddDevice}>
-                <input
-                  type="text"
-                  placeholder="New device name (e.g. Warehouse Temp Sensor)"
-                  value={newDeviceName}
-                  onChange={(e) => setNewDeviceName(e.target.value)}
-                  required
-                />
-                <button type="submit" className="primary-button" disabled={addingDevice}>
-                  {addingDevice ? "Adding..." : "Add device"}
-                </button>
-              </form>
+              <button className="primary-button" onClick={() => setShowAddDevice(true)}>
+                + Add device
+              </button>
             </div>
 
             {createdSecret && (
@@ -219,6 +230,7 @@ export default function Dashboard() {
                 <thead>
                   <tr>
                     <th>Name</th>
+                    <th>Category</th>
                     <th>Status</th>
                     <th>Last seen</th>
                     <th></th>
@@ -227,7 +239,11 @@ export default function Dashboard() {
                 <tbody>
                   {devices.map((d) => (
                     <tr key={d.id}>
-                      <td>{d.name}</td>
+                      <td>
+                        {d.name}
+                        {d.description && <div className="device-description">{d.description}</div>}
+                      </td>
+                      <td className="muted">{d.category ? CATEGORY_LABELS[d.category] || d.category : "—"}</td>
                       <td>
                         <span className={`status status-${d.status}`}>
                           <span className="status-dot" />
@@ -248,6 +264,62 @@ export default function Dashboard() {
           </section>
         </div>
       </div>
+
+      {showAddDevice && (
+        <div className="modal-overlay" onClick={() => !addingDevice && setShowAddDevice(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h3>Add device</h3>
+            <p>Register a new device and get its connection secret.</p>
+            <form className="add-device-form" onSubmit={handleAddDevice}>
+              <label className="field">
+                Name
+                <input
+                  type="text"
+                  placeholder="e.g. Warehouse Temp Sensor"
+                  value={newDeviceName}
+                  onChange={(e) => setNewDeviceName(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </label>
+              <label className="field">
+                Category
+                <select
+                  value={newDeviceCategory}
+                  onChange={(e) => setNewDeviceCategory(e.target.value)}
+                >
+                  {CATEGORY_OPTIONS.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                Description <span className="muted">(optional)</span>
+                <textarea
+                  placeholder="What is this device, and where is it?"
+                  value={newDeviceDescription}
+                  onChange={(e) => setNewDeviceDescription(e.target.value)}
+                />
+              </label>
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="ghost-button"
+                  onClick={() => setShowAddDevice(false)}
+                  disabled={addingDevice}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="primary-button" disabled={addingDevice}>
+                  {addingDevice ? "Adding..." : "Add device"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {deviceToDelete && (
         <div className="modal-overlay" onClick={() => !deleting && setDeviceToDelete(null)}>

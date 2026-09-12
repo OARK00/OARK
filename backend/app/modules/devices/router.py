@@ -17,6 +17,8 @@ def to_response(device: Device) -> DeviceResponse:
     return DeviceResponse(
         id=device.id,
         name=device.name,
+        category=device.category,
+        description=device.description,
         is_controllable=device.is_controllable,
         status=compute_status(device.last_seen_at).value,
         last_seen_at=device.last_seen_at,
@@ -36,13 +38,21 @@ def create_device(payload: DeviceCreate, db: Session = Depends(get_db), current_
     device = Device(
         org_id=current_user.org_id,
         name=payload.name,
+        category=payload.category,
+        description=payload.description,
         is_controllable=payload.is_controllable,
         hashed_secret=hash_password(secret),
     )
     db.add(device)
     db.commit()
     db.refresh(device)
-    return DeviceCreateResponse(id=device.id, name=device.name, secret=secret)
+    return DeviceCreateResponse(
+        id=device.id,
+        name=device.name,
+        category=device.category,
+        description=device.description,
+        secret=secret,
+    )
 
 
 @router.delete("/{device_id}", status_code=status.HTTP_204_NO_CONTENT)

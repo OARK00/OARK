@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Logo from "../components/Logo";
+import { getErrorMessage } from "../api/errors";
 
 // One node in the hub diagram: a colored circle with a small icon, a
 // connecting line back to the hub, and a label.
@@ -155,7 +156,7 @@ export default function Login() {
       }
       navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.detail || "Something went wrong");
+      setError(getErrorMessage(err, "Something went wrong"));
     } finally {
       setLoading(false);
     }
