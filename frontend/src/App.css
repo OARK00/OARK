@@ -907,6 +907,7 @@ body {
   height: 6px;
   border-radius: 50%;
   background: currentColor;
+  animation: live-dot-pulse 1.6s ease-in-out infinite;
 }
 
 .status-online {
