@@ -605,44 +605,30 @@ body {
   gap: 1.5rem;
 }
 
-/* ---------- Top bar (breadcrumb + live clock) ---------- */
+/* ---------- Welcome banner (greeting + inline stats) ---------- */
 
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  padding: 0.85rem 2rem;
+.welcome-banner {
+  position: relative;
+  overflow: hidden;
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.75rem 2rem;
 }
 
-.topbar-crumbs {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+.welcome-banner-watermark {
+  position: absolute;
+  right: -50px;
+  bottom: -50px;
+  opacity: 0.05;
+  pointer-events: none;
 }
 
-.topbar-org {
-  color: var(--muted);
-}
-
-.topbar-sep {
-  color: var(--border);
-}
-
-.topbar-page {
-  color: var(--text);
-  font-weight: 600;
-}
-
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
+.welcome-banner-top,
+.welcome-banner h1,
+.inline-stats {
+  position: relative;
+  z-index: 1;
 }
 
 .eyebrow {
@@ -654,6 +640,21 @@ body {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+.welcome-banner-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.4rem;
+}
+
+.welcome-banner h1 {
+  margin: 0 0 1.5rem;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
 }
 
 .live-clock {
@@ -1009,141 +1010,4 @@ body {
 .status-stale {
   background: #fef3c7;
   color: #92400e;
-}
-
-/* ---------- Command Center theme (dashboard shell only) ----------
-   Scoped to .app-shell so the login page keeps its own palette. */
-
-.app-shell {
-  --bg: #0d1117;
-  --surface: #131a22;
-  --surface-alt: #1a222c;
-  --border: #242e3a;
-  --text: #e6ebf1;
-  --muted: #8b96a5;
-  --accent: #2dd4a7;
-  --accent-dark: #24b78f;
-  --danger: #f87171;
-}
-
-.app-shell .logo-lockup svg {
-  color: var(--accent);
-}
-
-/* Denser than the light theme -- an operator should see more at once. */
-.app-shell .content {
-  padding: 1.5rem 2rem;
-  gap: 1rem;
-}
-
-.app-shell .panel {
-  padding: 1.25rem 1.5rem;
-}
-
-/* Data reads as data: monospace figures for anything a device reports. */
-.app-shell .inline-stat-value,
-.app-shell .live-clock-time,
-.app-shell .device-card-footer {
-  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
-}
-
-.app-shell .sidebar-item.active {
-  background: rgba(45, 212, 167, 0.1);
-}
-
-.app-shell .soon-badge {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.app-shell .account-avatar {
-  color: #08131a;
-}
-
-.app-shell .primary-button {
-  color: #08131a;
-}
-
-.app-shell .live-pill {
-  background: rgba(45, 212, 167, 0.12);
-  border-color: rgba(45, 212, 167, 0.3);
-  color: var(--accent);
-}
-
-.app-shell .live-dot {
-  background: var(--accent);
-}
-
-.app-shell .inline-stat-online {
-  background: rgba(45, 212, 167, 0.1);
-  border-color: rgba(45, 212, 167, 0.28);
-}
-
-.app-shell .inline-stat-online svg,
-.app-shell .inline-stat-online .inline-stat-value {
-  color: #2dd4a7;
-}
-
-.app-shell .inline-stat-offline {
-  background: rgba(248, 113, 113, 0.1);
-  border-color: rgba(248, 113, 113, 0.28);
-}
-
-.app-shell .inline-stat-offline svg,
-.app-shell .inline-stat-offline .inline-stat-value {
-  color: #f87171;
-}
-
-.app-shell .inline-stat-stale {
-  background: rgba(251, 191, 36, 0.1);
-  border-color: rgba(251, 191, 36, 0.28);
-}
-
-.app-shell .inline-stat-stale svg,
-.app-shell .inline-stat-stale .inline-stat-value {
-  color: #fbbf24;
-}
-
-.app-shell .status-online {
-  background: rgba(45, 212, 167, 0.14);
-  color: #2dd4a7;
-}
-
-.app-shell .status-offline {
-  background: rgba(248, 113, 113, 0.14);
-  color: #f87171;
-}
-
-.app-shell .status-stale {
-  background: rgba(251, 191, 36, 0.14);
-  color: #fbbf24;
-}
-
-.app-shell .device-icon-sensor {
-  color: #2dd4a7;
-  background: rgba(45, 212, 167, 0.1);
-  border-color: rgba(45, 212, 167, 0.25);
-}
-
-.app-shell .device-icon-controller {
-  color: #a78bfa;
-  background: rgba(167, 139, 250, 0.1);
-  border-color: rgba(167, 139, 250, 0.25);
-}
-
-.app-shell .device-icon-gateway {
-  color: #60a5fa;
-  background: rgba(96, 165, 250, 0.1);
-  border-color: rgba(96, 165, 250, 0.25);
-}
-
-.app-shell .modal-overlay {
-  background: rgba(3, 7, 12, 0.7);
-}
-
-.app-shell .danger-button {
-  color: #1a0505;
-}
-
-.app-shell .danger-button:hover {
-  background: #ef4444;
 }
