@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.modules.auth.router import router as auth_router
 from app.modules.devices.router import router as devices_router
+from app.modules.telemetry.router import router as telemetry_router
 from app.modules.ingestion.mqtt_client import run_mqtt_forever
 
 logging.basicConfig(level=logging.INFO)
@@ -31,6 +32,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(devices_router)
+app.include_router(telemetry_router)
 
 
 @app.get("/health")

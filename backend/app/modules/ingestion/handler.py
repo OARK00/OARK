@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.security import verify_device_secret
 from app.models.device import Device
+from app.models.telemetry import TelemetryReading
 
 
 def handle_telemetry_message(db: Session, device_id_str: str, payload: dict) -> bool:
@@ -33,6 +34,7 @@ def handle_telemetry_message(db: Session, device_id_str: str, payload: dict) -> 
 
     device.last_seen_at = datetime.now(timezone.utc)
     device.reported_state = data
+    db.add(TelemetryReading(org_id=device.org_id, device_id=device.id, data=data))
 
     db.commit()
     return True
