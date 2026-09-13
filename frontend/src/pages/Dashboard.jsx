@@ -3,6 +3,7 @@ import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import { useAuth } from "../context/AuthContext";
 import Sidebar from "../components/Sidebar";
+import Logo from "../components/Logo";
 
 const SunIcon = (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -225,6 +226,9 @@ export default function Dashboard() {
       <div className="main-column">
         <div className="content">
           <section className="welcome-banner">
+            <div className="welcome-banner-watermark">
+              <Logo size={220} />
+            </div>
             <div className="welcome-banner-top">
               <span className="eyebrow">
                 {greeting.icon}
@@ -236,43 +240,51 @@ export default function Dashboard() {
 
             <div className="inline-stats">
               <div className="inline-stat inline-stat-neutral">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="7" height="7" rx="1.5" />
-                  <rect x="14" y="3" width="7" height="7" rx="1.5" />
-                  <rect x="3" y="14" width="7" height="7" rx="1.5" />
-                  <rect x="14" y="14" width="7" height="7" rx="1.5" />
-                </svg>
+                <span className="inline-stat-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                  </svg>
+                </span>
                 <div>
                   <span className="inline-stat-value">{stats.total}</span>
                   <span className="inline-stat-label">Total devices</span>
                 </div>
               </div>
               <div className="inline-stat inline-stat-online">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0" />
-                  <circle cx="12" cy="19.5" r="1.2" fill="currentColor" stroke="none" />
-                </svg>
+                <span className="inline-stat-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0" />
+                    <circle cx="12" cy="19.5" r="1.2" fill="currentColor" stroke="none" />
+                  </svg>
+                </span>
                 <div>
                   <span className="inline-stat-value">{stats.online}</span>
                   <span className="inline-stat-label">Online</span>
                 </div>
               </div>
               <div className="inline-stat inline-stat-offline">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="M12 7v6" />
-                  <circle cx="12" cy="16.5" r="0.8" fill="currentColor" stroke="none" />
-                </svg>
+                <span className="inline-stat-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 7v6" />
+                    <circle cx="12" cy="16.5" r="0.8" fill="currentColor" stroke="none" />
+                  </svg>
+                </span>
                 <div>
                   <span className="inline-stat-value">{stats.offline}</span>
                   <span className="inline-stat-label">Offline</span>
                 </div>
               </div>
               <div className="inline-stat inline-stat-stale">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="M12 7v5l3.5 2" />
-                </svg>
+                <span className="inline-stat-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 7v5l3.5 2" />
+                  </svg>
+                </span>
                 <div>
                   <span className="inline-stat-value">{stats.stale}</span>
                   <span className="inline-stat-label">Stale</span>
