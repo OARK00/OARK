@@ -26,6 +26,39 @@ const CATEGORY_OPTIONS = [
 
 const CATEGORY_LABELS = Object.fromEntries(CATEGORY_OPTIONS.map((c) => [c.value, c.label]));
 
+const CATEGORY_ICONS = {
+  sensor: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 3a2 2 0 0 0-2 2v9.34a4 4 0 1 0 4 0V5a2 2 0 0 0-2-2Z" />
+      <path d="M12 17.5v-6" />
+    </svg>
+  ),
+  controller: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M5 7h14M5 12h14M5 17h14" />
+      <circle cx="9" cy="7" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="12" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="10" cy="17" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+  ),
+  gateway: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 13.5v6M9 6.8a5 5 0 1 0 6 0" />
+      <path d="M6.2 4a8.5 8.5 0 0 0 0 11.5M17.8 4a8.5 8.5 0 0 1 0 11.5" />
+    </svg>
+  ),
+  other: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 3 4 7.5v9L12 21l8-4.5v-9L12 3Z" />
+      <path d="M4 7.5 12 12m0 0 8-4.5M12 12v9" />
+    </svg>
+  ),
+};
+
+function categoryIcon(category) {
+  return CATEGORY_ICONS[category] || CATEGORY_ICONS.other;
+}
+
 function timeOfDayGreeting() {
   const hour = new Date().getHours();
   if (hour < 12) return { text: "Good morning", icon: SunIcon };
@@ -226,40 +259,40 @@ export default function Dashboard() {
             ) : devices.length === 0 ? (
               <p className="muted">No devices yet. Add your first one above.</p>
             ) : (
-              <table className="device-table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Category</th>
-                    <th>Status</th>
-                    <th>Last seen</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {devices.map((d) => (
-                    <tr key={d.id}>
-                      <td>
-                        {d.name}
-                        {d.description && <div className="device-description">{d.description}</div>}
-                      </td>
-                      <td className="muted">{d.category ? CATEGORY_LABELS[d.category] || d.category : "—"}</td>
-                      <td>
-                        <span className={`status status-${d.status}`}>
-                          <span className="status-dot" />
-                          {d.status}
+              <div className="device-grid">
+                {devices.map((d) => (
+                  <div className="device-card" key={d.id}>
+                    <div className="device-card-top">
+                      <div className="device-card-identity">
+                        <span className={`device-icon device-icon-${d.category || "other"}`}>
+                          {categoryIcon(d.category)}
                         </span>
-                      </td>
-                      <td>{d.last_seen_at ? new Date(d.last_seen_at).toLocaleString() : "Never"}</td>
-                      <td>
-                        <button className="ghost-button" onClick={() => setDeviceToDelete(d)}>
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        <div>
+                          <div className="device-card-name">{d.name}</div>
+                          <div className="device-card-category">
+                            {d.category ? CATEGORY_LABELS[d.category] || d.category : "Uncategorized"}
+                          </div>
+                        </div>
+                      </div>
+                      <span className={`status status-${d.status}`}>
+                        <span className="status-dot" />
+                        {d.status}
+                      </span>
+                    </div>
+
+                    {d.description && <p className="device-card-description">{d.description}</p>}
+
+                    <div className="device-card-footer">
+                      <span className="muted">
+                        {d.last_seen_at ? new Date(d.last_seen_at).toLocaleString() : "Never seen"}
+                      </span>
+                      <button className="ghost-button" onClick={() => setDeviceToDelete(d)}>
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </section>
         </div>

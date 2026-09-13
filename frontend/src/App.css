@@ -224,13 +224,6 @@ body {
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
 }
 
-.device-description {
-  font-size: 0.78rem;
-  color: var(--muted);
-  font-weight: 400;
-  margin-top: 0.15rem;
-}
-
 .add-device-form {
   display: flex;
   flex-direction: column;
@@ -786,15 +779,6 @@ body {
   font-weight: 800;
 }
 
-.add-device form {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.add-device input {
-  min-width: 260px;
-}
-
 .secret-banner {
   background: #f0fdfa;
   border: 1px solid var(--accent);
@@ -814,24 +798,98 @@ body {
   font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
 }
 
-.device-table {
-  width: 100%;
-  border-collapse: collapse;
+.device-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.9rem;
 }
 
-.device-table th,
-.device-table td {
-  text-align: left;
-  padding: 0.85rem 0.5rem;
-  border-bottom: 1px solid var(--border);
+.device-card {
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  border-radius: 12px;
+  padding: 1.1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-.device-table th {
+.device-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.device-card-identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.device-icon {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
   color: var(--muted);
-  font-size: 0.75rem;
+}
+
+.device-icon-sensor {
+  color: #0f766e;
+  background: #f0fdfa;
+  border-color: #99f6e4;
+}
+
+.device-icon-controller {
+  color: #7c3aed;
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+}
+
+.device-icon-gateway {
+  color: #2563eb;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.device-card-name {
   font-weight: 700;
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.device-card-category {
+  font-size: 0.72rem;
+  color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.device-card-description {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.device-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
 }
 
 .status {
