@@ -75,6 +75,41 @@ const CheckIcon = (
   </svg>
 );
 
+const DotsIcon = (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <circle cx="5" cy="12" r="1.6" />
+    <circle cx="12" cy="12" r="1.6" />
+    <circle cx="19" cy="12" r="1.6" />
+  </svg>
+);
+
+const TrashIcon = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
+  </svg>
+);
+
+const STATUS_FILTERS = [
+  { value: "all", label: "All" },
+  { value: "online", label: "Online" },
+  { value: "stale", label: "Stale" },
+  { value: "offline", label: "Offline" },
+];
+
+function shortId(id) {
+  return `${id.slice(0, 8)}…${id.slice(-4)}`;
+}
+
+function timeAgo(iso) {
+  const minutes = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hr ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} ${days === 1 ? "day" : "days"} ago`;
+}
+
 function CopyField({ label, value }) {
   const [copied, setCopied] = useState(false);
 
@@ -151,8 +186,27 @@ export default function Dashboard() {
   const [addingDevice, setAddingDevice] = useState(false);
   const [deviceToDelete, setDeviceToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [copiedId, setCopiedId] = useState(null);
 
   const { email } = useAuth();
+
+  useEffect(() => {
+    if (!openMenuId) return;
+    function handlePointerDown(e) {
+      if (!e.target.closest(".card-menu")) setOpenMenuId(null);
+    }
+    function handleKeyDown(e) {
+      if (e.key === "Escape") setOpenMenuId(null);
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [openMenuId]);
 
   async function loadDevices() {
     setLoading(true);
@@ -176,6 +230,22 @@ export default function Dashboard() {
     const stale = devices.filter((d) => d.status === "stale").length;
     return { total: devices.length, online, offline, stale };
   }, [devices]);
+
+  const visibleDevices =
+    statusFilter === "all" ? devices : devices.filter((d) => d.status === statusFilter);
+
+  async function copyDeviceId(id) {
+    try {
+      await navigator.clipboard.writeText(id);
+      setCopiedId(id);
+      setTimeout(() => {
+        setCopiedId(null);
+        setOpenMenuId(null);
+      }, 900);
+    } catch {
+      setOpenMenuId(null);
+    }
+  }
 
   async function handleAddDevice(e) {
     e.preventDefault();
@@ -235,7 +305,7 @@ export default function Dashboard() {
             <h1>Welcome back, {displayName}</h1>
 
             <div className="inline-stats">
-              <div className="inline-stat inline-stat-neutral">
+              <div className="inline-stat">
                 <span className="inline-stat-icon">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <rect x="3" y="3" width="7" height="7" rx="1.5" />
@@ -291,7 +361,27 @@ export default function Dashboard() {
 
           <section className="panel">
             <div className="panel-header">
-              <h2>Fleet</h2>
+              <div className="panel-title-group">
+                <h2>Fleet</h2>
+                {devices.length > 0 && (
+                  <div className="status-filter" role="group" aria-label="Filter devices by status">
+                    {STATUS_FILTERS.map((f) => (
+                      <button
+                        key={f.value}
+                        type="button"
+                        className={`status-filter-button ${statusFilter === f.value ? "active" : ""}`}
+                        aria-pressed={statusFilter === f.value}
+                        onClick={() => setStatusFilter(f.value)}
+                      >
+                        {f.label}
+                        <span className="status-filter-count">
+                          {f.value === "all" ? stats.total : stats[f.value]}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button className="primary-button" onClick={() => setShowAddDevice(true)}>
                 + Add device
               </button>
@@ -303,9 +393,11 @@ export default function Dashboard() {
               <p className="muted">Loading devices...</p>
             ) : devices.length === 0 ? (
               <p className="muted">No devices yet. Add your first one above.</p>
+            ) : visibleDevices.length === 0 ? (
+              <p className="muted">No {statusFilter} devices right now.</p>
             ) : (
               <div className="device-grid">
-                {devices.map((d) => (
+                {visibleDevices.map((d) => (
                   <div className="device-card" key={d.id}>
                     <div className="device-card-top">
                       <div className="device-card-identity">
@@ -314,8 +406,14 @@ export default function Dashboard() {
                         </span>
                         <div>
                           <div className="device-card-name">{d.name}</div>
-                          <div className="device-card-category">
-                            {d.category ? CATEGORY_LABELS[d.category] || d.category : "Uncategorized"}
+                          <div className="device-card-meta">
+                            <span>
+                              {d.category ? CATEGORY_LABELS[d.category] || d.category : "Uncategorized"}
+                            </span>
+                            <span aria-hidden="true">·</span>
+                            <span className="device-card-id" title={d.id}>
+                              {shortId(d.id)}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -328,12 +426,50 @@ export default function Dashboard() {
                     {d.description && <p className="device-card-description">{d.description}</p>}
 
                     <div className="device-card-footer">
-                      <span className="muted">
-                        {d.last_seen_at ? new Date(d.last_seen_at).toLocaleString() : "Never seen"}
-                      </span>
-                      <button className="ghost-button" onClick={() => setDeviceToDelete(d)}>
-                        Delete
-                      </button>
+                      {d.last_seen_at ? (
+                        <span className="muted" title={new Date(d.last_seen_at).toLocaleString()}>
+                          Last seen {timeAgo(d.last_seen_at)}
+                        </span>
+                      ) : (
+                        <span className="muted">Never seen</span>
+                      )}
+                      <div className="card-menu">
+                        <button
+                          type="button"
+                          className="card-menu-trigger"
+                          aria-label={`Actions for ${d.name}`}
+                          aria-haspopup="menu"
+                          aria-expanded={openMenuId === d.id}
+                          onClick={() => setOpenMenuId(openMenuId === d.id ? null : d.id)}
+                        >
+                          {DotsIcon}
+                        </button>
+                        {openMenuId === d.id && (
+                          <div className="card-menu-list" role="menu">
+                            <button
+                              type="button"
+                              role="menuitem"
+                              className="card-menu-item"
+                              onClick={() => copyDeviceId(d.id)}
+                            >
+                              {copiedId === d.id ? CheckIcon : CopyIcon}
+                              {copiedId === d.id ? "Copied" : "Copy device ID"}
+                            </button>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              className="card-menu-item card-menu-item-danger"
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                setDeviceToDelete(d);
+                              }}
+                            >
+                              {TrashIcon}
+                              Delete device
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
