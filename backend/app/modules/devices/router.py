@@ -28,7 +28,12 @@ def to_response(device: Device) -> DeviceResponse:
 
 @router.get("", response_model=list[DeviceResponse])
 def list_devices(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    devices = db.query(Device).filter(Device.org_id == current_user.org_id).all()
+    devices = (
+        db.query(Device)
+        .filter(Device.org_id == current_user.org_id)
+        .order_by(Device.created_at, Device.id)
+        .all()
+    )
     return [to_response(d) for d in devices]
 
 
