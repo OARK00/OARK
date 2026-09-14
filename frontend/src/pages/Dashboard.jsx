@@ -406,14 +406,11 @@ export default function Dashboard() {
                         </span>
                         <div>
                           <div className="device-card-name">{d.name}</div>
-                          <div className="device-card-meta">
-                            <span>
-                              {d.category ? CATEGORY_LABELS[d.category] || d.category : "Uncategorized"}
-                            </span>
-                            <span aria-hidden="true">·</span>
-                            <span className="device-card-id" title={d.id}>
-                              {shortId(d.id)}
-                            </span>
+                          <div className="device-card-category">
+                            {d.category ? CATEGORY_LABELS[d.category] || d.category : "Uncategorized"}
+                          </div>
+                          <div className="device-card-id" title={d.id}>
+                            {shortId(d.id)}
                           </div>
                         </div>
                       </div>

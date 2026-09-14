@@ -997,23 +997,17 @@ body {
   white-space: nowrap;
 }
 
-.device-card-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
+.device-card-category {
   margin-top: 0.1rem;
   font-size: 0.78rem;
   color: var(--muted);
-  white-space: nowrap;
-  min-width: 0;
 }
 
 .device-card-id {
   font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   font-size: 0.74rem;
   color: #9aa1ad;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .device-card-description {
