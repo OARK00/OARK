@@ -44,6 +44,8 @@ class Device(Base):
     name = Column(String, nullable=False)
     category = Column(String, nullable=True)
     description = Column(String, nullable=True)
+    model_number = Column(String, nullable=True)
+    firmware_version = Column(String, nullable=True)
     is_controllable = Column(Boolean, nullable=False, server_default="false")
     hashed_secret = Column(String, nullable=False)
     status = Column(Enum(DeviceStatus), nullable=False, default=DeviceStatus.offline)

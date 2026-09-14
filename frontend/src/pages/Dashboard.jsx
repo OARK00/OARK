@@ -3,6 +3,9 @@ import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import { useAuth } from "../context/AuthContext";
 import Sidebar from "../components/Sidebar";
+import AddDeviceWizard from "../components/AddDeviceWizard";
+import { CheckIcon, CopyIcon } from "../components/icons";
+import { CATEGORY_LABELS } from "../constants/devices";
 
 const SunIcon = (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -16,15 +19,6 @@ const MoonIcon = (
     <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" />
   </svg>
 );
-
-const CATEGORY_OPTIONS = [
-  { value: "sensor", label: "Sensor" },
-  { value: "controller", label: "Controller" },
-  { value: "gateway", label: "Gateway" },
-  { value: "other", label: "Other" },
-];
-
-const CATEGORY_LABELS = Object.fromEntries(CATEGORY_OPTIONS.map((c) => [c.value, c.label]));
 
 const CATEGORY_ICONS = {
   sensor: (
@@ -59,22 +53,6 @@ function categoryIcon(category) {
   return CATEGORY_ICONS[category] || CATEGORY_ICONS.other;
 }
 
-const MQTT_HOST = "h1106116.ala.asia-southeast1.emqxsl.com";
-const MQTT_PORT = 8883;
-
-const CopyIcon = (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <rect x="9" y="9" width="11" height="11" rx="1.5" />
-    <path d="M5 15V6a1 1 0 0 1 1-1h9" />
-  </svg>
-);
-
-const CheckIcon = (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M5 12.5 10 17l9-10" />
-  </svg>
-);
-
 const DotsIcon = (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
     <circle cx="5" cy="12" r="1.6" />
@@ -108,38 +86,6 @@ function timeAgo(iso) {
   if (hours < 24) return `${hours} hr ago`;
   const days = Math.floor(hours / 24);
   return `${days} ${days === 1 ? "day" : "days"} ago`;
-}
-
-function CopyField({ label, value }) {
-  const [copied, setCopied] = useState(false);
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // Clipboard access can be denied (permissions, non-HTTPS contexts) --
-      // leave the button as-is rather than crash.
-    }
-  }
-
-  return (
-    <div className="copy-field">
-      <span className="copy-field-label">{label}</span>
-      <div className="copy-field-row">
-        <code>{value}</code>
-        <button
-          type="button"
-          className="copy-field-button"
-          onClick={handleCopy}
-          aria-label={`Copy ${label}`}
-        >
-          {copied ? CheckIcon : CopyIcon}
-        </button>
-      </div>
-    </div>
-  );
 }
 
 function timeOfDayGreeting() {
@@ -179,11 +125,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAddDevice, setShowAddDevice] = useState(false);
-  const [newDeviceName, setNewDeviceName] = useState("");
-  const [newDeviceCategory, setNewDeviceCategory] = useState("sensor");
-  const [newDeviceDescription, setNewDeviceDescription] = useState("");
-  const [createdSecret, setCreatedSecret] = useState(null);
-  const [addingDevice, setAddingDevice] = useState(false);
   const [deviceToDelete, setDeviceToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -244,30 +185,6 @@ export default function Dashboard() {
       }, 900);
     } catch {
       setOpenMenuId(null);
-    }
-  }
-
-  async function handleAddDevice(e) {
-    e.preventDefault();
-    if (addingDevice) return;
-    setError(null);
-    setAddingDevice(true);
-    try {
-      const { data } = await api.post("/devices", {
-        name: newDeviceName,
-        category: newDeviceCategory,
-        description: newDeviceDescription || null,
-      });
-      setCreatedSecret(data);
-      setNewDeviceName("");
-      setNewDeviceCategory("sensor");
-      setNewDeviceDescription("");
-      setShowAddDevice(false);
-      await loadDevices();
-    } catch (err) {
-      setError(getErrorMessage(err, "Could not create device"));
-    } finally {
-      setAddingDevice(false);
     }
   }
 
@@ -477,93 +394,13 @@ export default function Dashboard() {
       </div>
 
       {showAddDevice && (
-        <div className="modal-overlay" onClick={() => !addingDevice && setShowAddDevice(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <h3>Add device</h3>
-            <p>Register a new device and get its connection secret.</p>
-            <form className="add-device-form" onSubmit={handleAddDevice}>
-              <label className="field">
-                Name
-                <input
-                  type="text"
-                  placeholder="e.g. Warehouse Temp Sensor"
-                  value={newDeviceName}
-                  onChange={(e) => setNewDeviceName(e.target.value)}
-                  required
-                  autoFocus
-                />
-              </label>
-              <label className="field">
-                Category
-                <select
-                  value={newDeviceCategory}
-                  onChange={(e) => setNewDeviceCategory(e.target.value)}
-                >
-                  {CATEGORY_OPTIONS.map((c) => (
-                    <option key={c.value} value={c.value}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="field">
-                Description <span className="muted">(optional)</span>
-                <textarea
-                  placeholder="What is this device, and where is it?"
-                  value={newDeviceDescription}
-                  onChange={(e) => setNewDeviceDescription(e.target.value)}
-                />
-              </label>
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="ghost-button"
-                  onClick={() => setShowAddDevice(false)}
-                  disabled={addingDevice}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="primary-button" disabled={addingDevice}>
-                  {addingDevice ? "Adding..." : "Add device"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {createdSecret && (
-        <div className="modal-overlay" onClick={() => setCreatedSecret(null)}>
-          <div className="modal-card connection-card" onClick={(e) => e.stopPropagation()}>
-            <h3>Connect &ldquo;{createdSecret.name}&rdquo;</h3>
-            <p>
-              Configure your device with these details. The secret is shown only once —
-              save it now.
-            </p>
-
-            <div className="connection-fields">
-              <CopyField label="Device ID" value={createdSecret.id} />
-              <CopyField label="Device secret" value={createdSecret.secret} />
-              <CopyField label="MQTT host" value={MQTT_HOST} />
-              <CopyField label="MQTT port" value={String(MQTT_PORT)} />
-              <CopyField label="Publish topic" value={`oark/devices/${createdSecret.id}/telemetry`} />
-            </div>
-
-            <div className="connection-payload">
-              <span className="copy-field-label">Payload format</span>
-              <pre>{`{
-  "secret": "<device secret>",
-  "data": { "temperature": 24.5, "humidity": 61 }
-}`}</pre>
-            </div>
-
-            <div className="modal-actions">
-              <button className="primary-button" onClick={() => setCreatedSecret(null)}>
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
+        <AddDeviceWizard
+          onCreated={loadDevices}
+          onClose={() => {
+            setShowAddDevice(false);
+            loadDevices();
+          }}
+        />
       )}
 
       {deviceToDelete && (

@@ -19,6 +19,8 @@ def to_response(device: Device) -> DeviceResponse:
         name=device.name,
         category=device.category,
         description=device.description,
+        model_number=device.model_number,
+        firmware_version=device.firmware_version,
         is_controllable=device.is_controllable,
         status=compute_status(device.last_seen_at).value,
         last_seen_at=device.last_seen_at,
@@ -37,6 +39,14 @@ def list_devices(db: Session = Depends(get_db), current_user: User = Depends(get
     return [to_response(d) for d in devices]
 
 
+@router.get("/{device_id}", response_model=DeviceResponse)
+def get_device(device_id: uuid.UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    device = db.query(Device).filter(Device.id == device_id, Device.org_id == current_user.org_id).first()
+    if not device:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
+    return to_response(device)
+
+
 @router.post("", response_model=DeviceCreateResponse, status_code=status.HTTP_201_CREATED)
 def create_device(payload: DeviceCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     secret = generate_device_secret()
@@ -45,6 +55,8 @@ def create_device(payload: DeviceCreate, db: Session = Depends(get_db), current_
         name=payload.name,
         category=payload.category,
         description=payload.description,
+        model_number=payload.model_number,
+        firmware_version=payload.firmware_version,
         is_controllable=payload.is_controllable,
         hashed_secret=hash_password(secret),
     )
@@ -56,6 +68,8 @@ def create_device(payload: DeviceCreate, db: Session = Depends(get_db), current_
         name=device.name,
         category=device.category,
         description=device.description,
+        model_number=device.model_number,
+        firmware_version=device.firmware_version,
         secret=secret,
     )
 
