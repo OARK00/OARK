@@ -3,7 +3,6 @@ import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import { useAuth } from "../context/AuthContext";
 import Sidebar from "../components/Sidebar";
-import Logo from "../components/Logo";
 
 const SunIcon = (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -226,9 +225,6 @@ export default function Dashboard() {
       <div className="main-column">
         <div className="content">
           <section className="welcome-banner">
-            <div className="welcome-banner-watermark">
-              <Logo size={220} />
-            </div>
             <div className="welcome-banner-top">
               <span className="eyebrow">
                 {greeting.icon}
