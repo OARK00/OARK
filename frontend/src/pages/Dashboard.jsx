@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import { useAuth } from "../context/AuthContext";
-import Sidebar from "../components/Sidebar";
+import AppShell from "../components/AppShell";
 import AddDeviceWizard from "../components/AddDeviceWizard";
-import { CheckIcon, CopyIcon } from "../components/icons";
+import { categoryIcon, CheckIcon, CopyIcon, DotsIcon, TrashIcon } from "../components/icons";
 import { CATEGORY_LABELS } from "../constants/devices";
 
 const SunIcon = (
@@ -17,53 +17,6 @@ const SunIcon = (
 const MoonIcon = (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" />
-  </svg>
-);
-
-const CATEGORY_ICONS = {
-  sensor: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 3a2 2 0 0 0-2 2v9.34a4 4 0 1 0 4 0V5a2 2 0 0 0-2-2Z" />
-      <path d="M12 17.5v-6" />
-    </svg>
-  ),
-  controller: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M5 7h14M5 12h14M5 17h14" />
-      <circle cx="9" cy="7" r="1.5" fill="currentColor" stroke="none" />
-      <circle cx="15" cy="12" r="1.5" fill="currentColor" stroke="none" />
-      <circle cx="10" cy="17" r="1.5" fill="currentColor" stroke="none" />
-    </svg>
-  ),
-  gateway: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 13.5v6M9 6.8a5 5 0 1 0 6 0" />
-      <path d="M6.2 4a8.5 8.5 0 0 0 0 11.5M17.8 4a8.5 8.5 0 0 1 0 11.5" />
-    </svg>
-  ),
-  other: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 3 4 7.5v9L12 21l8-4.5v-9L12 3Z" />
-      <path d="M4 7.5 12 12m0 0 8-4.5M12 12v9" />
-    </svg>
-  ),
-};
-
-function categoryIcon(category) {
-  return CATEGORY_ICONS[category] || CATEGORY_ICONS.other;
-}
-
-const DotsIcon = (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-    <circle cx="5" cy="12" r="1.6" />
-    <circle cx="12" cy="12" r="1.6" />
-    <circle cx="19" cy="12" r="1.6" />
-  </svg>
-);
-
-const TrashIcon = (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
   </svg>
 );
 
@@ -206,11 +159,7 @@ export default function Dashboard() {
   const greeting = timeOfDayGreeting();
 
   return (
-    <div className="app-shell">
-      <Sidebar active="devices" />
-
-      <div className="main-column">
-        <div className="content">
+    <AppShell active="devices">
           <section className="welcome-banner">
             <div className="welcome-banner-top">
               <span className="eyebrow">
@@ -324,7 +273,8 @@ export default function Dashboard() {
                         <div>
                           <div className="device-card-name">{d.name}</div>
                           <div className="device-card-category">
-                            {d.category ? CATEGORY_LABELS[d.category] || d.category : "Uncategorized"}
+                            {d.product_name ||
+                              (d.category ? CATEGORY_LABELS[d.category] || d.category : "Uncategorized")}
                           </div>
                           <div className="device-card-id" title={d.id}>
                             {shortId(d.id)}
@@ -390,8 +340,6 @@ export default function Dashboard() {
               </div>
             )}
           </section>
-        </div>
-      </div>
 
       {showAddDevice && (
         <AddDeviceWizard
@@ -426,6 +374,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-    </div>
+    </AppShell>
   );
 }

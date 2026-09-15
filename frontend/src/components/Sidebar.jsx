@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Logo from "./Logo";
 
@@ -15,6 +15,12 @@ const icons = {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <rect x="4" y="4" width="16" height="10" rx="1.5" />
       <path d="M8 20h8M12 14v6" />
+    </svg>
+  ),
+  products: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 3 4 7.5v9L12 21l8-4.5v-9L12 3Z" />
+      <path d="M4 7.5 12 12m0 0 8-4.5M12 12v9" />
     </svg>
   ),
   analytics: (
@@ -41,14 +47,17 @@ const navGroups = [
     label: "Monitor",
     items: [
       { key: "overview", label: "Overview", icon: icons.overview, disabled: true },
-      { key: "devices", label: "Devices", icon: icons.devices, disabled: false },
+      { key: "devices", label: "Devices", icon: icons.devices, to: "/dashboard" },
       { key: "analytics", label: "Analytics", icon: icons.analytics, disabled: true },
       { key: "alerts", label: "Alerts", icon: icons.alerts, disabled: true },
     ],
   },
   {
     label: "Manage",
-    items: [{ key: "settings", label: "Settings", icon: icons.settings, disabled: true }],
+    items: [
+      { key: "products", label: "Products", icon: icons.products, to: "/products" },
+      { key: "settings", label: "Settings", icon: icons.settings, disabled: true },
+    ],
   },
 ];
 
@@ -71,17 +80,25 @@ export default function Sidebar({ active = "devices" }) {
           <div key={group.label} className="sidebar-group">
             <div className="sidebar-group-label">{group.label}</div>
             <nav className="sidebar-nav">
-              {group.items.map((item) => (
-                <div
-                  key={item.key}
-                  className={`sidebar-item ${active === item.key ? "active" : ""} ${item.disabled ? "disabled" : ""}`}
-                  title={item.disabled ? "Coming soon" : undefined}
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                  {item.disabled && <span className="soon-badge">Soon</span>}
-                </div>
-              ))}
+              {group.items.map((item) =>
+                item.disabled ? (
+                  <div key={item.key} className="sidebar-item disabled" title="Coming soon">
+                    {item.icon}
+                    <span>{item.label}</span>
+                    <span className="soon-badge">Soon</span>
+                  </div>
+                ) : (
+                  <Link
+                    key={item.key}
+                    to={item.to}
+                    className={`sidebar-item sidebar-link ${active === item.key ? "active" : ""}`}
+                    aria-current={active === item.key ? "page" : undefined}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </Link>
+                )
+              )}
             </nav>
           </div>
         ))}

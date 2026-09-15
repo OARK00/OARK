@@ -2,6 +2,8 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import Products from "./pages/Products";
+import ProductDetail from "./pages/ProductDetail";
 import "./App.css";
 
 function RequireAuth({ children }) {
@@ -18,6 +20,22 @@ function App() {
         element={
           <RequireAuth>
             <Dashboard />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/products"
+        element={
+          <RequireAuth>
+            <Products />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/products/:productId"
+        element={
+          <RequireAuth>
+            <ProductDetail />
           </RequireAuth>
         }
       />

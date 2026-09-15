@@ -12,6 +12,8 @@ class DeviceCreate(BaseModel):
     model_config = NO_PROTECTED_NAMESPACES
 
     name: str
+    # When set, the device takes its category from the product.
+    product_id: uuid.UUID | None = None
     category: str | None = None
     description: str | None = None
     model_number: str | None = None
@@ -24,6 +26,7 @@ class DeviceCreateResponse(BaseModel):
 
     id: uuid.UUID
     name: str
+    product_id: uuid.UUID | None
     category: str | None
     description: str | None
     model_number: str | None
@@ -36,6 +39,8 @@ class DeviceResponse(BaseModel):
 
     id: uuid.UUID
     name: str
+    product_id: uuid.UUID | None
+    product_name: str | None
     category: str | None
     description: str | None
     model_number: str | None
