@@ -14,5 +14,10 @@ class Settings(BaseSettings):
     mqtt_username: str = ""
     mqtt_password: str = ""
 
+    # EMQX deployment API, used to give every device its own broker login.
+    emqx_api_url: str = ""
+    emqx_api_key: str = ""
+    emqx_api_secret: str = ""
+
 
 settings = Settings()

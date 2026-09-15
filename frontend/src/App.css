@@ -404,6 +404,10 @@ body {
   gap: 0.6rem;
 }
 
+.modal-error {
+  margin-bottom: 1rem;
+}
+
 .forgot-link {
   align-self: flex-end;
   margin-top: 0.35rem;

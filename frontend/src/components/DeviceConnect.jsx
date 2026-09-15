@@ -139,17 +139,19 @@ function ConnectionStatus({ device, waiting, onRetry }) {
   );
 }
 
-// `created` is the POST /devices response: the only time the secret is known.
+// `created` holds the device's secret, which the API returns only when a
+// device is created or its credentials are reset. `watch` is optional: the
+// live status only makes sense for a device that hasn't reported yet.
 export default function ConnectPanel({ created, watch }) {
   return (
     <>
-      <ConnectionStatus device={watch.device} waiting={watch.waiting} onRetry={watch.retry} />
+      {watch && <ConnectionStatus device={watch.device} waiting={watch.waiting} onRetry={watch.retry} />}
 
       <div className="connection-fields">
-        <CopyField label="Device ID" value={created.id} />
-        <CopyField label="Device secret" value={created.secret} />
         <CopyField label="MQTT host" value={MQTT_HOST} />
-        <CopyField label="MQTT port" value={String(MQTT_PORT)} />
+        <CopyField label="MQTT port (TLS)" value={String(MQTT_PORT)} />
+        <CopyField label="Username (device ID)" value={created.id} />
+        <CopyField label="Password (device secret)" value={created.secret} />
         <CopyField label="Publish topic" value={`oark/devices/${created.id}/telemetry`} />
       </div>
 

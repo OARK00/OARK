@@ -4,7 +4,8 @@ import { getErrorMessage } from "../api/errors";
 import { useAuth } from "../context/AuthContext";
 import AppShell from "../components/AppShell";
 import AddDeviceWizard from "../components/AddDeviceWizard";
-import { categoryIcon, CheckIcon, CopyIcon, DotsIcon, TrashIcon } from "../components/icons";
+import ConnectPanel from "../components/DeviceConnect";
+import { categoryIcon, CheckIcon, CopyIcon, DotsIcon, KeyIcon, TrashIcon } from "../components/icons";
 import { CATEGORY_LABELS } from "../constants/devices";
 
 const SunIcon = (
@@ -80,6 +81,11 @@ export default function Dashboard() {
   const [showAddDevice, setShowAddDevice] = useState(false);
   const [deviceToDelete, setDeviceToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+  const [deviceToReset, setDeviceToReset] = useState(null);
+  const [resetting, setResetting] = useState(false);
+  const [resetError, setResetError] = useState(null);
+  const [newCredentials, setNewCredentials] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [openMenuId, setOpenMenuId] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
@@ -144,14 +150,30 @@ export default function Dashboard() {
   async function confirmDelete() {
     if (!deviceToDelete) return;
     setDeleting(true);
+    setDeleteError(null);
     try {
       await api.delete(`/devices/${deviceToDelete.id}`);
       await loadDevices();
       setDeviceToDelete(null);
     } catch (err) {
-      setError(getErrorMessage(err, "Could not delete device"));
+      setDeleteError(getErrorMessage(err, "Could not delete device"));
     } finally {
       setDeleting(false);
+    }
+  }
+
+  async function confirmReset() {
+    if (!deviceToReset) return;
+    setResetting(true);
+    setResetError(null);
+    try {
+      const { data } = await api.post(`/devices/${deviceToReset.id}/credentials`);
+      setDeviceToReset(null);
+      setNewCredentials(data);
+    } catch (err) {
+      setResetError(getErrorMessage(err, "Could not reset credentials"));
+    } finally {
+      setResetting(false);
     }
   }
 
@@ -322,9 +344,23 @@ export default function Dashboard() {
                             <button
                               type="button"
                               role="menuitem"
+                              className="card-menu-item"
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                setResetError(null);
+                                setDeviceToReset(d);
+                              }}
+                            >
+                              {KeyIcon}
+                              Reset credentials
+                            </button>
+                            <button
+                              type="button"
+                              role="menuitem"
                               className="card-menu-item card-menu-item-danger"
                               onClick={() => {
                                 setOpenMenuId(null);
+                                setDeleteError(null);
                                 setDeviceToDelete(d);
                               }}
                             >
@@ -359,6 +395,7 @@ export default function Dashboard() {
               <strong>{deviceToDelete.name}</strong> will be permanently removed and its device
               secret revoked. This can't be undone.
             </p>
+            {deleteError && <div className="error modal-error">{deleteError}</div>}
             <div className="modal-actions">
               <button
                 className="ghost-button"
@@ -369,6 +406,42 @@ export default function Dashboard() {
               </button>
               <button className="danger-button" onClick={confirmDelete} disabled={deleting}>
                 {deleting ? "Deleting..." : "Delete device"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deviceToReset && (
+        <div className="modal-overlay" onClick={() => !resetting && setDeviceToReset(null)}>
+          <div className="modal-card" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <h3>Reset credentials?</h3>
+            <p>
+              <strong>{deviceToReset.name}</strong> gets a new password. The current one stops working
+              immediately, so the board disconnects until you update it.
+            </p>
+            {resetError && <div className="error modal-error">{resetError}</div>}
+            <div className="modal-actions">
+              <button className="ghost-button" onClick={() => setDeviceToReset(null)} disabled={resetting}>
+                Cancel
+              </button>
+              <button className="danger-button" onClick={confirmReset} disabled={resetting}>
+                {resetting ? "Resetting..." : "Reset credentials"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {newCredentials && (
+        <div className="modal-overlay">
+          <div className="modal-card wizard-card" role="dialog" aria-modal="true" aria-labelledby="new-creds-title">
+            <h3 id="new-creds-title">New credentials for &ldquo;{newCredentials.name}&rdquo;</h3>
+            <p>Put these on the board. The password is shown only once — save it now.</p>
+            <ConnectPanel created={newCredentials} />
+            <div className="modal-actions">
+              <button type="button" className="primary-button" onClick={() => setNewCredentials(null)}>
+                Done
               </button>
             </div>
           </div>
