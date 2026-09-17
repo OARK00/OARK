@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.core.broker import BrokerError, create_device_login, delete_device_login, replace_device_login
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.core.security import generate_device_secret, hash_password
+from app.core.security import generate_device_secret, hash_device_secret
 from app.models.device import Device, compute_status
 from app.models.product import Product
 from app.models.user import User
@@ -95,7 +95,7 @@ def create_device(payload: DeviceCreate, db: Session = Depends(get_db), current_
         model_number=payload.model_number,
         firmware_version=payload.firmware_version,
         is_controllable=payload.is_controllable,
-        hashed_secret=hash_password(secret),
+        hashed_secret=hash_device_secret(secret),
     )
     db.add(device)
     db.flush()
@@ -131,7 +131,7 @@ def reset_credentials(device_id: uuid.UUID, db: Session = Depends(get_db), curre
         replace_device_login(str(device.id), secret)
     except BrokerError:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=BROKER_UNAVAILABLE)
-    device.hashed_secret = hash_password(secret)
+    device.hashed_secret = hash_device_secret(secret)
     db.commit()
     db.refresh(device)
     return to_create_response(device, secret)

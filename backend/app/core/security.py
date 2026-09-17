@@ -1,3 +1,5 @@
+import hashlib
+import hmac
 import secrets
 from datetime import datetime, timedelta, timezone
 
@@ -7,6 +9,8 @@ from passlib.context import CryptContext
 from app.core.config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+DEVICE_HASH_PREFIX = "sha256$"
 
 
 def hash_password(password: str) -> str:
@@ -31,7 +35,22 @@ def generate_device_secret() -> str:
     return secrets.token_urlsafe(32)
 
 
+def hash_device_secret(secret: str) -> str:
+    """Plain SHA-256, unlike user passwords, which stay on bcrypt.
+
+    bcrypt is slow on purpose so that stolen hashes of guessable human
+    passwords can't be brute-forced. A device secret is 32 random bytes, so
+    guessing is hopeless regardless of speed, and the 50ms bcrypt costs would
+    be paid on every single telemetry message. Salting adds nothing here for
+    the same reason: the input is already unique and unguessable.
+    """
+    return DEVICE_HASH_PREFIX + hashlib.sha256(secret.encode()).hexdigest()
+
+
 def verify_device_secret(provided: str, stored_hash: str) -> bool:
-    """Constant-time check against the stored hash, per the payload-secret
-    protection proven in the prototype (Oark_Master_Document.docx, Sec. 2)."""
-    return pwd_context.verify(provided, stored_hash)
+    """Constant-time check; falls back to bcrypt for devices created before
+    hash_device_secret existed."""
+    if not stored_hash.startswith(DEVICE_HASH_PREFIX):
+        return pwd_context.verify(provided, stored_hash)
+    expected = hashlib.sha256(provided.encode()).hexdigest()
+    return hmac.compare_digest(expected, stored_hash[len(DEVICE_HASH_PREFIX) :])
