@@ -1,8 +1,17 @@
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+AppEnv = Literal["development", "test", "production"]
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    # Which environment this running copy is. Must match the label stored in
+    # the database it connects to (see app/core/environment.py). Defaults to
+    # development so a forgotten setting can never pass as production.
+    app_env: AppEnv = "development"
 
     database_url: str
     jwt_secret: str

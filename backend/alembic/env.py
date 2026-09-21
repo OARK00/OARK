@@ -5,6 +5,7 @@ from sqlalchemy import engine_from_config, pool
 
 from app.core.config import settings
 from app.core.database import Base
+from app.core.environment import assert_database_matches
 from app import models  # noqa: F401 -- registers all models on Base.metadata
 
 config = context.config
@@ -25,6 +26,10 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     connectable = engine_from_config(config.get_section(config.config_ini_section, {}), prefix="sqlalchemy.", poolclass=pool.NullPool)
+    # Checked on its own connection: reading the label would otherwise open
+    # a transaction that alembic then leaves uncommitted.
+    with connectable.connect() as check_connection:
+        assert_database_matches(check_connection, allow_unlabelled=True)
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():

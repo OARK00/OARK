@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.core.database import engine
+from app.core.environment import assert_database_matches
 from app.modules.auth.router import router as auth_router
 from app.modules.devices.router import router as devices_router
 from app.modules.products.router import router as products_router
@@ -16,6 +18,10 @@ logging.basicConfig(level=logging.INFO)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Before serving or ingesting anything: refuse to start against a
+    # database that belongs to a different environment.
+    with engine.connect() as conn:
+        assert_database_matches(conn)
     mqtt_task = asyncio.create_task(run_mqtt_forever())
     yield
     mqtt_task.cancel()
