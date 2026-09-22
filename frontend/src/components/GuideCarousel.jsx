@@ -8,37 +8,37 @@ const ROTATE_MS = 12000;
 // account data instead of claiming progress the platform can't see.
 export const GUIDES = [
   {
-    id: "connect",
-    title: "Connect your first device",
+    id: "device",
+    title: "Connect a device you already have",
     steps: [
-      { label: "Define a product", doneKey: "product_created" },
       { label: "Add a device", doneKey: "device_added" },
+      { label: "Copy its credentials" },
       { label: "Flash the sketch" },
       { label: "See it report", doneKey: "first_message" },
     ],
     action: { label: "Add a device", kind: "add-device" },
   },
   {
-    id: "history",
-    title: "Read what your devices recorded",
+    id: "customise",
+    title: "Customise what it measures",
     steps: [
-      { label: "Open a device" },
-      { label: "Pick a time range" },
-      { label: "Switch between fields" },
-      { label: "Spot the trend" },
+      { label: "Create a product", doneKey: "product_created" },
+      { label: "Let Oark read the fields" },
+      { label: "Name them and set units" },
+      { label: "Every device reuses it" },
     ],
-    action: { label: "Go to devices", kind: "link", to: "/dashboard" },
+    action: { label: "Go to products", kind: "link", to: "/products" },
   },
   {
-    id: "secure",
-    title: "Keep the fleet secure",
+    id: "template",
+    title: "Start from a ready-made template",
     steps: [
-      { label: "Each device, own login" },
-      { label: "Reset a leaked secret" },
-      { label: "Delete to revoke access" },
-      { label: "Watch what stops reporting" },
+      { label: "Pick a template" },
+      { label: "Product is created" },
+      { label: "Add your devices" },
+      { label: "Data arrives labelled" },
     ],
-    action: { label: "Go to devices", kind: "link", to: "/dashboard" },
+    action: { label: "Browse templates", kind: "template" },
   },
 ];
 

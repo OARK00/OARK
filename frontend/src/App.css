@@ -3144,3 +3144,135 @@ a.activity-name:hover {
     display: none;
   }
 }
+
+/* ---------- Animated guide arrows, ghosts, templates ---------- */
+
+.guide-arrow {
+  border-top: 0;
+  height: 2px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--border) 0 6px,
+    transparent 6px 12px
+  );
+  background-size: 12px 2px;
+  animation: guide-dash 0.9s linear infinite;
+}
+
+.guide-arrow::after {
+  border-top-color: var(--accent);
+  border-right-color: var(--accent);
+}
+
+@keyframes guide-dash {
+  to {
+    background-position-x: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guide-arrow {
+    animation: none;
+  }
+}
+
+.console-ghost {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 72px;
+  padding: 0.8rem 0.9rem;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: transparent;
+}
+
+.console-ghost.action {
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.console-ghost.action:hover {
+  border-color: var(--accent);
+  background: rgba(15, 118, 110, 0.04);
+}
+
+.console-ghost-plus {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.console-ghost-line {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-alt);
+}
+
+.console-ghost-line.short {
+  width: 55%;
+}
+
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.template-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  padding: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-alt);
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.template-card:hover:enabled {
+  border-color: var(--accent);
+}
+
+.template-card:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.template-icon {
+  color: var(--accent);
+}
+
+.template-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.template-summary {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.template-points {
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+}
+
+.template-creating {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+}

@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import AppShell from "../components/AppShell";
 import AddDeviceWizard from "../components/AddDeviceWizard";
 import GuideCarousel from "../components/GuideCarousel";
+import TemplatePicker from "../components/TemplatePicker";
 import WorkspaceConsole from "../components/WorkspaceConsole";
 
 const REFRESH_MS = 30000;
@@ -166,6 +167,7 @@ export default function Overview() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [adding, setAdding] = useState(false);
+  const [pickingTemplate, setPickingTemplate] = useState(false);
   const { email } = useAuth();
   const navigate = useNavigate();
 
@@ -223,17 +225,27 @@ export default function Overview() {
             <GuideCarousel
               checklist={data.checklist}
               onAddDevice={() => setAdding(true)}
-              renderAction={(action, addDevice) =>
-                action.kind === "add-device" ? (
-                  <button type="button" className="primary-button" onClick={addDevice}>
-                    {action.label}
-                  </button>
-                ) : (
+              renderAction={(action, addDevice) => {
+                if (action.kind === "add-device") {
+                  return (
+                    <button type="button" className="primary-button" onClick={addDevice}>
+                      {action.label}
+                    </button>
+                  );
+                }
+                if (action.kind === "template") {
+                  return (
+                    <button type="button" className="primary-button" onClick={() => setPickingTemplate(true)}>
+                      {action.label}
+                    </button>
+                  );
+                }
+                return (
                   <Link to={action.to} className="primary-button console-link-button">
                     {action.label}
                   </Link>
-                )
-              }
+                );
+              }}
             />
             <WorkspaceConsole data={data} onAddDevice={() => setAdding(true)} />
             <MessagesChart series={data.messages.series} />
@@ -280,6 +292,7 @@ export default function Overview() {
       )}
 
       {adding && <AddDeviceWizard onClose={() => setAdding(false)} onCreated={load} />}
+      {pickingTemplate && <TemplatePicker onClose={() => setPickingTemplate(false)} />}
     </AppShell>
   );
 }

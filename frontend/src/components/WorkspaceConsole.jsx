@@ -77,7 +77,22 @@ export default function WorkspaceConsole({ data, onAddDevice }) {
           </div>
 
           {data.recent_devices.length === 0 ? (
-            <p className="activity-empty">No devices yet. The first one takes about two minutes.</p>
+            // Keeping the card grid, with placeholders, so an empty tab has
+            // the same shape as a full one instead of collapsing to a line.
+            <div className="console-cards">
+              <button type="button" className="console-ghost action" onClick={onAddDevice}>
+                <span className="console-ghost-plus">+</span>
+                Add your first device
+              </button>
+              <div className="console-ghost" aria-hidden="true">
+                <span className="console-ghost-line" />
+                <span className="console-ghost-line short" />
+              </div>
+              <div className="console-ghost" aria-hidden="true">
+                <span className="console-ghost-line" />
+                <span className="console-ghost-line short" />
+              </div>
+            </div>
           ) : (
             <div className="console-cards">
               {data.recent_devices.slice(0, 3).map((device) => (
@@ -112,9 +127,20 @@ export default function WorkspaceConsole({ data, onAddDevice }) {
           </div>
 
           {(data.recent_products || []).length === 0 ? (
-            <p className="activity-empty">
-              A product describes what a type of device measures, so every unit of it reuses the same definition.
-            </p>
+            <div className="console-cards">
+              <Link to="/products" className="console-ghost action">
+                <span className="console-ghost-plus">+</span>
+                Define your first product
+              </Link>
+              <div className="console-ghost" aria-hidden="true">
+                <span className="console-ghost-line" />
+                <span className="console-ghost-line short" />
+              </div>
+              <div className="console-ghost" aria-hidden="true">
+                <span className="console-ghost-line" />
+                <span className="console-ghost-line short" />
+              </div>
+            </div>
           ) : (
             <div className="console-cards">
               {data.recent_products.slice(0, 3).map((product) => (
