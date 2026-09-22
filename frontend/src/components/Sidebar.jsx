@@ -46,7 +46,7 @@ const navGroups = [
   {
     label: "Monitor",
     items: [
-      { key: "overview", label: "Overview", icon: icons.overview, disabled: true },
+      { key: "overview", label: "Overview", icon: icons.overview, to: "/overview" },
       { key: "devices", label: "Devices", icon: icons.devices, to: "/dashboard" },
       { key: "analytics", label: "Analytics", icon: icons.analytics, disabled: true },
       { key: "alerts", label: "Alerts", icon: icons.alerts, disabled: true },

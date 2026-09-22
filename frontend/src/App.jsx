@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
+import Overview from "./pages/Overview";
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
@@ -15,6 +16,14 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route
+        path="/overview"
+        element={
+          <RequireAuth>
+            <Overview />
+          </RequireAuth>
+        }
+      />
       <Route
         path="/dashboard"
         element={
@@ -39,7 +48,7 @@ function App() {
           </RequireAuth>
         }
       />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/overview" replace />} />
     </Routes>
   );
 }

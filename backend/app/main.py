@@ -13,6 +13,7 @@ from app.core.environment import assert_database_matches
 from app.core.health import health_report
 from app.modules.auth.router import router as auth_router
 from app.modules.devices.router import router as devices_router
+from app.modules.overview.router import router as overview_router
 from app.modules.products.router import router as products_router
 from app.modules.telemetry.router import router as telemetry_router
 from app.modules.ingestion.mqtt_client import run_mqtt_forever
@@ -53,6 +54,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(devices_router)
 app.include_router(products_router)
+app.include_router(overview_router)
 app.include_router(telemetry_router)
 
 

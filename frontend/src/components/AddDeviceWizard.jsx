@@ -148,7 +148,7 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
         {step === 1 && created && (
           <>
             <h3 id="wizard-title">Connect &ldquo;{created.name}&rdquo;</h3>
-            <p>Configure your device with these details. The secret is shown only once — save it now.</p>
+            <p>Flash the device with the code below. The secret is shown only once.</p>
             <ConnectPanel created={created} watch={watch} />
             <div className="modal-actions">
               <button type="button" className="primary-button" onClick={onClose}>
