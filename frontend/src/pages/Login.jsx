@@ -154,7 +154,7 @@ export default function Login() {
       } else {
         await register(email, password);
       }
-      navigate("/dashboard");
+      navigate("/overview");
     } catch (err) {
       setError(getErrorMessage(err, "Something went wrong"));
     } finally {
