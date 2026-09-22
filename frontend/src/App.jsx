@@ -3,6 +3,7 @@ import { useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Overview from "./pages/Overview";
 import Dashboard from "./pages/Dashboard";
+import DeviceDetail from "./pages/DeviceDetail";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import "./App.css";
@@ -29,6 +30,14 @@ function App() {
         element={
           <RequireAuth>
             <Dashboard />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/devices/:deviceId"
+        element={
+          <RequireAuth>
+            <DeviceDetail />
           </RequireAuth>
         }
       />

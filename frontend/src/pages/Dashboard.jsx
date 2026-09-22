@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import { useAuth } from "../context/AuthContext";
@@ -280,7 +281,19 @@ export default function Dashboard() {
             {loading ? (
               <p className="muted">Loading devices...</p>
             ) : devices.length === 0 ? (
-              <p className="muted">No devices yet. Add your first one above.</p>
+              <div className="empty-state">
+                <div className="empty-state-art" aria-hidden="true">
+                  {categoryIcon("sensor")}
+                </div>
+                <h3>No devices yet</h3>
+                <p>
+                  A device is one physical unit reporting to Oark. Adding one gives you credentials and a
+                  ready-to-paste sketch.
+                </p>
+                <button className="primary-button" onClick={() => setShowAddDevice(true)}>
+                  + Add your first device
+                </button>
+              </div>
             ) : visibleDevices.length === 0 ? (
               <p className="muted">No {statusFilter} devices right now.</p>
             ) : (
@@ -293,7 +306,9 @@ export default function Dashboard() {
                           {categoryIcon(d.category)}
                         </span>
                         <div>
-                          <div className="device-card-name">{d.name}</div>
+                          <Link to={`/devices/${d.id}`} className="device-card-name">
+                            {d.name}
+                          </Link>
                           <div className="device-card-category">
                             {d.product_name ||
                               (d.category ? CATEGORY_LABELS[d.category] || d.category : "Uncategorized")}

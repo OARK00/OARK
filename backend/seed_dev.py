@@ -6,6 +6,7 @@ For looking at the UI with something in it. Refuses to run anywhere but a
 development database, and creates no broker logins: these devices exist to
 be looked at, not to connect.
 """
+import math
 import os
 import random
 import sys
@@ -31,6 +32,22 @@ DEVICES = [
     ("Roof weather mast", "sensor", 0, {"temperature": 29.6, "wind": 8.4}),
     ("Line 3 gateway", "gateway", 2400, {"clients": 12}),
 ]
+
+
+def wobble(state: dict, hour: int) -> dict:
+    """Numbers that drift over the day, the way a real sensor's do.
+
+    A constant value would draw a flat line and make the history chart look
+    broken, which is exactly the wrong thing to test a chart against.
+    """
+    varied = {}
+    for key, value in state.items():
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            varied[key] = value
+            continue
+        spread = max(abs(value) * 0.06, 0.4)
+        varied[key] = round(value + spread * math.sin(hour / 3.5) + random.uniform(-spread / 2, spread / 2), 2)
+    return varied
 
 
 def main() -> None:
@@ -59,8 +76,14 @@ def main() -> None:
     created = 0
     readings = 0
 
+    reset = "--reset" in sys.argv
+
     for name, category, minutes_ago, state in DEVICES:
-        if db.query(Device).filter(Device.org_id == user.org_id, Device.name == name).first():
+        existing = db.query(Device).filter(Device.org_id == user.org_id, Device.name == name).first()
+        if existing and reset:
+            db.delete(existing)
+            db.flush()
+        elif existing:
             continue
         last_seen = now - timedelta(minutes=minutes_ago)
         device = Device(
@@ -88,11 +111,12 @@ def main() -> None:
                     TelemetryReading(
                         org_id=user.org_id,
                         device_id=device.id,
-                        data=state,
+                        data=wobble(state, hour),
                         recorded_at=recorded_hour + timedelta(minutes=random.randint(0, 59)),
                     )
                 )
                 readings += 1
+        device.reported_state = wobble(state, 23)
 
     owner = user.email  # read before the session closes and expires the object
     db.commit()

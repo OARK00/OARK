@@ -123,7 +123,9 @@ function RecentActivity({ devices }) {
             return (
               <li key={device.id} className="activity-row">
                 <span className={`status-dot ${device.status}`} />
-                <span className="activity-name">{device.name}</span>
+                <Link to={`/devices/${device.id}`} className="activity-name">
+                  {device.name}
+                </Link>
                 <span className="activity-values">
                   {values.length === 0
                     ? "—"
@@ -139,6 +141,64 @@ function RecentActivity({ devices }) {
           })}
         </ul>
       )}
+    </div>
+  );
+}
+
+// An account with nothing in it has nothing to chart. Showing zeros and an
+// empty graph makes a new customer's first screen look like a broken
+// dashboard, so until the first device exists the page is a start screen.
+function StartScreen({ checklist, onAddDevice }) {
+  const steps = [
+    {
+      key: "product_created",
+      title: "Define a product",
+      text: "Describe what your devices measure, once. Every device of that type reuses it.",
+      action: (
+        <Link to="/products" className="ghost-button">
+          Go to products
+        </Link>
+      ),
+    },
+    {
+      key: "device_added",
+      title: "Add a device",
+      text: "One physical unit. Oark gives it its own credentials, which only it can use.",
+      action: (
+        <button type="button" className="primary-button" onClick={onAddDevice}>
+          Add a device
+        </button>
+      ),
+    },
+    {
+      key: "first_message",
+      title: "See it report",
+      text: "Paste the sketch we generate into your ESP32 and power it on. Data appears here.",
+      action: null,
+    },
+  ];
+
+  return (
+    <div className="start-screen">
+      <div className="start-head">
+        <h3>Set up your first device</h3>
+        <p>Three steps. This page becomes your live dashboard as soon as data arrives.</p>
+      </div>
+      <ol className="start-steps">
+        {steps.map((step, index) => {
+          const done = checklist[step.key];
+          return (
+            <li key={step.key} className={`start-step${done ? " done" : ""}`}>
+              <span className="start-step-mark">{done ? CheckIcon : index + 1}</span>
+              <div className="start-step-body">
+                <h4>{step.title}</h4>
+                <p>{step.text}</p>
+              </div>
+              {!done && step.action}
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }
@@ -179,7 +239,11 @@ export default function Overview() {
 
       {error && <div className="error">{error}</div>}
 
-      {data && (
+      {data && data.devices.total === 0 && (
+        <StartScreen checklist={data.checklist} onAddDevice={() => setAdding(true)} />
+      )}
+
+      {data && data.devices.total > 0 && (
         <div className="overview-grid">
           <div className="overview-main">
             <div className="stat-row">
