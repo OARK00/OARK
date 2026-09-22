@@ -1,4 +1,7 @@
-from sqlalchemy import CheckConstraint, Column, DateTime, Integer, String, func
+from datetime import datetime
+
+from sqlalchemy import CheckConstraint, DateTime, Integer, String, func
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
 
@@ -20,6 +23,8 @@ class EnvironmentLabel(Base):
         ),
     )
 
-    id = Column(Integer, primary_key=True, autoincrement=False, default=1)
-    environment = Column(String, nullable=False)
-    labelled_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False, default=1)
+    environment: Mapped[str] = mapped_column(String, nullable=False)
+    labelled_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )

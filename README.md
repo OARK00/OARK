@@ -26,6 +26,19 @@ python dev_server.py
 
 Local development never uses the production database. Each database holds a label (`development`, `test` or `production`), and the backend and migrations refuse to run when it doesn't match `APP_ENV`.
 
+## Checks
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+mypy       # type checking, config in mypy.ini
+pytest     # tests; each one runs in a transaction that is rolled back
+```
+
+Both run on every push through `.github/workflows/ci.yml`, against a throwaway Postgres created for that run. The suite refuses to start if `APP_ENV=production` or the database's label disagrees.
+
+`/health` is not decorative: it runs `SELECT 1` and reports the MQTT listener. A broker gap under two minutes reads as `waiting` (200) because cold starts and reconnects are normal; a longer one is `degraded` (503), and an unreachable database is `down` (503). Point an uptime monitor at `https://api.oark.in/health`.
+
 API docs then available at `http://localhost:8000/docs`.
 
 ## Frontend setup (local dev)

@@ -33,7 +33,7 @@ def get_org_product(db: Session, product_id: uuid.UUID, user: User) -> Product:
 
 
 def count_devices(db: Session, product_id: uuid.UUID) -> int:
-    return db.query(func.count(Device.id)).filter(Device.product_id == product_id).scalar()
+    return db.query(func.count(Device.id)).filter(Device.product_id == product_id).scalar() or 0
 
 
 def to_response(product: Product, device_count: int) -> ProductResponse:
@@ -57,12 +57,13 @@ def list_products(db: Session = Depends(get_db), current_user: User = Depends(ge
         .order_by(Product.created_at, Product.id)
         .all()
     )
-    counts = dict(
+    rows = (
         db.query(Device.product_id, func.count(Device.id))
         .filter(Device.org_id == current_user.org_id, Device.product_id.isnot(None))
         .group_by(Device.product_id)
         .all()
     )
+    counts: dict[uuid.UUID, int] = {row[0]: row[1] for row in rows}
     return [to_response(p, counts.get(p.id, 0)) for p in products]
 
 

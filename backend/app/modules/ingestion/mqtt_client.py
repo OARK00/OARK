@@ -37,6 +37,8 @@ async def _consume():
             device_id_str = topic_parts[2]
 
             try:
+                if not isinstance(message.payload, (str, bytes, bytearray)):
+                    raise TypeError("payload is not text")
                 payload = json.loads(message.payload)
             except (json.JSONDecodeError, TypeError):
                 logger.warning("Dropped malformed payload on %s", message.topic.value)
