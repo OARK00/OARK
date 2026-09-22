@@ -3,9 +3,13 @@
 The unit tests below describe the policy; the endpoint tests check it is
 actually applied before the password is ever compared.
 """
+from datetime import datetime, timedelta, timezone
+
+from app.models.login_attempt import LoginAttempt
 from app.modules.auth.rate_limit import (
     EMAIL_MAX_FAILURES,
     IP_MAX_FAILURES,
+    RETENTION,
     clear_failures,
     count_email_failures,
     is_rate_limited,
@@ -33,6 +37,18 @@ def test_failures_are_counted_per_email(db_session):
     # Same account whichever way it was typed.
     assert count_email_failures(db_session, "someone@example.com") == 2
     assert count_email_failures(db_session, "other@example.com") == 0
+
+
+def test_old_attempts_are_trimmed_so_the_table_stays_bounded(db_session):
+    stale = datetime.now(timezone.utc) - RETENTION - timedelta(hours=1)
+    db_session.add(LoginAttempt(email="old@example.com", ip="9.9.9.9", attempted_at=stale))
+    db_session.commit()
+
+    record_failure(db_session, "new@example.com", "1.2.3.4")
+
+    remaining = {a.email for a in db_session.query(LoginAttempt).all()}
+    assert "old@example.com" not in remaining
+    assert "new@example.com" in remaining
 
 
 def test_a_successful_login_clears_the_count(db_session):

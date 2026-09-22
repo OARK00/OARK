@@ -26,6 +26,11 @@ EMAIL_WINDOW = timedelta(minutes=15)
 IP_MAX_FAILURES = 30
 IP_WINDOW = timedelta(minutes=15)
 
+# Rows older than this no longer count towards any limit. A day of history is
+# kept so an attack can still be looked at afterwards, and the table is
+# trimmed on write, which keeps it bounded without a scheduled job.
+RETENTION = timedelta(hours=24)
+
 
 def client_ip(request: Request) -> str:
     """The caller's address as seen before Render's proxy.
@@ -60,6 +65,7 @@ def count_ip_failures(db: Session, ip: str) -> int:
 
 def record_failure(db: Session, email: str, ip: str) -> None:
     db.add(LoginAttempt(email=email.lower(), ip=ip))
+    db.execute(delete(LoginAttempt).where(LoginAttempt.attempted_at < datetime.now(timezone.utc) - RETENTION))
     db.commit()
 
 
