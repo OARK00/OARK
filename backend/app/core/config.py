@@ -18,6 +18,12 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60 * 24
 
+    # Whether the web API also runs the MQTT listener in its own process.
+    # True today because Render's free plan has room for one always-on
+    # service; set to false once the listener runs as its own service, so a
+    # deploy or a crash of the API can no longer stop taking device data.
+    ingestion_in_api: bool = True
+
     mqtt_host: str = "localhost"
     mqtt_port: int = 8883
     mqtt_username: str = ""

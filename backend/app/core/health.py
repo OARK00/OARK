@@ -56,17 +56,19 @@ def overall_status(database_ok: bool, mqtt_connected: bool, mqtt_disconnected_fo
     return "ok", 200
 
 
-def health_report() -> tuple[dict, int]:
+def health_report(include_ingestion: bool) -> tuple[dict, int]:
+    """include_ingestion is False for a web API that doesn't run the listener:
+    reporting on a listener living in another process would be a guess."""
     database = check_database()
-    ingestion = check_ingestion()
-    status, status_code = overall_status(
-        database["ok"], ingestion["connected"], ingestion["disconnected_for_seconds"]
-    )
-    return (
-        {
-            "status": status,
-            "environment": settings.app_env,
-            "checks": {"database": database, "ingestion": ingestion},
-        },
-        status_code,
-    )
+    checks: dict = {"database": database}
+
+    if include_ingestion:
+        ingestion = check_ingestion()
+        checks["ingestion"] = ingestion
+        status, status_code = overall_status(
+            database["ok"], ingestion["connected"], ingestion["disconnected_for_seconds"]
+        )
+    else:
+        status, status_code = overall_status(database["ok"], mqtt_connected=True, mqtt_disconnected_for=None)
+
+    return {"status": status, "environment": settings.app_env, "checks": checks}, status_code

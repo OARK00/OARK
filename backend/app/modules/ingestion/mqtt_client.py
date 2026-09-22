@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import uuid
 from datetime import datetime, timezone
 
 import aiomqtt
@@ -17,16 +18,39 @@ logger = logging.getLogger("oark.ingestion")
 TELEMETRY_TOPIC_FILTER = "oark/devices/+/telemetry"
 
 
+def share_group() -> str:
+    """The shared-subscription group this listener joins.
+
+    Every listener in a group gets a *share* of the messages, not a copy, so
+    running two of them doubles the capacity instead of doubling the rows.
+    The group is per environment: a developer's laptop must never take
+    production's messages away from production.
+    """
+    return f"oark-ingest-{settings.app_env}"
+
+
+def subscription_filter() -> str:
+    return f"$share/{share_group()}/{TELEMETRY_TOPIC_FILTER}"
+
+
+def client_identifier() -> str:
+    """Unique per process: two clients sharing an id kick each other off."""
+    return f"oark-listener-{settings.app_env}-{uuid.uuid4().hex[:8]}"
+
+
 async def _consume():
     async with aiomqtt.Client(
         hostname=settings.mqtt_host,
         port=settings.mqtt_port,
         username=settings.mqtt_username,
         password=settings.mqtt_password,
+        identifier=client_identifier(),
         tls_params=aiomqtt.TLSParameters(),
     ) as client:
-        await client.subscribe(TELEMETRY_TOPIC_FILTER)
-        logger.info("Connected to MQTT broker, subscribed to %s", TELEMETRY_TOPIC_FILTER)
+        # QoS 1: the broker keeps redelivering until this listener confirms,
+        # so a message isn't lost in the gap between arriving and being saved.
+        await client.subscribe(subscription_filter(), qos=1)
+        logger.info("Connected to MQTT broker, subscribed to %s", subscription_filter())
         ingestion_state.mark_connected()
 
         async for message in client.messages:

@@ -37,6 +37,12 @@ pytest     # tests; each one runs in a transaction that is rolled back
 
 Both run on every push through `.github/workflows/ci.yml`, against a throwaway Postgres created for that run. The suite refuses to start if `APP_ENV=production` or the database's label disagrees.
 
+## Ingestion
+
+The MQTT listener can run inside the web API (`INGESTION_IN_API=true`, one process) or as its own service (`python listener.py`, which also serves `/health` on `PORT`). Splitting it means a deploy or crash of the API cannot stop device data; the API's `/health` then stops reporting ingestion, and the listener's own `/health` is what to monitor.
+
+Listeners subscribe as `$share/oark-ingest-<environment>/oark/devices/+/telemetry`. The `$share` prefix makes the broker give each message to exactly **one** listener in the group, so running two of them doubles capacity instead of storing every reading twice. The group name carries the environment so a developer's laptop can never take production's messages.
+
 `/health` is not decorative: it runs `SELECT 1` and reports the MQTT listener. A broker gap under two minutes reads as `waiting` (200) because cold starts and reconnects are normal; a longer one is `degraded` (503), and an unreachable database is `down` (503). Point an uptime monitor at `https://api.oark.in/health`.
 
 API docs then available at `http://localhost:8000/docs`.

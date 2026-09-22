@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
+from app.core.config import settings
 from app.core.database import engine
 from app.core.environment import assert_database_matches
 from app.core.health import health_report
@@ -25,6 +26,11 @@ async def lifespan(app: FastAPI):
     # database that belongs to a different environment.
     with engine.connect() as conn:
         assert_database_matches(conn)
+
+    if not settings.ingestion_in_api:
+        yield
+        return
+
     mqtt_task = asyncio.create_task(run_mqtt_forever())
     yield
     mqtt_task.cancel()
@@ -52,5 +58,5 @@ app.include_router(telemetry_router)
 
 @app.get("/health")
 def health():
-    report, status_code = health_report()
+    report, status_code = health_report(include_ingestion=settings.ingestion_in_api)
     return JSONResponse(jsonable_encoder(report), status_code=status_code)
