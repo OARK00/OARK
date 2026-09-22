@@ -3276,3 +3276,196 @@ a.activity-name:hover {
   font-weight: 700;
   color: var(--accent);
 }
+
+/* ---------- Data table (devices, products) ---------- */
+
+.panel-count {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 0;
+  margin-bottom: 0.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1 1 240px;
+  max-width: 340px;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-alt);
+  color: var(--muted);
+}
+
+.search-field:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+}
+
+.search-field input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.sort-field {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.sort-field select {
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-alt);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.82rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  text-align: left;
+  padding: 0.6rem 0.9rem;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.data-table tbody td {
+  padding: 0.65rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.data-table tbody tr:hover {
+  background: var(--surface-alt);
+}
+
+.cell-device {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 200px;
+}
+
+.cell-device-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cell-device-name {
+  font-weight: 700;
+  color: inherit;
+  text-decoration: none;
+}
+
+.cell-device-name:hover {
+  color: var(--accent);
+}
+
+.cell-device-id {
+  font-family: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.cell-muted {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.cell-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  max-width: 320px;
+}
+
+.cell-actions {
+  width: 44px;
+  text-align: right;
+}
+
+.cell-actions .card-menu {
+  display: inline-block;
+}
+
+.row-actions {
+  display: flex;
+  gap: 0.25rem;
+  justify-content: flex-end;
+}
+
+.row-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.row-action:hover {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--accent);
+}
+
+.row-action.danger:hover {
+  color: var(--danger);
+  border-color: #fecaca;
+}
+
+.cell-actions {
+  width: 110px;
+  text-align: right;
+  white-space: nowrap;
+}

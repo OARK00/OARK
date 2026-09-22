@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import AppShell from "../components/AppShell";
 import AddDeviceWizard from "../components/AddDeviceWizard";
 import ConnectPanel from "../components/DeviceConnect";
-import { categoryIcon, CheckIcon, CopyIcon, DotsIcon, KeyIcon, TrashIcon } from "../components/icons";
+import { categoryIcon, CheckIcon, CopyIcon, KeyIcon, TrashIcon } from "../components/icons";
 import { CATEGORY_LABELS } from "../constants/devices";
 
 const SunIcon = (
@@ -88,26 +88,11 @@ export default function Dashboard() {
   const [resetError, setResetError] = useState(null);
   const [newCredentials, setNewCredentials] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [openMenuId, setOpenMenuId] = useState(null);
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("added");
   const [copiedId, setCopiedId] = useState(null);
 
   const { email } = useAuth();
-
-  useEffect(() => {
-    if (!openMenuId) return;
-    function handlePointerDown(e) {
-      if (!e.target.closest(".card-menu")) setOpenMenuId(null);
-    }
-    function handleKeyDown(e) {
-      if (e.key === "Escape") setOpenMenuId(null);
-    }
-    document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [openMenuId]);
 
   async function loadDevices() {
     setLoading(true);
@@ -132,19 +117,37 @@ export default function Dashboard() {
     return { total: devices.length, online, offline, stale };
   }, [devices]);
 
-  const visibleDevices =
-    statusFilter === "all" ? devices : devices.filter((d) => d.status === statusFilter);
+  const visibleDevices = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    let list = statusFilter === "all" ? devices : devices.filter((d) => d.status === statusFilter);
+
+    if (term) {
+      list = list.filter((d) =>
+        [d.name, d.id, d.product_name, d.description].some((field) =>
+          (field || "").toLowerCase().includes(term)
+        )
+      );
+    }
+
+    const sorted = [...list];
+    if (sort === "name") {
+      sorted.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sort === "last_seen") {
+      // Devices that never reported sort last rather than as "very old".
+      sorted.sort(
+        (a, b) => new Date(b.last_seen_at || 0).getTime() - new Date(a.last_seen_at || 0).getTime()
+      );
+    }
+    return sorted;
+  }, [devices, statusFilter, search, sort]);
 
   async function copyDeviceId(id) {
     try {
       await navigator.clipboard.writeText(id);
       setCopiedId(id);
-      setTimeout(() => {
-        setCopiedId(null);
-        setOpenMenuId(null);
-      }, 900);
+      setTimeout(() => setCopiedId(null), 900);
     } catch {
-      setOpenMenuId(null);
+      // Clipboard access can be denied; leave the button unchanged.
     }
   }
 
@@ -252,29 +255,60 @@ export default function Dashboard() {
             <div className="panel-header">
               <div className="panel-title-group">
                 <h2>Fleet</h2>
-                {devices.length > 0 && (
-                  <div className="status-filter" role="group" aria-label="Filter devices by status">
-                    {STATUS_FILTERS.map((f) => (
-                      <button
-                        key={f.value}
-                        type="button"
-                        className={`status-filter-button ${statusFilter === f.value ? "active" : ""}`}
-                        aria-pressed={statusFilter === f.value}
-                        onClick={() => setStatusFilter(f.value)}
-                      >
-                        {f.label}
-                        <span className="status-filter-count">
-                          {f.value === "all" ? stats.total : stats[f.value]}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <span className="panel-count">
+                  {visibleDevices.length === devices.length
+                    ? `${devices.length} ${devices.length === 1 ? "device" : "devices"}`
+                    : `${visibleDevices.length} of ${devices.length}`}
+                </span>
               </div>
               <button className="primary-button" onClick={() => setShowAddDevice(true)}>
                 + Add device
               </button>
             </div>
+
+            {devices.length > 0 && (
+              <div className="table-toolbar">
+                <div className="search-field">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m20 20-3.5-3.5" />
+                  </svg>
+                  <input
+                    type="search"
+                    placeholder="Search name, ID or product"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    aria-label="Search devices"
+                  />
+                </div>
+
+                <div className="status-filter" role="group" aria-label="Filter devices by status">
+                  {STATUS_FILTERS.map((f) => (
+                    <button
+                      key={f.value}
+                      type="button"
+                      className={`status-filter-button ${statusFilter === f.value ? "active" : ""}`}
+                      aria-pressed={statusFilter === f.value}
+                      onClick={() => setStatusFilter(f.value)}
+                    >
+                      {f.label}
+                      <span className="status-filter-count">
+                        {f.value === "all" ? stats.total : stats[f.value]}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                <label className="sort-field">
+                  <span>Sort</span>
+                  <select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort devices">
+                    <option value="added">Recently added</option>
+                    <option value="last_seen">Last seen</option>
+                    <option value="name">Name</option>
+                  </select>
+                </label>
+              </div>
+            )}
 
             {error && <div className="error">{error}</div>}
 
@@ -295,99 +329,115 @@ export default function Dashboard() {
                 </button>
               </div>
             ) : visibleDevices.length === 0 ? (
-              <p className="muted">No {statusFilter} devices right now.</p>
+              <p className="muted">
+                {search ? `Nothing matches “${search}”.` : `No ${statusFilter} devices right now.`}
+              </p>
             ) : (
-              <div className="device-grid">
-                {visibleDevices.map((d) => (
-                  <div className="device-card" key={d.id}>
-                    <div className="device-card-top">
-                      <div className="device-card-identity">
-                        <span className={`device-icon device-icon-${d.category || "other"}`}>
-                          {categoryIcon(d.category)}
-                        </span>
-                        <div>
-                          <Link to={`/devices/${d.id}`} className="device-card-name">
-                            {d.name}
-                          </Link>
-                          <div className="device-card-category">
-                            {d.product_name ||
-                              (d.category ? CATEGORY_LABELS[d.category] || d.category : "Uncategorized")}
+              <div className="table-wrap">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Device</th>
+                      <th>Product</th>
+                      <th>Status</th>
+                      <th>Last seen</th>
+                      <th>Latest values</th>
+                      <th className="cell-actions">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visibleDevices.map((d) => (
+                      <tr key={d.id}>
+                        <td>
+                          <div className="cell-device">
+                            <span className={`device-icon device-icon-${d.category || "other"}`}>
+                              {categoryIcon(d.category)}
+                            </span>
+                            <div className="cell-device-text">
+                              <Link to={`/devices/${d.id}`} className="cell-device-name">
+                                {d.name}
+                              </Link>
+                              <span className="cell-device-id" title={d.id}>
+                                {shortId(d.id)}
+                              </span>
+                            </div>
                           </div>
-                          <div className="device-card-id" title={d.id}>
-                            {shortId(d.id)}
+                        </td>
+                        <td>
+                          {d.product_name || (
+                            <span className="muted">
+                              {d.category ? CATEGORY_LABELS[d.category] || d.category : "—"}
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          <span className={`status status-${d.status}`}>
+                            <span className="status-dot" />
+                            {d.status}
+                          </span>
+                        </td>
+                        <td className="cell-muted" title={d.last_seen_at ? new Date(d.last_seen_at).toLocaleString() : ""}>
+                          {d.last_seen_at ? timeAgo(d.last_seen_at) : "never"}
+                        </td>
+                        <td>
+                          <div className="cell-values">
+                            {Object.entries(d.reported_state || {})
+                              .slice(0, 3)
+                              .map(([key, value]) => (
+                                <span key={key} className="activity-value">
+                                  {key}{" "}
+                                  <b>{typeof value === "object" ? JSON.stringify(value) : String(value)}</b>
+                                </span>
+                              ))}
+                            {Object.keys(d.reported_state || {}).length === 0 && (
+                              <span className="muted">—</span>
+                            )}
                           </div>
-                        </div>
-                      </div>
-                      <span className={`status status-${d.status}`}>
-                        <span className="status-dot" />
-                        {d.status}
-                      </span>
-                    </div>
-
-                    {d.description && <p className="device-card-description">{d.description}</p>}
-
-                    <div className="device-card-footer">
-                      {d.last_seen_at ? (
-                        <span className="muted" title={new Date(d.last_seen_at).toLocaleString()}>
-                          Last seen {timeAgo(d.last_seen_at)}
-                        </span>
-                      ) : (
-                        <span className="muted">Never seen</span>
-                      )}
-                      <div className="card-menu">
-                        <button
-                          type="button"
-                          className="card-menu-trigger"
-                          aria-label={`Actions for ${d.name}`}
-                          aria-haspopup="menu"
-                          aria-expanded={openMenuId === d.id}
-                          onClick={() => setOpenMenuId(openMenuId === d.id ? null : d.id)}
-                        >
-                          {DotsIcon}
-                        </button>
-                        {openMenuId === d.id && (
-                          <div className="card-menu-list" role="menu">
+                        </td>
+                        {/* Inline buttons rather than a dropdown: a menu
+                            positioned inside a table that scrolls sideways
+                            gets clipped by that scroll container. */}
+                        <td className="cell-actions">
+                          <div className="row-actions">
                             <button
                               type="button"
-                              role="menuitem"
-                              className="card-menu-item"
+                              className="row-action"
+                              title="Copy device ID"
+                              aria-label={`Copy ID of ${d.name}`}
                               onClick={() => copyDeviceId(d.id)}
                             >
                               {copiedId === d.id ? CheckIcon : CopyIcon}
-                              {copiedId === d.id ? "Copied" : "Copy device ID"}
                             </button>
                             <button
                               type="button"
-                              role="menuitem"
-                              className="card-menu-item"
+                              className="row-action"
+                              title="Reset credentials"
+                              aria-label={`Reset credentials for ${d.name}`}
                               onClick={() => {
-                                setOpenMenuId(null);
                                 setResetError(null);
                                 setDeviceToReset(d);
                               }}
                             >
                               {KeyIcon}
-                              Reset credentials
                             </button>
                             <button
                               type="button"
-                              role="menuitem"
-                              className="card-menu-item card-menu-item-danger"
+                              className="row-action danger"
+                              title="Delete device"
+                              aria-label={`Delete ${d.name}`}
                               onClick={() => {
-                                setOpenMenuId(null);
                                 setDeleteError(null);
                                 setDeviceToDelete(d);
                               }}
                             >
                               {TrashIcon}
-                              Delete device
                             </button>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </section>
