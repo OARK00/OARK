@@ -11,6 +11,8 @@ from app.core.config import settings
 from app.core.database import engine
 from app.core.environment import assert_database_matches
 from app.core.health import health_report
+from app.modules.alerts.router import router as alerts_router
+from app.modules.alerts.watcher import watch_for_silence
 from app.modules.auth.router import router as auth_router
 from app.modules.devices.router import router as devices_router
 from app.modules.overview.router import router as overview_router
@@ -33,8 +35,10 @@ async def lifespan(app: FastAPI):
         return
 
     mqtt_task = asyncio.create_task(run_mqtt_forever())
+    silence_task = asyncio.create_task(watch_for_silence())
     yield
     mqtt_task.cancel()
+    silence_task.cancel()
 
 
 app = FastAPI(title="Oark IoT Platform API", lifespan=lifespan)
@@ -55,6 +59,7 @@ app.include_router(auth_router)
 app.include_router(devices_router)
 app.include_router(products_router)
 app.include_router(overview_router)
+app.include_router(alerts_router)
 app.include_router(telemetry_router)
 
 

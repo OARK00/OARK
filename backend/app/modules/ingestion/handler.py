@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.security import verify_device_secret
 from app.models.device import Device
 from app.models.telemetry import TelemetryReading
+from app.modules.alerts.engine import evaluate_reading
 
 
 def handle_telemetry_message(db: Session, device_id_str: str, payload: object) -> bool:
@@ -46,6 +47,11 @@ def handle_telemetry_message(db: Session, device_id_str: str, payload: object) -
     device.last_seen_at = datetime.now(timezone.utc)
     device.reported_state = data
     db.add(TelemetryReading(org_id=device.org_id, device_id=device.id, data=data))
+
+    # Checked here rather than on a timer so a breach is recorded within
+    # seconds of arriving, and in the same transaction as the reading that
+    # caused it: an alert can never refer to data that was rolled back.
+    evaluate_reading(db, device, data)
 
     db.commit()
     return True

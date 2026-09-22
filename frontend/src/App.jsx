@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Overview from "./pages/Overview";
 import Dashboard from "./pages/Dashboard";
 import DeviceDetail from "./pages/DeviceDetail";
+import Alerts from "./pages/Alerts";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import "./App.css";
@@ -38,6 +39,14 @@ function App() {
         element={
           <RequireAuth>
             <DeviceDetail />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/alerts"
+        element={
+          <RequireAuth>
+            <Alerts />
           </RequireAuth>
         }
       />
