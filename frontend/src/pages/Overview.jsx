@@ -2,11 +2,20 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
+import { useAuth } from "../context/AuthContext";
 import AppShell from "../components/AppShell";
 import AddDeviceWizard from "../components/AddDeviceWizard";
 import { CheckIcon } from "../components/icons";
 
 const REFRESH_MS = 30000;
+
+// Platform news, the way Tuya's overview carries announcements: the page
+// stays useful on an account that has no data of its own yet.
+const WHATS_NEW = [
+  { date: "22 Sep", text: "Device history charts over 1 hour, 24 hours or 7 days" },
+  { date: "22 Sep", text: "Login protection: repeated wrong passwords are now blocked" },
+  { date: "21 Sep", text: "Every device gets its own broker credentials" },
+];
 
 function timeAgo(iso) {
   const minutes = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
@@ -31,6 +40,92 @@ function StatTile({ label, value, note, tone }) {
       <span className="stat-tile-label">{label}</span>
       <span className="stat-tile-value">{value}</span>
       {note && <span className="stat-tile-note">{note}</span>}
+    </div>
+  );
+}
+
+function Hero({ email, onAddDevice }) {
+  const name = (email || "").split("@")[0];
+
+  return (
+    <div className="hero-card">
+      <div className="hero-text">
+        <span className="hero-eyebrow">Oark platform</span>
+        <h3>Welcome back{name ? `, ${name}` : ""}</h3>
+        <p>
+          Connect devices over MQTT, watch live telemetry, and manage every unit from one place. Each device
+          gets its own credentials, so one leak can never speak for the rest.
+        </p>
+        <div className="hero-actions">
+          <button type="button" className="primary-button" onClick={onAddDevice}>
+            Add a device
+          </button>
+          <Link to="/products" className="ghost-button">
+            Define a product
+          </Link>
+        </div>
+      </div>
+      <div className="hero-art" aria-hidden="true">
+        <svg viewBox="0 0 200 120" width="100%" height="120">
+          <circle cx="100" cy="60" r="22" className="hero-core" />
+          <circle cx="100" cy="60" r="34" className="hero-ring" />
+          <circle cx="100" cy="60" r="48" className="hero-ring faint" />
+          {[
+            [30, 30],
+            [170, 32],
+            [34, 94],
+            [168, 92],
+          ].map(([x, y]) => (
+            <g key={`${x}-${y}`}>
+              <line x1="100" y1="60" x2={x} y2={y} className="hero-link" />
+              <circle cx={x} cy={y} r="7" className="hero-node" />
+            </g>
+          ))}
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+// The numbered strip Tuya uses for its tutorials: steps left to right with
+// arrows between them, ticking themselves off as the account progresses.
+function QuickStart({ checklist, onAddDevice }) {
+  const steps = [
+    { key: "product_created", title: "Define a product", text: "What your devices measure" },
+    { key: "device_added", title: "Add a device", text: "One physical unit, own credentials" },
+    { key: "first_message", title: "See it report", text: "Paste the sketch, power it on" },
+  ];
+  const done = steps.filter((step) => checklist[step.key]).length;
+  if (done === steps.length) return null;
+
+  return (
+    <div className="quickstart-card">
+      <div className="card-head">
+        <h3>Quick start</h3>
+        <span className="card-head-note">
+          {done} of {steps.length} done
+        </span>
+      </div>
+      <div className="quickstart-strip">
+        {steps.map((step, index) => (
+          <div key={step.key} className="quickstart-step-wrap">
+            <div className={`quickstart-step${checklist[step.key] ? " done" : ""}`}>
+              <span className="quickstart-mark">{checklist[step.key] ? CheckIcon : index + 1}</span>
+              <span className="quickstart-title">{step.title}</span>
+              <span className="quickstart-text">{step.text}</span>
+            </div>
+            {index < steps.length - 1 && <span className="quickstart-arrow" aria-hidden="true" />}
+          </div>
+        ))}
+      </div>
+      <div className="quickstart-actions">
+        <button type="button" className="primary-button" onClick={onAddDevice}>
+          Get started
+        </button>
+        <Link to="/products" className="ghost-button">
+          Products
+        </Link>
+      </div>
     </div>
   );
 }
@@ -69,42 +164,6 @@ function MessagesChart({ series }) {
   );
 }
 
-function Checklist({ checklist }) {
-  const steps = [
-    { key: "product_created", label: "Define a product", hint: "What your devices measure", to: "/products" },
-    { key: "device_added", label: "Add a device", hint: "One physical unit", to: null },
-    { key: "first_message", label: "Receive first message", hint: "Flash it and power on", to: null },
-  ];
-  const done = steps.filter((step) => checklist[step.key]).length;
-
-  return (
-    <div className="side-card">
-      <div className="card-head">
-        <h3>Getting started</h3>
-        <span className="card-head-note">
-          {done}/{steps.length}
-        </span>
-      </div>
-      <ol className="checklist">
-        {steps.map((step, index) => {
-          const complete = checklist[step.key];
-          return (
-            <li key={step.key} className={`checklist-item${complete ? " done" : ""}`}>
-              <span className="checklist-mark">{complete ? CheckIcon : index + 1}</span>
-              <span>
-                <span className="checklist-label">
-                  {step.to && !complete ? <Link to={step.to}>{step.label}</Link> : step.label}
-                </span>
-                <span className="checklist-hint">{step.hint}</span>
-              </span>
-            </li>
-          );
-        })}
-      </ol>
-    </div>
-  );
-}
-
 function RecentActivity({ devices }) {
   return (
     <div className="activity-card">
@@ -115,7 +174,7 @@ function RecentActivity({ devices }) {
         </Link>
       </div>
       {devices.length === 0 ? (
-        <p className="activity-empty">Nothing has reported yet.</p>
+        <p className="activity-empty">Nothing has reported yet. Your devices appear here as they connect.</p>
       ) : (
         <ul className="activity-list">
           {devices.map((device) => {
@@ -145,68 +204,11 @@ function RecentActivity({ devices }) {
   );
 }
 
-// An account with nothing in it has nothing to chart. Showing zeros and an
-// empty graph makes a new customer's first screen look like a broken
-// dashboard, so until the first device exists the page is a start screen.
-function StartScreen({ checklist, onAddDevice }) {
-  const steps = [
-    {
-      key: "product_created",
-      title: "Define a product",
-      text: "Describe what your devices measure, once. Every device of that type reuses it.",
-      action: (
-        <Link to="/products" className="ghost-button">
-          Go to products
-        </Link>
-      ),
-    },
-    {
-      key: "device_added",
-      title: "Add a device",
-      text: "One physical unit. Oark gives it its own credentials, which only it can use.",
-      action: (
-        <button type="button" className="primary-button" onClick={onAddDevice}>
-          Add a device
-        </button>
-      ),
-    },
-    {
-      key: "first_message",
-      title: "See it report",
-      text: "Paste the sketch we generate into your ESP32 and power it on. Data appears here.",
-      action: null,
-    },
-  ];
-
-  return (
-    <div className="start-screen">
-      <div className="start-head">
-        <h3>Set up your first device</h3>
-        <p>Three steps. This page becomes your live dashboard as soon as data arrives.</p>
-      </div>
-      <ol className="start-steps">
-        {steps.map((step, index) => {
-          const done = checklist[step.key];
-          return (
-            <li key={step.key} className={`start-step${done ? " done" : ""}`}>
-              <span className="start-step-mark">{done ? CheckIcon : index + 1}</span>
-              <div className="start-step-body">
-                <h4>{step.title}</h4>
-                <p>{step.text}</p>
-              </div>
-              {!done && step.action}
-            </li>
-          );
-        })}
-      </ol>
-    </div>
-  );
-}
-
 export default function Overview() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [adding, setAdding] = useState(false);
+  const { email } = useAuth();
   const navigate = useNavigate();
 
   async function load() {
@@ -239,13 +241,11 @@ export default function Overview() {
 
       {error && <div className="error">{error}</div>}
 
-      {data && data.devices.total === 0 && (
-        <StartScreen checklist={data.checklist} onAddDevice={() => setAdding(true)} />
-      )}
-
-      {data && data.devices.total > 0 && (
+      {data && (
         <div className="overview-grid">
           <div className="overview-main">
+            <Hero email={email} onAddDevice={() => setAdding(true)} />
+
             <div className="stat-row">
               <StatTile label="Devices" value={data.devices.total} note={`${data.products} products`} />
               <StatTile label="Online" value={data.devices.online} tone="good" note="reported in last 2 min" />
@@ -262,12 +262,26 @@ export default function Overview() {
               />
             </div>
 
+            <QuickStart checklist={data.checklist} onAddDevice={() => setAdding(true)} />
             <MessagesChart series={data.messages.series} />
             <RecentActivity devices={data.recent_devices} />
           </div>
 
           <aside className="overview-side">
-            <Checklist checklist={data.checklist} />
+            <div className="side-card">
+              <div className="card-head">
+                <h3>What&rsquo;s new</h3>
+              </div>
+              <ul className="news-list">
+                {WHATS_NEW.map((item) => (
+                  <li key={item.text}>
+                    <span className="news-date">{item.date}</span>
+                    <span className="news-text">{item.text}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             <div className="side-card">
               <div className="card-head">
                 <h3>Resources</h3>

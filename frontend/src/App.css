@@ -2613,3 +2613,251 @@ a.activity-name:hover {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ---------- Overview hero, quick start, news ---------- */
+
+.hero-card {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.4rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: linear-gradient(135deg, #0b1f1d 0%, #123632 55%, #0f2a27 100%);
+  color: #ffffff;
+}
+
+.hero-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.hero-eyebrow {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #7fd1c6;
+  margin-bottom: 0.35rem;
+}
+
+.hero-card h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.hero-card p {
+  margin: 0 0 1rem;
+  max-width: 460px;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #b9c6c3;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.hero-actions .ghost-button {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.hero-actions .ghost-button:hover {
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+.hero-art {
+  flex: 0 0 200px;
+  display: none;
+}
+
+@media (min-width: 820px) {
+  .hero-art {
+    display: block;
+  }
+}
+
+.hero-core {
+  fill: rgba(45, 212, 191, 0.9);
+}
+
+.hero-ring {
+  fill: none;
+  stroke: rgba(125, 211, 200, 0.45);
+  stroke-width: 1;
+}
+
+.hero-ring.faint {
+  stroke: rgba(125, 211, 200, 0.2);
+}
+
+.hero-link {
+  stroke: rgba(125, 211, 200, 0.35);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.hero-node {
+  fill: #0b1f1d;
+  stroke: rgba(125, 211, 200, 0.8);
+  stroke-width: 1.5;
+}
+
+.quickstart-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  padding: 1rem 1.1rem 1.1rem;
+}
+
+.quickstart-strip {
+  display: flex;
+  align-items: stretch;
+  gap: 0.25rem;
+}
+
+.quickstart-step-wrap {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.quickstart-step {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.2rem;
+  padding: 0.85rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-alt);
+}
+
+.quickstart-step.done {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.quickstart-mark {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.25rem;
+}
+
+.quickstart-step.done .quickstart-mark {
+  border-color: #bbf7d0;
+  color: #16a34a;
+}
+
+.quickstart-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.quickstart-text {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.quickstart-arrow {
+  flex: 0 0 26px;
+  height: 1px;
+  margin: 0 0.15rem;
+  border-top: 1px dashed var(--border);
+  position: relative;
+}
+
+.quickstart-arrow::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-top: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  transform: rotate(45deg);
+}
+
+.quickstart-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin-top: 0.9rem;
+}
+
+.quickstart-actions .ghost-button {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.quickstart-actions .primary-button {
+  padding-left: 1.1rem;
+  padding-right: 1.1rem;
+}
+
+.news-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.news-list li {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.news-list li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.news-date {
+  flex: 0 0 44px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  padding-top: 0.1rem;
+}
+
+@media (max-width: 760px) {
+  .quickstart-strip {
+    flex-direction: column;
+  }
+
+  .quickstart-step-wrap {
+    flex-direction: column;
+  }
+
+  .quickstart-arrow {
+    display: none;
+  }
+}
