@@ -4,9 +4,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 
 from app.core.database import engine
 from app.core.environment import assert_database_matches
+from app.core.health import health_report
 from app.modules.auth.router import router as auth_router
 from app.modules.devices.router import router as devices_router
 from app.modules.products.router import router as products_router
@@ -49,4 +52,5 @@ app.include_router(telemetry_router)
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    report, status_code = health_report()
+    return JSONResponse(jsonable_encoder(report), status_code=status_code)

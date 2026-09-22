@@ -1,12 +1,14 @@
 import asyncio
 import json
 import logging
+from datetime import datetime, timezone
 
 import aiomqtt
 
 from app.core.config import settings
 from app.core.database import SessionLocal
 from app.modules.ingestion.handler import handle_telemetry_message
+from app.modules.ingestion.state import ingestion_state
 
 logger = logging.getLogger("oark.ingestion")
 
@@ -25,8 +27,10 @@ async def _consume():
     ) as client:
         await client.subscribe(TELEMETRY_TOPIC_FILTER)
         logger.info("Connected to MQTT broker, subscribed to %s", TELEMETRY_TOPIC_FILTER)
+        ingestion_state.mark_connected()
 
         async for message in client.messages:
+            ingestion_state.last_message_at = datetime.now(timezone.utc)
             topic_parts = message.topic.value.split("/")
             if len(topic_parts) != 4:
                 continue
@@ -54,7 +58,9 @@ async def run_mqtt_forever():
             await _consume()
         except aiomqtt.MqttError as error:
             logger.warning("MQTT connection lost (%s); reconnecting in 5s", error)
+            ingestion_state.mark_disconnected(str(error))
             await asyncio.sleep(5)
-        except Exception:
+        except Exception as error:
             logger.exception("Unexpected error in MQTT ingestion loop; reconnecting in 5s")
+            ingestion_state.mark_disconnected(f"{type(error).__name__}: {error}")
             await asyncio.sleep(5)
