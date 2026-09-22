@@ -1,3 +1,8 @@
 -r requirements.txt
 pytest==8.3.3
 mypy==1.11.2
+# Type stubs for libraries that ship none. Without these, mypy reports the
+# imports as untyped and fails on a clean machine even though it passes on
+# one where they happen to be installed.
+types-passlib==1.7.7.20260211
+types-python-jose==3.5.0.20260408
