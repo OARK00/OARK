@@ -22,6 +22,7 @@ router = APIRouter(prefix="/overview", tags=["overview"])
 
 CHART_HOURS = 24
 RECENT_DEVICE_LIMIT = 6
+RECENT_PRODUCT_LIMIT = 6
 
 
 def _hourly_series(db: Session, org_id, since: datetime) -> list[dict]:
@@ -71,7 +72,20 @@ def overview(db: Session = Depends(get_db), current_user: User = Depends(get_cur
 
     devices = db.query(Device).filter(Device.org_id == org_id).all()
     statuses = [compute_status(device.last_seen_at).value for device in devices]
+
+    products = (
+        db.query(Product)
+        .filter(Product.org_id == org_id)
+        .order_by(Product.created_at.desc(), Product.id)
+        .limit(RECENT_PRODUCT_LIMIT)
+        .all()
+    )
     product_count = db.execute(select(func.count(Product.id)).where(Product.org_id == org_id)).scalar() or 0
+    # Counted from the devices already loaded rather than another query.
+    devices_per_product: dict = {}
+    for device in devices:
+        if device.product_id:
+            devices_per_product[device.product_id] = devices_per_product.get(device.product_id, 0) + 1
 
     last_24h = _count_readings(db, org_id, day_ago, now)
     previous_24h = _count_readings(db, org_id, day_ago - timedelta(hours=CHART_HOURS), day_ago)
@@ -112,4 +126,15 @@ def overview(db: Session = Depends(get_db), current_user: User = Depends(get_cur
             }
             for device in recent
         ],
+        "recent_products": [
+            {
+                "id": str(product.id),
+                "name": product.name,
+                "category": product.category,
+                "data_points": len(product.data_points or []),
+                "device_count": devices_per_product.get(product.id, 0),
+            }
+            for product in products
+        ],
+        "never_reported": sum(1 for device in devices if device.last_seen_at is None),
     }

@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import { useAuth } from "../context/AuthContext";
 import AppShell from "../components/AppShell";
 import AddDeviceWizard from "../components/AddDeviceWizard";
-import { CheckIcon } from "../components/icons";
+import GuideCarousel from "../components/GuideCarousel";
+import WorkspaceConsole from "../components/WorkspaceConsole";
 
 const REFRESH_MS = 30000;
 
@@ -31,7 +32,7 @@ function trendLabel(current, previous) {
   if (!previous) return current ? "first messages today" : "no messages yet";
   const change = Math.round(((current - previous) / previous) * 100);
   if (change === 0) return "same as yesterday";
-  return `${change > 0 ? "▲" : "▼"} ${Math.abs(change)}% vs yesterday`;
+  return `${change > 0 ? "â–²" : "â–¼"} ${Math.abs(change)}% vs yesterday`;
 }
 
 function StatTile({ label, value, note, tone }) {
@@ -82,49 +83,6 @@ function Hero({ email, onAddDevice }) {
             </g>
           ))}
         </svg>
-      </div>
-    </div>
-  );
-}
-
-// The numbered strip Tuya uses for its tutorials: steps left to right with
-// arrows between them, ticking themselves off as the account progresses.
-function QuickStart({ checklist, onAddDevice }) {
-  const steps = [
-    { key: "product_created", title: "Define a product", text: "What your devices measure" },
-    { key: "device_added", title: "Add a device", text: "One physical unit, own credentials" },
-    { key: "first_message", title: "See it report", text: "Paste the sketch, power it on" },
-  ];
-  const done = steps.filter((step) => checklist[step.key]).length;
-  if (done === steps.length) return null;
-
-  return (
-    <div className="quickstart-card">
-      <div className="card-head">
-        <h3>Quick start</h3>
-        <span className="card-head-note">
-          {done} of {steps.length} done
-        </span>
-      </div>
-      <div className="quickstart-strip">
-        {steps.map((step, index) => (
-          <div key={step.key} className="quickstart-step-wrap">
-            <div className={`quickstart-step${checklist[step.key] ? " done" : ""}`}>
-              <span className="quickstart-mark">{checklist[step.key] ? CheckIcon : index + 1}</span>
-              <span className="quickstart-title">{step.title}</span>
-              <span className="quickstart-text">{step.text}</span>
-            </div>
-            {index < steps.length - 1 && <span className="quickstart-arrow" aria-hidden="true" />}
-          </div>
-        ))}
-      </div>
-      <div className="quickstart-actions">
-        <button type="button" className="primary-button" onClick={onAddDevice}>
-          Get started
-        </button>
-        <Link to="/products" className="ghost-button">
-          Products
-        </Link>
       </div>
     </div>
   );
@@ -262,7 +220,22 @@ export default function Overview() {
               />
             </div>
 
-            <QuickStart checklist={data.checklist} onAddDevice={() => setAdding(true)} />
+            <GuideCarousel
+              checklist={data.checklist}
+              onAddDevice={() => setAdding(true)}
+              renderAction={(action, addDevice) =>
+                action.kind === "add-device" ? (
+                  <button type="button" className="primary-button" onClick={addDevice}>
+                    {action.label}
+                  </button>
+                ) : (
+                  <Link to={action.to} className="primary-button console-link-button">
+                    {action.label}
+                  </Link>
+                )
+              }
+            />
+            <WorkspaceConsole data={data} onAddDevice={() => setAdding(true)} />
             <MessagesChart series={data.messages.series} />
             <RecentActivity devices={data.recent_devices} />
           </div>
