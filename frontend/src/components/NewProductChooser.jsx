@@ -22,10 +22,70 @@ const TemplateIcon = (
   </svg>
 );
 
-// The first screen of creating a product, in the shape the reference
-// platforms use: describing the device is the front door, with a template
+// The three ways to say what kind of device something is, in the shape the
+// reference platforms use: describing it is the front door, with a template
 // and a fully manual setup as the two ways around it. The AI box is shown
 // but disabled until generation exists -- visible direction, no fake button.
+// Used on its own for New product, and as the first step of Add device.
+export function ChooserBody({
+  onTemplate,
+  onManual,
+  manualTitle = "Set up manually",
+  manualText = "Full freedom. Connect a test device and Oark reads its fields, or define them yourself.",
+}) {
+  return (
+    <>
+      <div className="ai-box" aria-disabled="true">
+        <div className="ai-box-head">
+          <span className="ai-box-title">
+            {SparkIcon}
+            Describe your device
+          </span>
+          <span className="soon-badge">Soon</span>
+        </div>
+        <p className="ai-box-note">
+          Oark will draft its name, category and data points from one sentence. You can edit everything afterwards.
+        </p>
+        <div className="ai-box-input">
+          <textarea placeholder="e.g. A cold store freezer with a door sensor…" disabled rows={2} />
+          <button type="button" className="primary-button" disabled>
+            {SparkIcon}
+            Generate
+          </button>
+        </div>
+        <div className="ai-box-examples">
+          <span className="ai-box-examples-label">Try one</span>
+          {EXAMPLES.map((example) => (
+            <span key={example} className="ai-chip">
+              {example}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="chooser-divider">
+        <span>or</span>
+      </div>
+
+      <div className="chooser-options">
+        <button type="button" className="chooser-option" onClick={onTemplate}>
+          <span className="chooser-option-icon">{TemplateIcon}</span>
+          <span className="chooser-option-title">Start from a template</span>
+          <span className="chooser-option-text">
+            Ready-made for common hardware: temperature, energy, tank level, machine status. One click.
+          </span>
+        </button>
+
+        <button type="button" className="chooser-option" onClick={onManual}>
+          <span className="chooser-option-icon">{PlusIcon}</span>
+          <span className="chooser-option-title">{manualTitle}</span>
+          <span className="chooser-option-text">{manualText}</span>
+        </button>
+      </div>
+    </>
+  );
+}
+
 export default function NewProductChooser({ onClose, onTemplate, onManual }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -39,56 +99,7 @@ export default function NewProductChooser({ onClose, onTemplate, onManual }) {
         <h3 id="chooser-title">New product</h3>
         <p>A product is a type of device. Define it once, and every device of that type reuses it.</p>
 
-        <div className="ai-box" aria-disabled="true">
-          <div className="ai-box-head">
-            <span className="ai-box-title">
-              {SparkIcon}
-              Describe your device
-            </span>
-            <span className="soon-badge">Soon</span>
-          </div>
-          <p className="ai-box-note">
-            Oark will draft its name, category and data points from one sentence. You can edit everything
-            afterwards.
-          </p>
-          <div className="ai-box-input">
-            <textarea placeholder="e.g. A cold store freezer with a door sensor…" disabled rows={2} />
-            <button type="button" className="primary-button" disabled>
-              {SparkIcon}
-              Generate
-            </button>
-          </div>
-          <div className="ai-box-examples">
-            <span className="ai-box-examples-label">Try one</span>
-            {EXAMPLES.map((example) => (
-              <span key={example} className="ai-chip">
-                {example}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="chooser-divider">
-          <span>or</span>
-        </div>
-
-        <div className="chooser-options">
-          <button type="button" className="chooser-option" onClick={onTemplate}>
-            <span className="chooser-option-icon">{TemplateIcon}</span>
-            <span className="chooser-option-title">Start from a template</span>
-            <span className="chooser-option-text">
-              Ready-made for common hardware: temperature, energy, tank level, machine status. One click.
-            </span>
-          </button>
-
-          <button type="button" className="chooser-option" onClick={onManual}>
-            <span className="chooser-option-icon">{PlusIcon}</span>
-            <span className="chooser-option-title">Set up manually</span>
-            <span className="chooser-option-text">
-              Full freedom. Connect a test device and Oark reads its fields, or define them yourself.
-            </span>
-          </button>
-        </div>
+        <ChooserBody onTemplate={onTemplate} onManual={onManual} />
 
         <div className="modal-actions">
           <button type="button" className="ghost-button" onClick={onClose}>

@@ -1,18 +1,28 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import { CATEGORY_OPTIONS } from "../constants/devices";
 import ConnectPanel, { useFirstMessage } from "./DeviceConnect";
+import { ChooserBody } from "./NewProductChooser";
+import { TemplateGrid } from "./TemplatePicker";
 import WizardSteps from "./WizardSteps";
 
 const STEPS = ["Device", "Connect"];
 const STANDALONE = "";
 
+// Step one has three views:
+//   choose   -- what kind of device is it: describe / template / own setup
+//   template -- the template cards, inline; picking one creates the product
+//   form     -- name the unit, with the product (if any) already selected
+// Someone with no products starts at "choose", because "No product" in a
+// dropdown is not an answer to "what is this device". Someone with products
+// starts at the form, with the choice one click away for something new.
 export default function AddDeviceWizard({ onClose, onCreated, initialProductId = STANDALONE }) {
   const [step, setStep] = useState(0);
+  const [view, setView] = useState(null);
   const [products, setProducts] = useState(null);
   const [productId, setProductId] = useState(initialProductId);
+  const [fromTemplate, setFromTemplate] = useState(null);
   const [form, setForm] = useState({ name: "", category: "sensor", description: "" });
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState(null);
@@ -26,12 +36,23 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
       .then(({ data }) => {
         setProducts(data);
         if (!initialProductId && data.length) setProductId(data[0].id);
+        setView(data.length || initialProductId ? "form" : "choose");
       })
-      .catch(() => setProducts([]));
+      .catch(() => {
+        setProducts([]);
+        setView("form");
+      });
   }, [initialProductId]);
 
   function update(field) {
     return (e) => setForm((current) => ({ ...current, [field]: e.target.value }));
+  }
+
+  function adoptNewProduct(product) {
+    setProducts((current) => [...(current || []), product]);
+    setProductId(product.id);
+    setFromTemplate(product.name);
+    setView("form");
   }
 
   async function createDevice(e) {
@@ -57,11 +78,12 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
   }
 
   const selectedProduct = products?.find((p) => p.id === productId);
+  const hasProducts = Boolean(products?.length);
 
   return (
     <div className="modal-overlay" onClick={() => !creating && step === 0 && onClose()}>
       <div
-        className="modal-card wizard-card"
+        className={`modal-card wizard-card${view === "choose" ? " chooser-card" : ""}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="wizard-title"
@@ -69,28 +91,67 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
       >
         <WizardSteps steps={STEPS} current={step} />
 
-        {step === 0 && (
+        {step === 0 && view === null && <p className="muted">Loading…</p>}
+
+        {step === 0 && view === "choose" && (
+          <>
+            <h3 id="wizard-title">Add device</h3>
+            <p>First, what kind of device is it? Oark uses this to label its data and reuse it for every unit.</p>
+            <ChooserBody
+              onTemplate={() => setView("template")}
+              onManual={() => {
+                setProductId(STANDALONE);
+                setView("form");
+              }}
+              manualTitle="My own setup"
+              manualText="Full freedom. Name it and pick a category now; Oark reads its fields once it reports."
+            />
+            <div className="modal-actions">
+              {hasProducts && (
+                <button type="button" className="ghost-button" onClick={() => setView("form")}>
+                  ← Back
+                </button>
+              )}
+              <button type="button" className="ghost-button" onClick={onClose}>
+                Cancel
+              </button>
+            </div>
+          </>
+        )}
+
+        {step === 0 && view === "template" && (
+          <>
+            <h3 id="wizard-title">Start from a template</h3>
+            <p>Pick the closest match. It becomes a product you can edit later, and this device uses it.</p>
+            <TemplateGrid onCreated={adoptNewProduct} />
+            <div className="modal-actions">
+              <button type="button" className="ghost-button" onClick={() => setView("choose")}>
+                ← Back
+              </button>
+            </div>
+          </>
+        )}
+
+        {step === 0 && view === "form" && (
           <form onSubmit={createDevice}>
             <h3 id="wizard-title">Add device</h3>
-            <p>Pick what kind of device this is, then give this unit a name.</p>
+            <p>
+              {fromTemplate
+                ? `Created the product “${fromTemplate}”. Now give this unit a name.`
+                : "Pick what kind of device this is, then give this unit a name."}
+            </p>
             <div className="add-device-form">
               <label className="field">
                 Product
-                <select value={productId} onChange={(e) => setProductId(e.target.value)} disabled={products === null}>
-                  {products === null && <option value={productId}>Loading products…</option>}
+                <select value={productId} onChange={(e) => setProductId(e.target.value)}>
                   {products?.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
                       {p.model_number ? ` (${p.model_number})` : ""}
                     </option>
                   ))}
-                  {products !== null && <option value={STANDALONE}>No product: standalone device</option>}
+                  <option value={STANDALONE}>No product: standalone device</option>
                 </select>
-                {products?.length === 0 && (
-                  <span className="field-note">
-                    No products yet. <Link to="/products?new=1">Create one</Link> to reuse its data points across devices.
-                  </span>
-                )}
                 {selectedProduct && (
                   <span className="field-note">
                     {selectedProduct.data_points.length
@@ -98,6 +159,9 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
                       : "This product has no data points yet."}
                   </span>
                 )}
+                <button type="button" className="link-button small field-link" onClick={() => setView("choose")}>
+                  Something new? Start from a template or your own setup
+                </button>
               </label>
               <label className="field">
                 Name
@@ -110,7 +174,7 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
                   autoFocus
                 />
               </label>
-              {!productId && products !== null && (
+              {!productId && (
                 <label className="field">
                   Category
                   <select value={form.category} onChange={update("category")}>
@@ -138,7 +202,7 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
               <button type="button" className="ghost-button" onClick={onClose} disabled={creating}>
                 Cancel
               </button>
-              <button type="submit" className="primary-button" disabled={creating || products === null}>
+              <button type="submit" className="primary-button" disabled={creating}>
                 {creating ? "Creating..." : "Create device"}
               </button>
             </div>

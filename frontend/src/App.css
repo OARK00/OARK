@@ -3774,3 +3774,9 @@ a.activity-name:hover {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.field-link {
+  align-self: flex-start;
+  margin-top: 0.15rem;
+  font-weight: 600;
+}
