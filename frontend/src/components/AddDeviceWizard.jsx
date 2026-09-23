@@ -88,7 +88,7 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
                 </select>
                 {products?.length === 0 && (
                   <span className="field-note">
-                    No products yet. <Link to="/products">Create one</Link> to reuse its data points across devices.
+                    No products yet. <Link to="/products?new=1">Create one</Link> to reuse its data points across devices.
                   </span>
                 )}
                 {selectedProduct && (

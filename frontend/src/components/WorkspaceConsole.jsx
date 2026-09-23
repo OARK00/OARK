@@ -117,7 +117,7 @@ export default function WorkspaceConsole({ data, onAddDevice }) {
               ]}
             />
             <div className="console-actions">
-              <Link to="/products" className="primary-button console-link-button">
+              <Link to="/products?new=1" className="primary-button console-link-button">
                 New product
               </Link>
               <Link to="/products" className="ghost-button">
@@ -128,7 +128,7 @@ export default function WorkspaceConsole({ data, onAddDevice }) {
 
           {(data.recent_products || []).length === 0 ? (
             <div className="console-cards">
-              <Link to="/products" className="console-ghost action">
+              <Link to="/products?new=1" className="console-ghost action">
                 <span className="console-ghost-plus">+</span>
                 Define your first product
               </Link>

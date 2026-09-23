@@ -27,7 +27,7 @@ export const GUIDES = [
       { label: "Name them and set units" },
       { label: "Every device reuses it" },
     ],
-    action: { label: "Go to products", kind: "link", to: "/products" },
+    action: { label: "Create a product", kind: "link", to: "/products?new=1" },
   },
   {
     id: "template",

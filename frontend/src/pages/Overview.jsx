@@ -62,7 +62,7 @@ function Hero({ email, onAddDevice }) {
           <button type="button" className="primary-button" onClick={onAddDevice}>
             Add a device
           </button>
-          <Link to="/products" className="ghost-button">
+          <Link to="/products?new=1" className="ghost-button">
             Define a product
           </Link>
         </div>
@@ -278,7 +278,7 @@ export default function Overview() {
                   </button>
                 </li>
                 <li>
-                  <button type="button" className="link-button" onClick={() => navigate("/products")}>
+                  <button type="button" className="link-button" onClick={() => navigate("/products?new=1")}>
                     Define a product
                   </button>
                 </li>
