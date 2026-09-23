@@ -29,6 +29,19 @@ class Settings(BaseSettings):
     mqtt_username: str = ""
     mqtt_password: str = ""
 
+    # AI drafting of products from a one-sentence description. The provider
+    # is a setting so moving from Gemini to Claude later changes no callers.
+    ai_provider: Literal["gemini"] = "gemini"
+    gemini_api_key: str = ""
+    # Configurable because model names are retired over time; check the
+    # provider's model list if drafting starts failing with a 404. The lite
+    # model is the primary because it answered reliably on the free tier
+    # while the newest model was often refusing with "high demand"; when one
+    # is busy the other is tried, since each model has its own capacity.
+    gemini_model: str = "gemini-3.1-flash-lite"
+    gemini_fallback_model: str = "gemini-3.6-flash"
+    ai_drafts_per_hour: int = 20
+
     # EMQX deployment API, used to give every device its own broker login.
     emqx_api_url: str = ""
     emqx_api_key: str = ""

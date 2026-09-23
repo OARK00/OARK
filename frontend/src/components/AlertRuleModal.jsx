@@ -106,7 +106,7 @@ export default function AlertRuleModal({ onClose, onCreated }) {
             </label>
 
             {!isNoData && (
-              <div className="field-row">
+              <div className="field-row-limit">
                 <label className="field">
                   Field
                   <input

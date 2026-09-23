@@ -64,6 +64,7 @@ function formatValue(value) {
 
 function Observation({ row }) {
   if (row.manual) return <span>Added by you</span>;
+  if (row.suggested) return <span>Suggested from your description</span>;
   if (!row.sampleCount) return <span>Not seen in recent data</span>;
   const range =
     row.observedMin !== null && row.observedMax !== null && row.observedMin !== row.observedMax

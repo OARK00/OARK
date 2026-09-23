@@ -3,6 +3,7 @@ import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import { CATEGORY_OPTIONS } from "../constants/devices";
 import ConnectPanel, { useFirstMessage } from "./DeviceConnect";
+import DraftReview from "./DraftReview";
 import { ChooserBody } from "./NewProductChooser";
 import { TemplateGrid } from "./TemplatePicker";
 import WizardSteps from "./WizardSteps";
@@ -10,8 +11,9 @@ import WizardSteps from "./WizardSteps";
 const STEPS = ["Device", "Connect"];
 const STANDALONE = "";
 
-// Step one has three views:
+// Step one has four views:
 //   choose   -- what kind of device is it: describe / template / own setup
+//   draft    -- the AI's proposal, for review; creating it makes the product
 //   template -- the template cards, inline; picking one creates the product
 //   form     -- name the unit, with the product (if any) already selected
 // Someone with no products starts at "choose", because "No product" in a
@@ -22,7 +24,8 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
   const [view, setView] = useState(null);
   const [products, setProducts] = useState(null);
   const [productId, setProductId] = useState(initialProductId);
-  const [fromTemplate, setFromTemplate] = useState(null);
+  const [justCreated, setJustCreated] = useState(null);
+  const [draft, setDraft] = useState(null);
   const [form, setForm] = useState({ name: "", category: "sensor", description: "" });
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState(null);
@@ -51,7 +54,7 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
   function adoptNewProduct(product) {
     setProducts((current) => [...(current || []), product]);
     setProductId(product.id);
-    setFromTemplate(product.name);
+    setJustCreated(product.name);
     setView("form");
   }
 
@@ -83,7 +86,9 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
   return (
     <div className="modal-overlay" onClick={() => !creating && step === 0 && onClose()}>
       <div
-        className={`modal-card wizard-card${view === "choose" ? " chooser-card" : ""}`}
+        className={`modal-card wizard-card${view === "choose" ? " chooser-card" : ""}${
+          view === "draft" ? " wizard-card-wide" : ""
+        }`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="wizard-title"
@@ -98,6 +103,10 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
             <h3 id="wizard-title">Add device</h3>
             <p>First, what kind of device is it? Oark uses this to label its data and reuse it for every unit.</p>
             <ChooserBody
+              onDraft={(proposal) => {
+                setDraft(proposal);
+                setView("draft");
+              }}
               onTemplate={() => setView("template")}
               onManual={() => {
                 setProductId(STANDALONE);
@@ -119,6 +128,10 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
           </>
         )}
 
+        {step === 0 && view === "draft" && draft && (
+          <DraftReview draft={draft} onBack={() => setView("choose")} onCreated={adoptNewProduct} />
+        )}
+
         {step === 0 && view === "template" && (
           <>
             <h3 id="wizard-title">Start from a template</h3>
@@ -136,8 +149,8 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
           <form onSubmit={createDevice}>
             <h3 id="wizard-title">Add device</h3>
             <p>
-              {fromTemplate
-                ? `Created the product “${fromTemplate}”. Now give this unit a name.`
+              {justCreated
+                ? `Created the product “${justCreated}”. Now give this unit a name.`
                 : "Pick what kind of device this is, then give this unit a name."}
             </p>
             <div className="add-device-form">

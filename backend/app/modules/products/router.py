@@ -1,15 +1,22 @@
+import logging
 import uuid
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.core.ai import AIUnavailable, is_configured
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.deps import get_current_user
+from app.models.ai_request import AiRequest
 from app.models.device import Device
 from app.models.product import Product
 from app.models.telemetry import TelemetryReading
 from app.models.user import User
+from app.modules.products import drafting
 from app.modules.products.inference import suggest_data_points
 from app.modules.products.schemas import (
     DataPointsUpdate,
@@ -19,6 +26,77 @@ from app.modules.products.schemas import (
 )
 
 router = APIRouter(prefix="/products", tags=["products"])
+logger = logging.getLogger("oark.ai")
+
+
+class DraftRequest(BaseModel):
+    # Long enough to describe a device, short enough to bound the cost of
+    # every call and the room a hostile text has to work with.
+    description: str = Field(min_length=8, max_length=500)
+
+
+def _drafts_last_hour(db: Session, org_id) -> int:
+    since = datetime.now(timezone.utc) - timedelta(hours=1)
+    return (
+        db.query(func.count(AiRequest.id))
+        .filter(AiRequest.org_id == org_id, AiRequest.created_at >= since)
+        .scalar()
+        or 0
+    )
+
+
+@router.get("/draft/status")
+def draft_status(current_user: User = Depends(get_current_user)):
+    """Lets the UI show the describe box as available or as coming soon,
+    instead of offering a button that can only fail."""
+    return {"available": is_configured()}
+
+
+@router.post("/draft", response_model=drafting.ProductDraft)
+def draft_product(
+    payload: DraftRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Propose a product from one sentence. Saves nothing: the caller shows
+    the draft for review and creates the product through the normal calls."""
+    # Checked before the limit: a platform without a key costs nothing per
+    # click, so those clicks must not use up anyone's hourly allowance.
+    if not is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="AI drafting isn't set up yet. Start from a template or set it up yourself.",
+        )
+    if _drafts_last_hour(db, current_user.org_id) >= settings.ai_drafts_per_hour:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="You've used this hour's AI drafts. Try again later, or start from a template.",
+        )
+
+    try:
+        draft = drafting.draft_product(payload.description.strip())
+    except AIUnavailable as exc:
+        # The user gets a generic message; the reason goes to the logs, where
+        # it is needed to tell a retired model from a spent quota.
+        logger.warning("AI draft failed for org %s: %s", current_user.org_id, exc)
+        db.add(AiRequest(org_id=current_user.org_id, succeeded=False))
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="AI drafting isn't available right now. Start from a template or set it up yourself.",
+        )
+    except drafting.DraftRejected as exc:
+        logger.warning("AI draft rejected for org %s: %s", current_user.org_id, str(exc)[:300])
+        db.add(AiRequest(org_id=current_user.org_id, succeeded=False))
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Couldn't turn that into a product. Try describing what the device measures.",
+        )
+
+    db.add(AiRequest(org_id=current_user.org_id, succeeded=True))
+    db.commit()
+    return draft
 
 # Enough recent history to see every field a device sends, without scanning
 # a product's whole telemetry table.

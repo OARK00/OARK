@@ -3472,7 +3472,9 @@ a.activity-name:hover {
 
 /* ---------- Alerts ---------- */
 
-.field-row {
+/* A field with a narrow value beside it (alert rule: field + limit). Named
+   separately so it doesn't override the equal two-column .field-row. */
+.field-row-limit {
   display: grid;
   grid-template-columns: 1fr 140px;
   gap: 0.75rem;
@@ -3588,7 +3590,8 @@ a.activity-name:hover {
     gap: 0.2rem;
   }
 
-  .field-row {
+  .field-row,
+  .field-row-limit {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -3779,4 +3782,19 @@ a.activity-name:hover {
   align-self: flex-start;
   margin-top: 0.15rem;
   font-weight: 600;
+}
+
+button.ai-chip {
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+button.ai-chip:hover:enabled {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.ai-box-error {
+  margin-top: 0.6rem;
 }

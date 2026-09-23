@@ -6,8 +6,10 @@ from app.models.telemetry import TelemetryReading
 from app.models.environment import EnvironmentLabel
 from app.models.login_attempt import LoginAttempt
 from app.models.alert import AlertEvent, AlertRule
+from app.models.ai_request import AiRequest
 
 __all__ = [
+    "AiRequest",
     "AlertEvent",
     "AlertRule",
     "Organization",
