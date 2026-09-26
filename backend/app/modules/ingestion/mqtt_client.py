@@ -73,6 +73,11 @@ async def _consume():
                 accepted = handle_telemetry_message(db, device_id_str, payload)
                 if not accepted:
                     logger.warning("Rejected telemetry for device %s", device_id_str)
+            except Exception:
+                # One message that fails to save must not disconnect every
+                # device: log it, drop it, keep listening.
+                db.rollback()
+                logger.exception("Failed to store telemetry for device %s", device_id_str)
             finally:
                 db.close()
 

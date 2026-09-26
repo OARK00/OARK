@@ -62,9 +62,10 @@ class Device(Base):
         Enum(DeviceStatus), nullable=False, default=DeviceStatus.offline
     )
 
-    # Device Shadow: commands write desired_state; the device's own reports
-    # update reported_state on reconnect, so a command to an offline device
-    # is queued instead of lost (Oark_Master_Document.docx, Sec. 3).
+    # Unused: what a device is being asked to change lives in device_commands,
+    # derived from the pending rows rather than copied here where it could
+    # drift. Kept mapped until a release that no longer reads the column has
+    # shipped, so dropping it can never break the version still running.
     desired_state: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
     reported_state: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
 

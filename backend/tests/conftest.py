@@ -13,6 +13,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
 
+from app.core import broker
 from app.core.config import settings
 from app.core.database import engine, get_db
 from app.core.environment import assert_database_matches
@@ -59,6 +60,23 @@ def fake_broker(monkeypatch):
     monkeypatch.setattr(devices_router, "replace_device_login", recorder("replace"))
     monkeypatch.setattr(devices_router, "delete_device_login", recorder("delete"))
     return calls
+
+
+@pytest.fixture(autouse=True)
+def fake_publish(monkeypatch):
+    """Messages that would have gone to devices. Set `connected` to False to
+    act as if nothing is subscribed, or `error` to act as if the broker's API
+    is down."""
+    state: dict = {"sent": [], "connected": True, "error": None}
+
+    def publish(device_id: str, message: dict) -> bool:
+        if state["error"]:
+            raise broker.BrokerError(state["error"])
+        state["sent"].append((device_id, message))
+        return state["connected"]
+
+    monkeypatch.setattr(broker, "publish_to_device", publish)
+    return state
 
 
 @pytest.fixture()

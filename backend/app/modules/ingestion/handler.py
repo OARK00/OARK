@@ -7,6 +7,7 @@ from app.core.security import verify_device_secret
 from app.models.device import Device
 from app.models.telemetry import TelemetryReading
 from app.modules.alerts.engine import evaluate_reading
+from app.modules.commands.engine import resolve_commands
 
 
 def handle_telemetry_message(db: Session, device_id_str: str, payload: object) -> bool:
@@ -44,7 +45,8 @@ def handle_telemetry_message(db: Session, device_id_str: str, payload: object) -
     if not verify_device_secret(secret, device.hashed_secret):
         return False
 
-    device.last_seen_at = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)
+    device.last_seen_at = now
     device.reported_state = data
     db.add(TelemetryReading(org_id=device.org_id, device_id=device.id, data=data))
 
@@ -52,6 +54,7 @@ def handle_telemetry_message(db: Session, device_id_str: str, payload: object) -
     # seconds of arriving, and in the same transaction as the reading that
     # caused it: an alert can never refer to data that was rolled back.
     evaluate_reading(db, device, data)
+    resolve_commands(db, device, data, now)
 
     db.commit()
     return True

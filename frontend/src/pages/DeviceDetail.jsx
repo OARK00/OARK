@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import AppShell from "../components/AppShell";
+import DeviceControls, { CommandHistory } from "../components/DeviceControls";
 import LineChart from "../components/LineChart";
 import { CATEGORY_LABELS } from "../constants/devices";
 
@@ -13,6 +14,9 @@ const RANGES = [
 ];
 
 const REFRESH_MS = 30000;
+// While a command waits for its device, check often: a switch that takes
+// thirty seconds to show it worked feels broken.
+const PENDING_REFRESH_MS = 2000;
 
 function timeAgo(iso) {
   if (!iso) return "never";
@@ -39,6 +43,7 @@ export default function DeviceDetail() {
   const [device, setDevice] = useState(null);
   const [dataPoints, setDataPoints] = useState([]);
   const [readings, setReadings] = useState([]);
+  const [commands, setCommands] = useState([]);
   const [range, setRange] = useState(24);
   const [selectedKey, setSelectedKey] = useState(null);
   const [error, setError] = useState(null);
@@ -72,11 +77,38 @@ export default function DeviceDetail() {
     }
   }, [deviceId, range]);
 
+  // The device and its commands only, without the heavier telemetry history.
+  const loadLive = useCallback(async () => {
+    try {
+      const [deviceResponse, commandsResponse] = await Promise.all([
+        api.get(`/devices/${deviceId}`),
+        api.get(`/devices/${deviceId}/commands`),
+      ]);
+      setDevice(deviceResponse.data);
+      setCommands(commandsResponse.data);
+    } catch {
+      // The next refresh tries again; the full load reports real errors.
+    }
+  }, [deviceId]);
+
   useEffect(() => {
     load();
-    const id = setInterval(load, REFRESH_MS);
+    loadLive();
+    const id = setInterval(() => {
+      load();
+      loadLive();
+    }, REFRESH_MS);
     return () => clearInterval(id);
-  }, [load]);
+  }, [load, loadLive]);
+
+  const waiting = commands.some((command) => command.status === "pending");
+  useEffect(() => {
+    if (!waiting) return undefined;
+    const id = setInterval(loadLive, PENDING_REFRESH_MS);
+    return () => clearInterval(id);
+  }, [waiting, loadLive]);
+
+  const controls = useMemo(() => dataPoints.filter((point) => point.access === "write"), [dataPoints]);
 
   const keys = useMemo(() => numericKeys(readings), [readings]);
   const activeKey = selectedKey && keys.includes(selectedKey) ? selectedKey : keys[0];
@@ -134,6 +166,10 @@ export default function DeviceDetail() {
       {device && (
         <div className="detail-grid">
           <div className="detail-main">
+            {controls.length > 0 && (
+              <DeviceControls device={device} points={controls} commands={commands} onChange={loadLive} />
+            )}
+
             <div className="chart-card">
               <div className="card-head">
                 <h3>History</h3>
@@ -212,6 +248,10 @@ export default function DeviceDetail() {
                 </ul>
               )}
             </div>
+
+            {(controls.length > 0 || commands.length > 0) && (
+              <CommandHistory commands={commands} points={dataPoints} />
+            )}
           </div>
 
           <aside className="detail-side">

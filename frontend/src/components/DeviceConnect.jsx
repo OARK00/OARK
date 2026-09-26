@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/client";
 import { MQTT_HOST, MQTT_PORT } from "../constants/devices";
+import { arduinoSketch, pythonSnippet } from "./firmwareSnippets";
 import { CheckIcon, CopyIcon } from "./icons";
 
 const POLL_INTERVAL_MS = 3000;
@@ -165,79 +166,28 @@ function ConnectionStatus({ device, waiting, onRetry }) {
   );
 }
 
-function arduinoSketch(deviceId, secret) {
-  return `#include <WiFi.h>
-#include <WiFiClientSecure.h>
-#include <PubSubClient.h>   // Library Manager: "PubSubClient" by Nick O'Leary
+// The snippets are written for the device's product: its readings go in the
+// report, and anything controllable gets a variable and a command handler.
+function useProductPoints(productId) {
+  const [points, setPoints] = useState([]);
 
-const char* WIFI_SSID     = "your-wifi-name";
-const char* WIFI_PASSWORD = "your-wifi-password";
+  useEffect(() => {
+    if (!productId) return;
+    let cancelled = false;
+    api
+      .get(`/products/${productId}`)
+      .then(({ data }) => {
+        if (!cancelled) setPoints(data.data_points || []);
+      })
+      .catch(() => {
+        // Fall back to the generic example rather than hide the code.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [productId]);
 
-// From Oark. The secret is shown only once -- keep it in the device only.
-const char* DEVICE_ID     = "${deviceId}";
-const char* DEVICE_SECRET = "${secret}";
-
-WiFiClientSecure net;
-PubSubClient mqtt(net);
-
-void connectOark() {
-  mqtt.setServer("${MQTT_HOST}", ${MQTT_PORT});
-  while (!mqtt.connected()) {
-    Serial.print("Connecting to Oark... ");
-    if (mqtt.connect(DEVICE_ID, DEVICE_ID, DEVICE_SECRET)) {
-      Serial.println("connected");
-    } else {
-      Serial.println(mqtt.state());
-      delay(3000);
-    }
-  }
-}
-
-void setup() {
-  Serial.begin(115200);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  while (WiFi.status() != WL_CONNECTED) delay(500);
-
-  net.setInsecure();   // TLS without checking the broker's certificate
-  connectOark();
-}
-
-void loop() {
-  if (!mqtt.connected()) connectOark();
-  mqtt.loop();
-
-  float temperature = 24.5;   // replace with your sensor reading
-
-  char topic[96];
-  snprintf(topic, sizeof(topic), "oark/devices/%s/telemetry", DEVICE_ID);
-
-  char payload[192];
-  snprintf(payload, sizeof(payload),
-           "{\\"secret\\":\\"%s\\",\\"data\\":{\\"temperature\\":%.1f}}",
-           DEVICE_SECRET, temperature);
-
-  mqtt.publish(topic, payload);
-  delay(10000);   // every 10 seconds
-}`;
-}
-
-function pythonSnippet(deviceId, secret) {
-  return `import json, ssl, time
-import paho.mqtt.client as mqtt   # pip install paho-mqtt
-
-DEVICE_ID = "${deviceId}"
-DEVICE_SECRET = "${secret}"
-
-client = mqtt.Client(client_id=DEVICE_ID)
-client.username_pw_set(DEVICE_ID, DEVICE_SECRET)
-client.tls_set(cert_reqs=ssl.CERT_REQUIRED)
-client.connect("${MQTT_HOST}", ${MQTT_PORT})
-client.loop_start()
-
-while True:
-    body = json.dumps({"secret": DEVICE_SECRET, "data": {"temperature": 24.5}})
-    client.publish(f"oark/devices/{DEVICE_ID}/telemetry", body, qos=1)
-    time.sleep(10)`;
+  return points;
 }
 
 const TABS = [
@@ -251,6 +201,8 @@ const TABS = [
 // live status only makes sense for a device that hasn't reported yet.
 export default function ConnectPanel({ created, watch }) {
   const [tab, setTab] = useState("esp32");
+  const points = useProductPoints(created.product_id);
+  const controllable = points.some((point) => point.access === "write");
 
   return (
     <>
@@ -282,15 +234,18 @@ export default function ConnectPanel({ created, watch }) {
 
       {tab === "esp32" && (
         <>
-          <p className="setup-note">Paste into Arduino IDE, fill in your Wi-Fi, and upload. Everything else is filled in.</p>
-          <CodeBlock language="Arduino C++" code={arduinoSketch(created.id, created.secret)} />
+          <p className="setup-note">
+            Paste into Arduino IDE, fill in your Wi-Fi, and upload. Everything else is filled in
+            {controllable ? ", including a handler for the controls Oark can send." : "."}
+          </p>
+          <CodeBlock language="Arduino C++" code={arduinoSketch(created.id, created.secret, points)} />
         </>
       )}
 
       {tab === "python" && (
         <>
           <p className="setup-note">For a Raspberry Pi, a gateway, or testing from a laptop.</p>
-          <CodeBlock language="Python" code={pythonSnippet(created.id, created.secret)} />
+          <CodeBlock language="Python" code={pythonSnippet(created.id, created.secret, points)} />
         </>
       )}
 
@@ -303,13 +258,22 @@ export default function ConnectPanel({ created, watch }) {
             <CopyField label="Username" value={created.id} hint="The device ID is the username." />
             <CopyField label="Password" value={created.secret} />
             <CopyField label="Publish topic" value={`oark/devices/${created.id}/telemetry`} />
+            <CopyField
+              label="Subscribe topic"
+              value={`oark/devices/${created.id}/commands`}
+              hint="Commands arrive here. Report the new value to confirm one."
+            />
           </div>
           <div className="connection-payload">
-            <span className="copy-field-label">Message body</span>
+            <span className="copy-field-label">Message body you publish</span>
             <pre>{`{
   "secret": "<device secret>",
   "data": { "temperature": 24.5, "humidity": 61 }
 }`}</pre>
+          </div>
+          <div className="connection-payload">
+            <span className="copy-field-label">Command you receive</span>
+            <pre>{`{ "desired": { "relay": true } }`}</pre>
           </div>
         </>
       )}

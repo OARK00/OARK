@@ -3584,6 +3584,234 @@ a.activity-name:hover {
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.2);
 }
 
+/* ---------- Device controls ---------- */
+
+.controls-offline {
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 0.78rem;
+}
+
+.control-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.control-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.25rem 1rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.control-row:first-child {
+  border-top: 0;
+  padding-top: 0.2rem;
+}
+
+.control-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.control-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.control-current {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.control-current b {
+  color: var(--text);
+  font-family: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+}
+
+.control-action {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.control-toggle {
+  width: 46px;
+  height: 26px;
+}
+
+.control-toggle .toggle-knob {
+  width: 20px;
+  height: 20px;
+}
+
+.control-toggle:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+/* On its way but not confirmed: the new position, drawn unsettled. */
+.control-toggle.pending {
+  background: repeating-linear-gradient(135deg, rgba(15, 118, 110, 0.35) 0 6px, rgba(15, 118, 110, 0.18) 6px 12px);
+  border-color: var(--accent);
+}
+
+.control-toggle.pending:not(.on) {
+  background: repeating-linear-gradient(135deg, #e5e7eb 0 6px, #f3f4f6 6px 12px);
+  border-color: #9ca3af;
+}
+
+.control-input {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.control-input input {
+  width: 110px;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.control-input input:focus {
+  outline: 2px solid rgba(15, 118, 110, 0.25);
+  border-color: var(--accent);
+}
+
+.control-input .ghost-button {
+  padding: 0.4rem 0.8rem;
+}
+
+.control-unit {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.control-note {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+}
+
+.control-note-pending {
+  color: #92400e;
+}
+
+.control-note-ok {
+  color: #15803d;
+}
+
+.control-note-error {
+  color: var(--danger);
+}
+
+.control-spinner {
+  width: 10px;
+  height: 10px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: control-spin 0.8s linear infinite;
+}
+
+@keyframes control-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .control-spinner {
+    animation: none;
+  }
+}
+
+.command-row {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) auto minmax(0, 170px);
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+}
+
+.command-row:first-child {
+  border-top: 0;
+}
+
+.command-what b {
+  font-family: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+}
+
+.command-status {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.command-status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.command-status-applied {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.command-status-expired {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.command-status-superseded {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.command-who {
+  color: var(--muted);
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+
+@media (max-width: 760px) {
+  .command-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .command-who {
+    text-align: left;
+  }
+
+  .control-input input {
+    width: 90px;
+  }
+}
+
 @media (max-width: 760px) {
   .alert-row {
     grid-template-columns: minmax(0, 1fr);

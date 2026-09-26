@@ -1,10 +1,13 @@
-"""Device logins on the EMQX broker.
+"""Device logins on the EMQX broker, and messages sent to devices.
 
 Each device connects with username = its device ID and password = its device
 secret. The broker's access rules only let a username publish to
-oark/devices/<username>/telemetry, so a leaked login can only ever speak as
-that one device.
+oark/devices/<username>/telemetry and subscribe to
+oark/devices/<username>/commands, so a leaked login can only ever speak as,
+and listen as, that one device.
 """
+
+import json
 
 import httpx
 
@@ -54,6 +57,36 @@ def replace_device_login(device_id: str, secret: str) -> None:
                     USERS_PATH, json={"user_id": device_id, "password": secret, "is_superuser": False}
                 )
             _check(response, (200, 201, 204))
+    except httpx.HTTPError as exc:
+        raise BrokerError(f"Broker API unreachable: {exc}") from exc
+
+
+def commands_topic(device_id: str) -> str:
+    return f"oark/devices/{device_id}/commands"
+
+
+def publish_to_device(device_id: str, message: dict) -> bool:
+    """Send a message to one device through the broker's HTTP API.
+
+    Returns True when the broker handed it to the connected device, False
+    when nothing was subscribed (the device is offline, or its firmware does
+    not listen for commands). Not retained: an old instruction must never be
+    waiting on the topic for a device that reconnects hours later.
+    """
+    try:
+        with _client() as client:
+            response = client.post(
+                "/publish",
+                json={
+                    "topic": commands_topic(device_id),
+                    "payload": json.dumps(message),
+                    "qos": 1,
+                    "retain": False,
+                },
+            )
+            # 202 carries reason "no_matching_subscribers".
+            _check(response, (200, 202))
+            return response.status_code == 200
     except httpx.HTTPError as exc:
         raise BrokerError(f"Broker API unreachable: {exc}") from exc
 

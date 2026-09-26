@@ -45,6 +45,12 @@ Listeners subscribe as `$share/oark-ingest-<environment>/oark/devices/+/telemetr
 
 `/health` is not decorative: it runs `SELECT 1` and reports the MQTT listener. A broker gap under two minutes reads as `waiting` (200) because cold starts and reconnects are normal; a longer one is `degraded` (503), and an unreachable database is `down` (503). Point an uptime monitor at `https://api.oark.in/health`.
 
+## Commands
+
+A data point marked `write` on a product can be set from the device page. `POST /devices/{id}/commands` checks the value against the data point (type, min/max), records who sent it, and publishes `{"desired": {...every value still waiting...}}` to `oark/devices/<id>/commands` through the broker's HTTP API (QoS 1, not retained). The device confirms by reporting the new value in its ordinary telemetry; there is no separate acknowledgement.
+
+A command waits at most five minutes. If the device is offline, a sweep beside the listener resends it once the device is heard from again; after five minutes it expires and is never sent, so nothing switches by itself long after someone asked. The broker lets each device subscribe only to its own commands topic, and only the backend can publish there.
+
 API docs then available at `http://localhost:8000/docs`.
 
 ## Frontend setup (local dev)

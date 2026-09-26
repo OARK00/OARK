@@ -17,6 +17,7 @@ from app.core.database import engine
 from app.core.environment import assert_database_matches
 from app.core.health import health_report
 from app.modules.alerts.watcher import watch_for_silence
+from app.modules.commands.sweeper import sweep_commands
 from app.modules.ingestion.mqtt_client import run_mqtt_forever
 
 logging.basicConfig(level=logging.INFO)
@@ -28,9 +29,11 @@ async def lifespan(app: FastAPI):
         assert_database_matches(conn)
     mqtt_task = asyncio.create_task(run_mqtt_forever())
     silence_task = asyncio.create_task(watch_for_silence())
+    commands_task = asyncio.create_task(sweep_commands())
     yield
     mqtt_task.cancel()
     silence_task.cancel()
+    commands_task.cancel()
 
 
 app = FastAPI(title="Oark ingestion listener", lifespan=lifespan)
