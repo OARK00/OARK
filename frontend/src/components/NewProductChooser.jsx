@@ -29,16 +29,23 @@ const TemplateIcon = (
   </svg>
 );
 
-// Whether this platform has an AI provider configured. Asked once, so the
-// box shows as usable or as coming soon instead of offering a button that
-// can only fail.
+// Remembered for the whole visit: whether AI is configured doesn't change
+// while someone clicks around, and asking again on every open made the box
+// flash "Soon" -- which reads as "AI is gone" -- until the answer came back.
+let knownAvailability = null;
+
+// Whether this platform has an AI provider configured: true, false, or null
+// while still asking. Only a real "no" shows the box as coming soon.
 function useDraftAvailable() {
-  const [available, setAvailable] = useState(false);
+  const [available, setAvailable] = useState(knownAvailability);
   useEffect(() => {
     api
       .get("/products/draft/status")
-      .then(({ data }) => setAvailable(Boolean(data.available)))
-      .catch(() => setAvailable(false));
+      .then(({ data }) => {
+        knownAvailability = Boolean(data.available);
+        setAvailable(knownAvailability);
+      })
+      .catch(() => setAvailable((current) => current ?? false));
   }, []);
   return available;
 }
@@ -49,8 +56,10 @@ function DescribeBox({ onDraft }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
-  const enabled = available && Boolean(onDraft);
-  const ready = enabled && !busy && text.trim().length >= MIN_DESCRIPTION;
+  const checking = available === null;
+  // While checking, typing is allowed; only Generate waits for the answer.
+  const enabled = available !== false && Boolean(onDraft);
+  const ready = available === true && enabled && !busy && text.trim().length >= MIN_DESCRIPTION;
 
   async function generate() {
     if (!ready) return;
@@ -73,7 +82,7 @@ function DescribeBox({ onDraft }) {
           {SparkIcon}
           Describe your device
         </span>
-        {!enabled && <span className="soon-badge">Soon</span>}
+        {!enabled && !checking && <span className="soon-badge">Soon</span>}
       </div>
       <p className="ai-box-note">
         Oark will draft its name, category and data points from one sentence. You can edit everything afterwards.
@@ -138,7 +147,7 @@ export function ChooserBody({
           <span className="chooser-option-icon">{TemplateIcon}</span>
           <span className="chooser-option-title">Start from a template</span>
           <span className="chooser-option-text">
-            Ready-made for common hardware: temperature, energy, tank level, machine status. One click.
+            Ready-made for common hardware: temperature, energy, tank level, machine status, robot car. One click.
           </span>
         </button>
 

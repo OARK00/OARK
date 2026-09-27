@@ -3941,6 +3941,11 @@ a.activity-name:hover {
   max-width: 600px;
 }
 
+.chooser-existing {
+  display: block;
+  margin: 0.9rem auto 0;
+}
+
 .ai-box {
   padding: 1rem;
   border: 1px solid var(--border);

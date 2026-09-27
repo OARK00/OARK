@@ -12,13 +12,14 @@ const STEPS = ["Device", "Connect"];
 const STANDALONE = "";
 
 // Step one has four views:
-//   choose   -- what kind of device is it: describe / template / own setup
+//   choose   -- what kind of device is it: describe with AI / template / own setup
 //   draft    -- the AI's proposal, for review; creating it makes the product
 //   template -- the template cards, inline; picking one creates the product
 //   form     -- name the unit, with the product (if any) already selected
-// Someone with no products starts at "choose", because "No product" in a
-// dropdown is not an answer to "what is this device". Someone with products
-// starts at the form, with the choice one click away for something new.
+// Everyone starts at "choose": the three ways in are the front door, as in
+// the platforms Oark is modelled on. Adding one more unit of a product that
+// already exists is a link under them. Only when the caller already knows
+// the product (Add device from a product's page) does it open on the form.
 export default function AddDeviceWizard({ onClose, onCreated, initialProductId = STANDALONE }) {
   const [step, setStep] = useState(0);
   const [view, setView] = useState(null);
@@ -39,7 +40,7 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
       .then(({ data }) => {
         setProducts(data);
         if (!initialProductId && data.length) setProductId(data[0].id);
-        setView(data.length || initialProductId ? "form" : "choose");
+        setView(initialProductId ? "form" : "choose");
       })
       .catch(() => {
         setProducts([]);
@@ -115,12 +116,19 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
               manualTitle="My own setup"
               manualText="Full freedom. Name it and pick a category now; Oark reads its fields once it reports."
             />
+            {hasProducts && (
+              <button
+                type="button"
+                className="link-button small field-link chooser-existing"
+                onClick={() => {
+                  if (!products.some((p) => p.id === productId)) setProductId(products[0].id);
+                  setView("form");
+                }}
+              >
+                Or add another unit of a product you already have ({products.length}) →
+              </button>
+            )}
             <div className="modal-actions">
-              {hasProducts && (
-                <button type="button" className="ghost-button" onClick={() => setView("form")}>
-                  ← Back
-                </button>
-              )}
               <button type="button" className="ghost-button" onClick={onClose}>
                 Cancel
               </button>
@@ -173,7 +181,7 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
                   </span>
                 )}
                 <button type="button" className="link-button small field-link" onClick={() => setView("choose")}>
-                  Something new? Start from a template or your own setup
+                  ← Back to: describe with AI, pick a template, or set it up yourself
                 </button>
               </label>
               <label className="field">
