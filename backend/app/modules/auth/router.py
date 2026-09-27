@@ -1,9 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.core.security import create_access_token, hash_password, verify_password
+from app.core.security import (
+    SESSION_COOKIE_MAX_AGE,
+    SESSION_COOKIE_NAME,
+    create_access_token,
+    hash_password,
+    verify_password,
+)
 from app.models.organization import Organization
 from app.models.user import User, UserRole
 from app.modules.auth.rate_limit import (
@@ -25,13 +31,36 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 DUMMY_PASSWORD_HASH = hash_password("oark-dummy-password-never-valid")
 
 
+def set_session_cookie(response: Response, token: str) -> None:
+    response.set_cookie(
+        key=SESSION_COOKIE_NAME,
+        value=token,
+        max_age=SESSION_COOKIE_MAX_AGE,
+        httponly=True,
+        # Secure works over http://localhost too: Chrome and Firefox treat
+        # localhost as a trustworthy origin, so dev needs no special case.
+        secure=True,
+        # Lax, not Strict: still sent on the app.oark.in -> api.oark.in
+        # requests the frontend makes (subdomains of the same site), while a
+        # genuinely different site (evil.com) gets no cookie on the
+        # cross-site POST/PUT/DELETE it would need for CSRF.
+        samesite="lax",
+        path="/",
+    )
+
+
 @router.get("/me", response_model=UserResponse)
 def me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+def logout(response: Response):
+    response.delete_cookie(key=SESSION_COOKIE_NAME, path="/")
+
+
 @router.post("/register", response_model=TokenResponse)
-def register(payload: RegisterRequest, db: Session = Depends(get_db)):
+def register(payload: RegisterRequest, response: Response, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == payload.email).first():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
@@ -51,11 +80,12 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     db.refresh(user)
 
     token = create_access_token(subject=str(user.id), org_id=str(user.org_id), role=user.role.value)
+    set_session_cookie(response, token)
     return TokenResponse(access_token=token)
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(payload: LoginRequest, request: Request, db: Session = Depends(get_db)):
+def login(payload: LoginRequest, request: Request, response: Response, db: Session = Depends(get_db)):
     ip = client_ip(request)
     if is_rate_limited(count_email_failures(db, payload.email), count_ip_failures(db, ip)):
         raise HTTPException(
@@ -74,4 +104,5 @@ def login(payload: LoginRequest, request: Request, db: Session = Depends(get_db)
     # A correct password means the earlier failures were the owner fumbling.
     clear_failures(db, payload.email)
     token = create_access_token(subject=str(user.id), org_id=str(user.org_id), role=user.role.value)
+    set_session_cookie(response, token)
     return TokenResponse(access_token=token)

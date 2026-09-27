@@ -10,8 +10,11 @@ import ProductDetail from "./pages/ProductDetail";
 import "./App.css";
 
 function RequireAuth({ children }) {
-  const { token } = useAuth();
-  return token ? children : <Navigate to="/login" replace />;
+  const { email, checking } = useAuth();
+  // Wait for the first /auth/me check: the cookie can't be read here, so
+  // "no email yet" during that check is not the same as "not logged in".
+  if (checking) return null;
+  return email ? children : <Navigate to="/login" replace />;
 }
 
 function App() {

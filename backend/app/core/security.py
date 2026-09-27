@@ -12,6 +12,13 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 DEVICE_HASH_PREFIX = "sha256$"
 
+# The browser's session lives in this cookie, never in JS-reachable storage:
+# a script an attacker sneaks onto the page (XSS) cannot read it, only send
+# requests that use it. Scripts and any future non-browser client still
+# authenticate with a plain Authorization header instead -- see get_current_user.
+SESSION_COOKIE_NAME = "oark_session"
+SESSION_COOKIE_MAX_AGE = settings.jwt_expire_minutes * 60
+
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
