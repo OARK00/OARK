@@ -17,9 +17,10 @@ from app.modules.devices.router import get_org_device
 router = APIRouter(prefix="/devices/{device_id}/commands", tags=["commands"])
 logger = logging.getLogger("oark.commands")
 
-# Per device. Generous for a person at a switch, low enough that a stuck
-# script cannot flood a device or the broker.
-COMMANDS_PER_MINUTE = 30
+# Per device. Someone driving with hold-to-move buttons sends two commands
+# per move (press and release), so this allows a minute of busy driving,
+# while a stuck script still cannot flood a device or the broker.
+COMMANDS_PER_MINUTE = 120
 
 
 def to_response(command: DeviceCommand, sent_by: str | None, now: datetime) -> CommandResponse:
@@ -30,7 +31,7 @@ def to_response(command: DeviceCommand, sent_by: str | None, now: datetime) -> C
         status=engine.display_status(command, now),
         sent_by=sent_by,
         created_at=command.created_at,
-        expires_at=command.created_at + engine.COMMAND_TTL,
+        expires_at=command.expires_at,
         delivered_at=command.delivered_at,
         resolved_at=command.resolved_at,
     )
@@ -78,20 +79,26 @@ def send_command(
         status="pending",
         sent_by_user_id=current_user.id,
         created_at=now,
+        expires_at=now + engine.command_ttl(point),
     )
     db.add(command)
+    # Read before committing: a commit expires every loaded object, and
+    # touching one afterwards costs another round trip to the database --
+    # time a driver holding a car's button feels.
+    sender_email = current_user.email
+    target_id = device.id
     # Recorded before it is sent: a command the device acted on must never
     # be missing from the history because the send and the save disagreed.
     db.commit()
 
     try:
-        engine.send_waiting(db, device.id, now)
+        engine.send_waiting(db, target_id, now)
     except BrokerError as error:
         # Still pending: the sweep sends it once the device is heard from.
-        logger.warning("Sending a command to device %s failed: %s", device.id, error)
+        logger.warning("Sending a command to device %s failed: %s", target_id, error)
     db.commit()
     db.refresh(command)
-    return to_response(command, current_user.email, now)
+    return to_response(command, sender_email, now)
 
 
 @router.get("", response_model=list[CommandResponse])

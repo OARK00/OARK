@@ -50,4 +50,23 @@ export const PRODUCT_TEMPLATES = [
       { key: "fault", label: "Fault", type: "string", access: "read" },
     ],
   },
+  {
+    id: "robot-car",
+    name: "Robot car",
+    category: "controller",
+    description: "Two-motor car on relays, driven with hold-to-move buttons, plus an obstacle distance sensor.",
+    summary: "Demos, rovers, small AGVs",
+    data_points: [
+      {
+        key: "drive",
+        label: "Drive",
+        type: "string",
+        access: "write",
+        widget: "buttons",
+        options: ["forward", "left", "stop", "right", "reverse"],
+        release_value: "stop",
+      },
+      { key: "obstacle_distance", label: "Obstacle distance", type: "number", unit: "cm", min: 0, max: 400, access: "read" },
+    ],
+  },
 ];

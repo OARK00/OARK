@@ -25,6 +25,12 @@ logger = logging.getLogger("oark.commands")
 # someone asked, when nobody is watching any more.
 COMMAND_TTL = timedelta(minutes=5)
 
+# A button press is an action happening now, not a setting to reach
+# eventually. A car's "forward" that arrives after the driver let go, or
+# after the car reconnects a minute later, is a car driving by itself. Short
+# enough that it is also never resent (see RESEND_AFTER).
+ACTION_TTL = timedelta(seconds=10)
+
 # A command the device has not confirmed is sent again, but only once the
 # device has been heard from since the last try, and no more often than this.
 RESEND_AFTER = timedelta(seconds=15)
@@ -71,7 +77,15 @@ def validate_value(point: DataPoint, value: Any) -> Any:
         raise CommandRejected(f"{point.label} takes some text.")
     if len(value) > MAX_TEXT_COMMAND_LENGTH:
         raise CommandRejected(f"{point.label} takes at most {MAX_TEXT_COMMAND_LENGTH} characters.")
+    # A listed set is a whitelist: a car's drive field accepts "forward" or
+    # "stop", never "forward_and_reverse" typed into a crafted request.
+    if point.options is not None and value not in point.options:
+        raise CommandRejected(f"{point.label} takes one of: {', '.join(point.options)}.")
     return value
+
+
+def command_ttl(point: DataPoint) -> timedelta:
+    return ACTION_TTL if point.widget == "buttons" else COMMAND_TTL
 
 
 def report_confirms(sent: Any, reported: Any) -> bool:
@@ -99,7 +113,7 @@ def report_confirms(sent: Any, reported: Any) -> bool:
 def display_status(command: DeviceCommand, now: datetime) -> str:
     """Expiry is decided by the clock, so it is shown from the clock too,
     even in the seconds before the sweep writes it down."""
-    if command.status == "pending" and command.created_at <= now - COMMAND_TTL:
+    if command.status == "pending" and command.expires_at <= now:
         return "expired"
     return command.status
 
@@ -110,7 +124,7 @@ def waiting_commands(db: Session, device_id, now: datetime) -> list[DeviceComman
         .filter(
             DeviceCommand.device_id == device_id,
             DeviceCommand.status == "pending",
-            DeviceCommand.created_at > now - COMMAND_TTL,
+            DeviceCommand.expires_at > now,
         )
         .order_by(DeviceCommand.created_at)
         .all()
@@ -156,7 +170,7 @@ def send_waiting(db: Session, device_id, now: datetime) -> bool:
 def expire_old_commands(db: Session, now: datetime) -> int:
     return (
         db.query(DeviceCommand)
-        .filter(DeviceCommand.status == "pending", DeviceCommand.created_at <= now - COMMAND_TTL)
+        .filter(DeviceCommand.status == "pending", DeviceCommand.expires_at <= now)
         .update({DeviceCommand.status: "expired", DeviceCommand.resolved_at: now})
     )
 
@@ -170,7 +184,7 @@ def devices_due_a_resend(db: Session, now: datetime) -> list:
         .join(Device, Device.id == DeviceCommand.device_id)
         .filter(
             DeviceCommand.status == "pending",
-            DeviceCommand.created_at > now - COMMAND_TTL,
+            DeviceCommand.expires_at > now,
             or_(DeviceCommand.last_sent_at.is_(None), DeviceCommand.last_sent_at <= now - RESEND_AFTER),
             Device.last_seen_at > func.coalesce(DeviceCommand.last_sent_at, DeviceCommand.created_at),
         )

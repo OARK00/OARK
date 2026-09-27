@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 
@@ -18,17 +18,23 @@ function recent(iso) {
   return iso && Date.now() - new Date(iso).getTime() < OUTCOME_VISIBLE_MS;
 }
 
-function ControlNote({ command, error }) {
+function ControlNote({ command, error, isButtons }) {
   if (error) return <p className="control-note control-note-error">{error}</p>;
   if (!command) return null;
 
   if (command.status === "pending") {
+    let text = "Sent · waiting for the device to confirm";
+    if (!command.delivered_at) {
+      // A button press is never kept for later (it would move the car by
+      // itself), so don't promise that it will arrive.
+      text = isButtons
+        ? "Device isn't connected · this press will be dropped"
+        : `Device isn't listening right now · it gets this if it's back within ${WAIT_MINUTES} min`;
+    }
     return (
       <p className="control-note control-note-pending">
         <span className="control-spinner" aria-hidden="true" />
-        {command.delivered_at
-          ? "Sent · waiting for the device to confirm"
-          : `Device isn't listening right now · it gets this if it's back within ${WAIT_MINUTES} min`}
+        {text}
       </p>
     );
   }
@@ -43,6 +49,128 @@ function ControlNote({ command, error }) {
     );
   }
   return null;
+}
+
+// Values that name a direction are laid out as a pad; anything else becomes
+// a plain row of buttons, so the same widget serves a car or a garage door.
+const PAD_SLOTS = {
+  forward: "up",
+  up: "up",
+  reverse: "down",
+  back: "down",
+  backward: "down",
+  down: "down",
+  left: "left",
+  right: "right",
+  stop: "center",
+};
+const PAD_ORDER = [null, "up", null, "left", "center", "right", null, "down", null];
+const SLOT_ARROWS = { up: "▲", down: "▼", left: "◀", right: "▶", center: "■" };
+
+function buttonLabel(value) {
+  const text = value.replace(/[_-]+/g, " ");
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function ButtonsControl({ point, reported, onSend }) {
+  const release = point.release_value;
+  const [held, setHeld] = useState(null);
+  const heldRef = useRef(null);
+
+  function press(value) {
+    if (heldRef.current !== null) return;
+    // Pressing the release button itself (stop) is a plain tap.
+    if (release && value !== release) {
+      heldRef.current = value;
+      setHeld(value);
+    }
+    onSend(value);
+  }
+
+  const letGo = useCallback(() => {
+    if (heldRef.current === null) return;
+    heldRef.current = null;
+    setHeld(null);
+    onSend(release);
+  }, [onSend, release]);
+
+  // Switching tab or window mid-press never delivers the pointer's "up",
+  // which would leave the car driving: losing focus counts as letting go.
+  useEffect(() => {
+    window.addEventListener("blur", letGo);
+    document.addEventListener("visibilitychange", letGo);
+    return () => {
+      window.removeEventListener("blur", letGo);
+      document.removeEventListener("visibilitychange", letGo);
+    };
+  }, [letGo]);
+
+  function renderButton(value, slot) {
+    const active = held === value || (held === null && reported === value && value !== release);
+    return (
+      <button
+        key={value}
+        type="button"
+        className={`pad-button${active ? " active" : ""}${slot ? ` pad-${slot}` : ""}`}
+        onPointerDown={(event) => {
+          if (event.button !== 0) return;
+          event.preventDefault();
+          // Keeps the "up" coming to this button even if the finger slides
+          // off. It throws when the browser already considers that pointer
+          // gone; the press itself must still go out.
+          try {
+            event.currentTarget.setPointerCapture(event.pointerId);
+          } catch {
+            // no capture: pointerup / pointercancel / blur still end the hold
+          }
+          press(value);
+        }}
+        onPointerUp={letGo}
+        onPointerCancel={letGo}
+        onLostPointerCapture={letGo}
+        onKeyDown={(event) => {
+          if ((event.key === " " || event.key === "Enter") && !event.repeat) {
+            event.preventDefault();
+            press(value);
+          }
+        }}
+        onKeyUp={(event) => {
+          if (event.key === " " || event.key === "Enter") letGo();
+        }}
+        onContextMenu={(event) => event.preventDefault()}
+      >
+        {slot && <span aria-hidden="true">{SLOT_ARROWS[slot]}</span>}
+        {buttonLabel(value)}
+      </button>
+    );
+  }
+
+  const slots = {};
+  const rest = [];
+  point.options.forEach((value) => {
+    const slot = PAD_SLOTS[value.toLowerCase()];
+    if (slot && !slots[slot]) slots[slot] = value;
+    else rest.push(value);
+  });
+  const isPad = ["up", "down", "left", "right"].filter((slot) => slots[slot]).length >= 2;
+
+  return (
+    <div className="buttons-control">
+      {isPad ? (
+        <div className="pad-grid">
+          {PAD_ORDER.map((slot, index) =>
+            slot && slots[slot] ? renderButton(slots[slot], slot) : <span key={`gap-${index}`} />
+          )}
+        </div>
+      ) : null}
+      {(isPad ? rest : point.options).length > 0 && (
+        <div className="button-row">{(isPad ? rest : point.options).map((value) => renderButton(value, null))}</div>
+      )}
+      <p className="buttons-hint">
+        {release ? `Hold a button to keep it going. Letting go sends "${release}".` : "Each tap sends once."}
+      </p>
+    </div>
+  );
 }
 
 function BooleanControl({ point, reported, pending, busy, onSend }) {
@@ -113,6 +241,24 @@ export default function DeviceControls({ device, points, commands, onChange }) {
     }
   }
 
+  // Button presses leave strictly one after another: if "stop" could
+  // overtake the "forward" it is meant to end, the car would stop and then
+  // drive off. Each waits for the previous request to finish, but not for
+  // the page to refresh, so letting go reaches the car as soon as possible.
+  const queues = useRef({});
+  function sendInOrder(point, value) {
+    const previous = queues.current[point.key] || Promise.resolve();
+    queues.current[point.key] = previous
+      .then(() => api.post(`/devices/${device.id}/commands`, { key: point.key, value }))
+      .then(() => {
+        setErrors((current) => ({ ...current, [point.key]: null }));
+        onChange();
+      })
+      .catch((err) => {
+        setErrors((current) => ({ ...current, [point.key]: getErrorMessage(err, "Could not send that command") }));
+      });
+  }
+
   return (
     <div className="activity-card controls-card">
       <div className="card-head">
@@ -122,8 +268,10 @@ export default function DeviceControls({ device, points, commands, onChange }) {
 
       {device.status !== "online" && (
         <p className="controls-offline">
-          This device is {device.status}. Commands wait up to {WAIT_MINUTES} minutes for it to come back, then they're
-          dropped so nothing switches unexpectedly later.
+          This device is {device.status}.{" "}
+          {points.some((point) => point.widget === "buttons")
+            ? `Settings wait up to ${WAIT_MINUTES} minutes for it to come back; button presses are dropped after a few seconds, so nothing moves by itself later.`
+            : `Commands wait up to ${WAIT_MINUTES} minutes for it to come back, then they're dropped so nothing switches unexpectedly later.`}
         </p>
       )}
 
@@ -132,19 +280,26 @@ export default function DeviceControls({ device, points, commands, onChange }) {
           // Commands arrive newest first, so the first match is the latest.
           const latest = commands.find((command) => command.key === point.key);
           const pending = latest?.status === "pending" ? latest : null;
+          const isButtons = point.widget === "buttons" && point.options?.length > 0;
           return (
-            <li key={point.key} className="control-row">
+            <li key={point.key} className={`control-row${isButtons ? " control-row-stacked" : ""}`}>
               <div className="control-label">
                 <span className="control-name">{point.label}</span>
                 <span className="control-current">
                   Now <b>{formatCommandValue(reported[point.key], point)}</b>
-                  {pending && point.type !== "boolean" && (
+                  {pending && point.type !== "boolean" && !isButtons && (
                     <> → {formatCommandValue(pending.value, point)}</>
                   )}
                 </span>
               </div>
               <div className="control-action">
-                {point.type === "boolean" ? (
+                {isButtons ? (
+                  <ButtonsControl
+                    point={point}
+                    reported={reported[point.key]}
+                    onSend={(value) => sendInOrder(point, value)}
+                  />
+                ) : point.type === "boolean" ? (
                   <BooleanControl
                     point={point}
                     reported={reported[point.key]}
@@ -156,7 +311,7 @@ export default function DeviceControls({ device, points, commands, onChange }) {
                   <ValueControl point={point} busy={busyKey === point.key} onSend={(value) => send(point, value)} />
                 )}
               </div>
-              <ControlNote command={latest} error={errors[point.key]} />
+              <ControlNote command={latest} error={errors[point.key]} isButtons={isButtons} />
             </li>
           );
         })}

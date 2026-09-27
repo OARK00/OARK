@@ -8,6 +8,7 @@ and listen as, that one device.
 """
 
 import json
+import threading
 
 import httpx
 
@@ -15,6 +16,9 @@ from app.core.config import settings
 
 USERS_PATH = "/authentication/password_based:built_in_database/users"
 TIMEOUT_SECONDS = 10
+# A command is worth little if it arrives late; better to fail fast and let
+# the person press again than to hang the request.
+PUBLISH_TIMEOUT_SECONDS = 5
 
 
 class BrokerError(Exception):
@@ -65,6 +69,41 @@ def commands_topic(device_id: str) -> str:
     return f"oark/devices/{device_id}/commands"
 
 
+# One connection kept open for publishing. Opening a fresh TLS connection per
+# command cost ~480 ms against ~70 ms reused (measured from the dev laptop),
+# which a person holding a car's button feels as the car overshooting.
+# The lock makes it safe across the API's worker threads, and also keeps
+# commands leaving in the order they were decided.
+_publish_client: httpx.Client | None = None
+_publish_lock = threading.Lock()
+
+
+def _new_publish_client() -> httpx.Client:
+    client = _client()
+    client.timeout = httpx.Timeout(PUBLISH_TIMEOUT_SECONDS)
+    return client
+
+
+def _post_publish(body: dict) -> httpx.Response:
+    """Called with the lock held. A kept-open connection can be closed by the
+    broker between commands; that one failure is retried on a new
+    connection. A timeout is not retried: the message may already be out."""
+    global _publish_client
+    for attempt in (1, 2):
+        if _publish_client is None:
+            _publish_client = _new_publish_client()
+        try:
+            return _publish_client.post("/publish", json=body)
+        except httpx.TimeoutException:
+            raise
+        except httpx.TransportError:
+            _publish_client.close()
+            _publish_client = None
+            if attempt == 2:
+                raise
+    raise AssertionError("unreachable")
+
+
 def publish_to_device(device_id: str, message: dict) -> bool:
     """Send a message to one device through the broker's HTTP API.
 
@@ -73,22 +112,20 @@ def publish_to_device(device_id: str, message: dict) -> bool:
     not listen for commands). Not retained: an old instruction must never be
     waiting on the topic for a device that reconnects hours later.
     """
+    body = {
+        "topic": commands_topic(device_id),
+        "payload": json.dumps(message),
+        "qos": 1,
+        "retain": False,
+    }
     try:
-        with _client() as client:
-            response = client.post(
-                "/publish",
-                json={
-                    "topic": commands_topic(device_id),
-                    "payload": json.dumps(message),
-                    "qos": 1,
-                    "retain": False,
-                },
-            )
-            # 202 carries reason "no_matching_subscribers".
-            _check(response, (200, 202))
-            return response.status_code == 200
+        with _publish_lock:
+            response = _post_publish(body)
     except httpx.HTTPError as exc:
         raise BrokerError(f"Broker API unreachable: {exc}") from exc
+    # 202 carries reason "no_matching_subscribers".
+    _check(response, (200, 202))
+    return response.status_code == 200
 
 
 def delete_device_login(device_id: str) -> None:

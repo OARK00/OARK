@@ -45,6 +45,10 @@ class DeviceCommand(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
     )
+    # After this the command is dropped, never delivered late. Stored per
+    # command because it differs by kind: a switch may wait minutes for its
+    # device, a car's "forward" must not arrive after the driver let go.
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     # Last attempt to send it, whatever the result; spaces out resends.
     last_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     # Last time the broker handed it to the connected device. Null means it

@@ -31,31 +31,83 @@ const CPP_TYPES = { boolean: "bool", number: "float", string: "String" };
 const CPP_DEFAULTS = { boolean: "false", number: "0", string: '""' };
 const CPP_CHECKS = { boolean: "bool", number: "float", string: "const char*" };
 
+// A buttons field gets one branch per button, so the sketch already knows
+// every value Oark can send and only the pins are left to fill in.
+function optionBranches(point) {
+  const branches = point.options
+    .map(
+      (option, index) => `  ${index === 0 ? "if" : "} else if"} (${point.name} == ${cString(option)}) {
+    // set your pins for "${option}"`
+    )
+    .join("\n");
+  return `  // ${point.label}: one of ${point.options.map((option) => `"${option}"`).join(", ")}
+${branches}
+  }`;
+}
+
+function initialValue(point) {
+  if (point.release_value) return cString(point.release_value);
+  return CPP_DEFAULTS[point.type] || "0";
+}
+
 export function arduinoSketch(deviceId, secret, dataPoints) {
   const points = withNames(dataPoints);
   const controls = points.filter((p) => p.access === "write");
   const readings = points.filter((p) => p.access !== "write");
+  const withButtons = controls.filter((p) => p.type === "string" && p.options?.length);
+  // Hold-to-move buttons: things that must stop by themselves if "let go"
+  // never arrives (browser closed mid-press, Wi-Fi drop).
+  const holds = controls.filter((p) => p.release_value);
 
   const readingLines = readings
     .map((p) => `  data[${cString(p.key)}] = ${CPP_DEFAULTS[p.type] || "0"};   // replace with your ${p.label || p.key} reading`)
     .join("\n");
 
+  const plainControls = controls.filter((p) => !withButtons.includes(p));
+  const applyBody = [
+    ...withButtons.map(optionBranches),
+    plainControls.length
+      ? `  // Drive your hardware from the values above, for example:
+  // digitalWrite(RELAY_PIN, ${plainControls.find((p) => p.type === "boolean")?.name || "someSwitch"} ? HIGH : LOW);`
+      : null,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
+  const holdState = holds.length
+    ? `
+// Safety for hold-to-move buttons: go back to ${holds.map((p) => `"${p.release_value}"`).join(", ")} by
+// itself if the connection drops, or if no command arrives for HOLD_LIMIT_MS
+// (someone closed the page while holding a button).
+const unsigned long HOLD_LIMIT_MS = 10000;
+unsigned long lastCommandAt = 0;
+
+void safeStop() {
+${holds.map((p) => `  ${p.name} = ${cString(p.release_value)};`).join("\n")}
+  applyOutputs();
+}
+
+bool isMoving() {
+  return ${holds.map((p) => `${p.name} != ${cString(p.release_value)}`).join(" || ")};
+}
+`
+    : "";
+
   const controlParts = controls.length
     ? {
         state: `// What Oark can change. Oark sends new values; applyOutputs() acts on them.
-${controls.map((p) => `${CPP_TYPES[p.type] || "float"} ${p.name} = ${CPP_DEFAULTS[p.type] || "0"};`).join("\n")}
+${controls.map((p) => `${CPP_TYPES[p.type] || "float"} ${p.name} = ${initialValue(p)};`).join("\n")}
 
 void applyOutputs() {
-  // Drive your hardware from the values above, for example:
-  // digitalWrite(RELAY_PIN, ${controls.find((p) => p.type === "boolean")?.name || "someSwitch"} ? HIGH : LOW);
+${applyBody}
 }
-
+${holdState}
 `,
         report: controls.map((p) => `  data[${cString(p.key)}] = ${p.name};`).join("\n"),
         handler: `
 // Oark sends {"desired": {...}} to this device's commands topic when someone
 // changes a control. Reporting the new values is the confirmation Oark waits for.
-void onCommand(char* topic, byte* payload, unsigned int length) {
+void onCommand(char* topic, byte* payload, unsigned int length) {${holds.length ? "\n  lastCommandAt = millis();" : ""}
   JsonDocument doc;
   if (deserializeJson(doc, payload, length)) return;   // not JSON: ignore it
   JsonObject desired = doc["desired"];
@@ -136,9 +188,25 @@ ${controlParts.setup}
 }
 
 void loop() {
-  if (!mqtt.connected()) connectOark();
+${
+  holds.length
+    ? `  if (!mqtt.connected()) {
+    safeStop();   // never keep moving while unable to hear "let go"
+    connectOark();
+  }`
+    : "  if (!mqtt.connected()) connectOark();"
+}
   mqtt.loop();   // keep this running: it is what receives commands
-
+${
+  holds.length
+    ? `
+  if (isMoving() && millis() - lastCommandAt > HOLD_LIMIT_MS) {
+    safeStop();
+    report();
+  }
+`
+    : ""
+}
   // No delay() here: a device asleep in delay() hears nothing from Oark.
   if (millis() - lastReport >= 10000) {   // every 10 seconds
     lastReport = millis();

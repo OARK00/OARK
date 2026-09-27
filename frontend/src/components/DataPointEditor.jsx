@@ -1,6 +1,22 @@
 import { ACCESS_OPTIONS, DATA_POINT_TYPES } from "../constants/products";
 import { PlusIcon, TrashIcon } from "./icons";
 
+const MAX_BUTTONS = 8;
+const MAX_BUTTON_VALUE = 32;
+
+// "forward, reverse, stop" -> ["forward", "reverse", "stop"]
+export function parseOptions(text) {
+  return text
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+// Buttons only make sense on a text field Oark can control.
+function canHaveButtons(row) {
+  return row.type === "string" && row.access === "write";
+}
+
 // Editor rows hold form strings; toRows/toPayload convert at the edges.
 export function toRows(points) {
   return points.map((p) => ({
@@ -11,6 +27,9 @@ export function toRows(points) {
     min: p.min ?? "",
     max: p.max ?? "",
     access: p.access,
+    widget: p.widget ?? "",
+    options: (p.options || []).join(", "),
+    releaseValue: p.release_value ?? "",
     include: true,
     manual: false,
     sampleCount: p.sample_count ?? null,
@@ -25,6 +44,8 @@ export function toPayload(rows) {
     .filter((r) => r.include)
     .map((r) => {
       const isNumber = r.type === "number";
+      const buttons = canHaveButtons(r) && r.widget === "buttons";
+      const options = buttons ? parseOptions(r.options) : [];
       return {
         key: r.key.trim(),
         label: r.label.trim(),
@@ -33,6 +54,9 @@ export function toPayload(rows) {
         min: isNumber && r.min !== "" ? Number(r.min) : null,
         max: isNumber && r.max !== "" ? Number(r.max) : null,
         access: r.access,
+        widget: buttons ? "buttons" : null,
+        options: buttons ? options : null,
+        release_value: buttons && options.includes(r.releaseValue) ? r.releaseValue : null,
       };
     });
 }
@@ -50,6 +74,15 @@ export function validateRows(rows) {
       if (r.max !== "" && Number.isNaN(Number(r.max))) return `${name}: maximum must be a number.`;
       if (r.min !== "" && r.max !== "" && Number(r.min) > Number(r.max)) {
         return `${name}: minimum is higher than maximum.`;
+      }
+    }
+    if (canHaveButtons(r) && r.widget === "buttons") {
+      const options = parseOptions(r.options);
+      if (options.length === 0) return `${name}: add at least one button, e.g. forward, reverse, stop.`;
+      if (options.length > MAX_BUTTONS) return `${name}: at most ${MAX_BUTTONS} buttons.`;
+      if (new Set(options).size !== options.length) return `${name}: the same button is listed twice.`;
+      if (options.some((option) => option.length > MAX_BUTTON_VALUE)) {
+        return `${name}: keep each button value under ${MAX_BUTTON_VALUE} characters.`;
       }
     }
   }
@@ -94,6 +127,9 @@ export default function DataPointEditor({ rows, onChange }) {
         min: "",
         max: "",
         access: "read",
+        widget: "",
+        options: "",
+        releaseValue: "",
         include: true,
         manual: true,
         sampleCount: null,
@@ -212,6 +248,39 @@ export default function DataPointEditor({ rows, onChange }) {
                     </label>
                   </>
                 )}
+                {canHaveButtons(row) && (
+                  <label className="dp-field">
+                    Show as
+                    <select value={row.widget} onChange={(e) => updateRow(index, "widget", e.target.value)}>
+                      <option value="">Text box</option>
+                      <option value="buttons">Buttons</option>
+                    </select>
+                  </label>
+                )}
+              </div>
+            )}
+
+            {row.include && canHaveButtons(row) && row.widget === "buttons" && (
+              <div className="dp-row-fields dp-buttons-fields">
+                <label className="dp-field dp-field-wide">
+                  Buttons (comma separated)
+                  <input
+                    value={row.options}
+                    onChange={(e) => updateRow(index, "options", e.target.value)}
+                    placeholder="forward, reverse, left, right, stop"
+                  />
+                </label>
+                <label className="dp-field">
+                  Hold to move: on release send
+                  <select value={row.releaseValue} onChange={(e) => updateRow(index, "releaseValue", e.target.value)}>
+                    <option value="">Off (each tap sends once)</option>
+                    {parseOptions(row.options).map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
             )}
           </div>

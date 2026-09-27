@@ -7,6 +7,8 @@ from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validat
 NO_PROTECTED_NAMESPACES = ConfigDict(protected_namespaces=())
 
 MAX_DATA_POINTS = 50
+MAX_OPTIONS = 8
+MAX_OPTION_LENGTH = 32
 
 
 class DataPoint(BaseModel):
@@ -20,6 +22,14 @@ class DataPoint(BaseModel):
     max: float | None = None
     # "read": the device reports it. "write": it can also be controlled.
     access: Literal["read", "write"] = "read"
+    # "buttons": a controllable text field shown as one button per allowed
+    # value (forward / reverse / stop), instead of a free text box.
+    widget: Literal["buttons"] | None = None
+    # The only values a command may set on a text field. None: any text.
+    options: list[str] | None = Field(default=None, max_length=MAX_OPTIONS)
+    # Buttons only: sent when a button is let go, so a car moves only while
+    # its button is held. None: a press is a single tap.
+    release_value: str | None = None
 
     @model_validator(mode="after")
     def limits_only_for_numbers(self):
@@ -29,6 +39,35 @@ class DataPoint(BaseModel):
             self.max = None
         elif self.min is not None and self.max is not None and self.min > self.max:
             raise ValueError(f"{self.label}: minimum is higher than maximum")
+        return self
+
+    @model_validator(mode="after")
+    def options_only_for_text(self):
+        if self.type != "string":
+            if self.widget == "buttons":
+                raise ValueError(f"{self.label}: buttons need a text field")
+            self.options = None
+            self.release_value = None
+            return self
+
+        if self.options is not None:
+            cleaned = [option.strip() for option in self.options]
+            if any(not option or len(option) > MAX_OPTION_LENGTH for option in cleaned):
+                raise ValueError(f"{self.label}: each value needs 1 to {MAX_OPTION_LENGTH} characters")
+            if len(set(cleaned)) != len(cleaned):
+                raise ValueError(f"{self.label}: the same value is listed twice")
+            self.options = cleaned or None
+
+        if self.widget == "buttons":
+            if self.access != "write":
+                raise ValueError(f"{self.label}: buttons are for fields Oark can control")
+            if not self.options:
+                raise ValueError(f"{self.label}: buttons need at least one value")
+        else:
+            self.release_value = None
+
+        if self.release_value is not None and self.release_value not in (self.options or []):
+            raise ValueError(f"{self.label}: the value sent on release must be one of the buttons")
         return self
 
 

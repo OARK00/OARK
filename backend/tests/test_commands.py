@@ -223,6 +223,89 @@ def test_a_report_that_does_not_mention_the_field_changes_nothing(client, pump, 
     assert stored(db_session, command_id).status == "pending"
 
 
+# --- buttons (a car's drive pad) --------------------------------------------------
+
+CAR_POINTS = [
+    {
+        "key": "drive",
+        "label": "Drive",
+        "type": "string",
+        "access": "write",
+        "widget": "buttons",
+        "options": ["forward", "reverse", "left", "right", "stop"],
+        "release_value": "stop",
+    },
+    {"key": "obstacle_distance", "label": "Obstacle distance", "type": "number", "unit": "cm", "access": "read"},
+]
+
+
+@pytest.fixture()
+def car(client, account):
+    headers = account("Robot Lab")["headers"]
+    product_id = client.post("/products", json={"name": "Robot car", "category": "controller"}, headers=headers).json()["id"]
+    client.put(f"/products/{product_id}/data-points", json={"data_points": CAR_POINTS}, headers=headers)
+    device = client.post("/devices", json={"name": "Car 1", "product_id": product_id}, headers=headers).json()
+    return headers, device["id"], device["secret"]
+
+
+def test_a_button_sends_its_value(client, car, fake_publish):
+    _, device_id, _ = car
+
+    response = send(client, car, "drive", "forward")
+
+    assert response.status_code == 201, response.text
+    assert fake_publish["sent"][-1] == (device_id, {"desired": {"drive": "forward"}})
+
+
+def test_only_the_listed_values_can_be_sent(client, car, fake_publish):
+    response = send(client, car, "drive", "forward_and_reverse")
+
+    assert response.status_code == 422
+    assert "forward" in response.json()["detail"]
+    assert fake_publish["sent"] == []
+
+
+def test_a_button_press_expires_in_seconds_not_minutes(client, car):
+    body = send(client, car, "drive", "forward").json()
+
+    waited = datetime.fromisoformat(body["expires_at"]) - datetime.fromisoformat(body["created_at"])
+    assert waited == engine.ACTION_TTL
+
+
+def test_releasing_replaces_the_press(client, car, fake_publish, db_session):
+    """Hold forward, let go: the car is told stop, and forward is never resent."""
+    press = send(client, car, "drive", "forward").json()
+    send(client, car, "drive", "stop")
+
+    assert stored(db_session, press["id"]).status == "superseded"
+    assert fake_publish["sent"][-1][1] == {"desired": {"drive": "stop"}}
+
+
+def test_a_press_is_never_delivered_late(client, car, fake_publish, db_session):
+    """The car was offline when forward was pressed and comes back later: it
+    must not start driving by itself."""
+    _, device_id, _ = car
+    fake_publish["connected"] = False
+    command_id = send(client, car, "drive", "forward").json()["id"]
+    fake_publish["sent"].clear()
+    fake_publish["connected"] = True
+
+    later = datetime.now(timezone.utc) + engine.RESEND_AFTER + timedelta(seconds=1)
+    device_row(db_session, device_id).last_seen_at = later
+    _, resent = engine.sweep(db_session, later)
+
+    assert resent == 0
+    assert fake_publish["sent"] == []
+    assert stored(db_session, command_id).status == "expired"
+
+
+def test_switches_still_wait_minutes(client, pump):
+    body = send(client, pump, "pump_state", True).json()
+
+    waited = datetime.fromisoformat(body["expires_at"]) - datetime.fromisoformat(body["created_at"])
+    assert waited == engine.COMMAND_TTL
+
+
 # --- the sweep -------------------------------------------------------------------
 
 
