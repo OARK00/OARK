@@ -25,6 +25,15 @@ def test_database_failure_outranks_broker_failure():
     assert overall_status(database_ok=False, mqtt_connected=False, mqtt_disconnected_for=1.0) == ("down", 503)
 
 
+def test_monitors_that_only_send_head_get_an_answer(client):
+    """A 405 to HEAD looks like an outage to monitors that use it."""
+    get = client.get("/health")
+    head = client.head("/health")
+
+    assert head.status_code == get.status_code
+    assert head.status_code != 405
+
+
 def test_an_api_without_the_listener_does_not_report_on_it(monkeypatch):
     """Once the listener runs as its own service, the API must not guess at
     the state of a process it no longer contains."""

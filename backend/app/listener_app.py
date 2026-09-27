@@ -39,7 +39,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Oark ingestion listener", lifespan=lifespan)
 
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health():
     report, status_code = health_report(include_ingestion=True)
     return JSONResponse(jsonable_encoder(report), status_code=status_code)

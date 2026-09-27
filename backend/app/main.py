@@ -68,7 +68,9 @@ app.include_router(alerts_router)
 app.include_router(telemetry_router)
 
 
-@app.get("/health")
+# HEAD as well as GET: some uptime monitors only send HEAD, and a 405 there
+# reads as "site down" even when everything is fine.
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health():
     report, status_code = health_report(include_ingestion=settings.ingestion_in_api)
     return JSONResponse(jsonable_encoder(report), status_code=status_code)
