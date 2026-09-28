@@ -54,7 +54,9 @@ export const PRODUCT_TEMPLATES = [
     id: "robot-car",
     name: "Robot car",
     category: "controller",
-    description: "Two-motor car on relays, driven with hold-to-move buttons, plus an obstacle distance sensor.",
+    // Forward and reverse only, the common relay car. A car that can turn adds
+    // "left, right" to the buttons in the product's editor.
+    description: "Two-motor car on relays that drives forward and reverse with hold-to-move buttons, plus an obstacle distance sensor.",
     summary: "Demos, rovers, small AGVs",
     data_points: [
       {
@@ -63,7 +65,7 @@ export const PRODUCT_TEMPLATES = [
         type: "string",
         access: "write",
         widget: "buttons",
-        options: ["forward", "left", "stop", "right", "reverse"],
+        options: ["forward", "stop", "reverse"],
         release_value: "stop",
       },
       { key: "obstacle_distance", label: "Obstacle distance", type: "number", unit: "cm", min: 0, max: 400, access: "read" },

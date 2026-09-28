@@ -76,6 +76,77 @@ def test_a_boolean_cannot_carry_a_unit(client, account, ai):
     assert point["unit"] is None
 
 
+CAR_ANSWER = {
+    "name": "Robot Car",
+    "category": "controller",
+    "description": "A two-wheel car driven from the dashboard.",
+    "data_points": [
+        {
+            "key": "drive",
+            "label": "Drive",
+            "type": "string",
+            "access": "write",
+            "widget": "buttons",
+            "options": ["forward", "reverse", "left", "right", "stop"],
+            "release_value": "stop",
+        },
+        {"key": "obstacle_distance", "label": "Obstacle distance", "type": "number", "unit": "cm", "access": "read"},
+    ],
+}
+
+
+def test_a_car_can_be_drafted_with_a_direction_pad(client, account, ai):
+    ai["answer"] = CAR_ANSWER
+
+    drive = draft(client, account()["headers"], text="A two-wheel robot car on relays").json()["data_points"][0]
+
+    assert drive["widget"] == "buttons"
+    assert drive["options"] == ["forward", "reverse", "left", "right", "stop"]
+    assert drive["release_value"] == "stop"
+
+
+def test_sloppy_buttons_are_mended_not_refused(client, account, ai):
+    """A good draft is not thrown away over the model's capital letters."""
+    sloppy = {**CAR_ANSWER["data_points"][0], "options": ["Forward", "forward", " Stop "], "release_value": "STOP"}
+    ai["answer"] = {**CAR_ANSWER, "data_points": [sloppy]}
+
+    response = draft(client, account()["headers"])
+
+    assert response.status_code == 200
+    drive = response.json()["data_points"][0]
+    assert drive["options"] == ["forward", "stop"]
+    assert drive["release_value"] == "stop"
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"options": []},  # buttons with nothing to press
+        {"options": None},
+        {"access": "read"},  # buttons on something Oark can't control
+        {"type": "boolean"},
+    ],
+)
+def test_impossible_buttons_become_a_plain_field(client, account, ai, change):
+    ai["answer"] = {**CAR_ANSWER, "data_points": [{**CAR_ANSWER["data_points"][0], **change}]}
+
+    response = draft(client, account()["headers"])
+
+    assert response.status_code == 200
+    drive = response.json()["data_points"][0]
+    assert drive["widget"] is None
+    assert drive["release_value"] is None
+
+
+def test_a_release_value_that_is_not_a_button_is_dropped(client, account, ai):
+    ai["answer"] = {**CAR_ANSWER, "data_points": [{**CAR_ANSWER["data_points"][0], "release_value": "brake"}]}
+
+    drive = draft(client, account()["headers"]).json()["data_points"][0]
+
+    assert drive["widget"] == "buttons"
+    assert drive["release_value"] is None
+
+
 @pytest.mark.parametrize(
     "bad_answer",
     [
