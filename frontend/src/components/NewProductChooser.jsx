@@ -50,7 +50,7 @@ function useDraftAvailable() {
   return available;
 }
 
-function DescribeBox({ onDraft }) {
+export function DescribeBox({ onDraft }) {
   const available = useDraftAvailable();
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);

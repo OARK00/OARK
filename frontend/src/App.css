@@ -3941,6 +3941,14 @@ a.activity-name:hover {
   max-width: 600px;
 }
 
+.ai-product-card {
+  max-width: 760px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  padding: 1.25rem;
+}
+
 .chooser-existing {
   display: block;
   margin: 0.9rem auto 0;

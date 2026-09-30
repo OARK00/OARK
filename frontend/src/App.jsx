@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import DeviceDetail from "./pages/DeviceDetail";
 import Alerts from "./pages/Alerts";
 import Products from "./pages/Products";
+import AIProduct from "./pages/AIProduct";
 import ProductDetail from "./pages/ProductDetail";
 import "./App.css";
 
@@ -58,6 +59,14 @@ function App() {
         element={
           <RequireAuth>
             <Products />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/ai-product"
+        element={
+          <RequireAuth>
+            <AIProduct />
           </RequireAuth>
         }
       />

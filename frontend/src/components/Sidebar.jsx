@@ -34,6 +34,18 @@ const icons = {
       <path d="M10.5 21a1.5 1.5 0 0 0 3 0" />
     </svg>
   ),
+  aiProduct: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3Z" />
+      <path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z" />
+    </svg>
+  ),
+  assistant: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" />
+      <path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01" />
+    </svg>
+  ),
   settings: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <circle cx="12" cy="12" r="3" />
@@ -42,22 +54,29 @@ const icons = {
   ),
 };
 
+// Order agreed with the user (2026-09-30): Products right below Devices, then
+// AI Product -- creating a product with AI, Oark's core idea -- as its own entry.
 const navGroups = [
   {
     label: "Monitor",
     items: [
       { key: "overview", label: "Overview", icon: icons.overview, to: "/overview" },
       { key: "devices", label: "Devices", icon: icons.devices, to: "/dashboard" },
-      { key: "analytics", label: "Analytics", icon: icons.analytics, disabled: true },
+      { key: "products", label: "Products", icon: icons.products, to: "/products" },
+      { key: "ai-product", label: "AI Product", icon: icons.aiProduct, to: "/ai-product" },
       { key: "alerts", label: "Alerts", icon: icons.alerts, to: "/alerts" },
     ],
   },
   {
-    label: "Manage",
+    label: "Insights",
     items: [
-      { key: "products", label: "Products", icon: icons.products, to: "/products" },
-      { key: "settings", label: "Settings", icon: icons.settings, disabled: true },
+      { key: "analytics", label: "Analytics", icon: icons.analytics, disabled: true },
+      { key: "assistant", label: "AI Assistant", icon: icons.assistant, disabled: true },
     ],
+  },
+  {
+    label: "Manage",
+    items: [{ key: "settings", label: "Settings", icon: icons.settings, disabled: true }],
   },
 ];
 
