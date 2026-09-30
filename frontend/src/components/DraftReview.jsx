@@ -7,7 +7,14 @@ import DataPointEditor, { toPayload, toRows, validateRows } from "./DataPointEdi
 // The AI's proposal, laid out for a person to check. Nothing has been saved
 // yet: creating goes through the same two calls as every other product, so
 // an AI-drafted product is indistinguishable from a hand-made one afterwards.
-export default function DraftReview({ draft, onBack, onCreated }) {
+// Given an empty draft and its own title, the same form is "Build Your Own".
+export default function DraftReview({
+  draft,
+  onBack,
+  onCreated,
+  title = "Check the draft",
+  intro = "Drafted from your description. Change anything that isn’t right, then create it.",
+}) {
   const [form, setForm] = useState({
     name: draft.name,
     category: draft.category,
@@ -48,8 +55,8 @@ export default function DraftReview({ draft, onBack, onCreated }) {
 
   return (
     <form onSubmit={create}>
-      <h3>Check the draft</h3>
-      <p>Drafted from your description. Change anything that isn&rsquo;t right, then create it.</p>
+      <h3>{title}</h3>
+      <p>{intro}</p>
 
       <div className="add-device-form">
         <div className="field-row">

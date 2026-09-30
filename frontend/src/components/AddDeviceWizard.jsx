@@ -10,12 +10,16 @@ import WizardSteps from "./WizardSteps";
 
 const STEPS = ["Device", "Connect"];
 const STANDALONE = "";
+// Build Your Own starts the same product form the AI fills in, just blank.
+const EMPTY_PRODUCT = { name: "", category: "sensor", description: "", data_points: [] };
 
-// Step one has four views:
-//   choose   -- what kind of device is it: describe with AI / template / own setup
+// Step one has five views:
+//   choose   -- what kind of device is it: Create with AI / Product Library / Build Your Own
 //   draft    -- the AI's proposal, for review; creating it makes the product
-//   template -- the template cards, inline; picking one creates the product
+//   build    -- the same product form, empty: every field and control by hand
+//   template -- the Product Library cards, inline; picking one creates the product
 //   form     -- name the unit, with the product (if any) already selected
+// Every path except "another unit" ends in a new product, then the form.
 // Everyone starts at "choose": the three ways in are the front door, as in
 // the platforms Oark is modelled on. Adding one more unit of a product that
 // already exists is a link under them. Only when the caller already knows
@@ -88,7 +92,7 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
     <div className="modal-overlay" onClick={() => !creating && step === 0 && onClose()}>
       <div
         className={`modal-card wizard-card${view === "choose" ? " chooser-card" : ""}${
-          view === "draft" ? " wizard-card-wide" : ""
+          view === "draft" || view === "build" ? " wizard-card-wide" : ""
         }`}
         role="dialog"
         aria-modal="true"
@@ -109,12 +113,7 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
                 setView("draft");
               }}
               onTemplate={() => setView("template")}
-              onManual={() => {
-                setProductId(STANDALONE);
-                setView("form");
-              }}
-              manualTitle="Build Your Own"
-              manualText="Full freedom. Name it and pick a category now; Oark reads its fields once it reports."
+              onManual={() => setView("build")}
             />
             {hasProducts && (
               <button
@@ -138,6 +137,16 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
 
         {step === 0 && view === "draft" && draft && (
           <DraftReview draft={draft} onBack={() => setView("choose")} onCreated={adoptNewProduct} />
+        )}
+
+        {step === 0 && view === "build" && (
+          <DraftReview
+            draft={EMPTY_PRODUCT}
+            title="Build Your Own"
+            intro="Full freedom: name the product and add its fields and controls, including buttons. You can also leave the fields for later: Oark suggests them once the device reports."
+            onBack={() => setView("choose")}
+            onCreated={adoptNewProduct}
+          />
         )}
 
         {step === 0 && view === "template" && (
