@@ -21,7 +21,13 @@ from app.modules.auth.rate_limit import (
     record_failure,
     retry_after_seconds,
 )
-from app.modules.auth.schemas import LoginRequest, RegisterRequest, TokenResponse, UserResponse
+from app.modules.auth.schemas import (
+    ChangePasswordRequest,
+    LoginRequest,
+    RegisterRequest,
+    TokenResponse,
+    UserResponse,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -57,6 +63,39 @@ def me(current_user: User = Depends(get_current_user)):
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 def logout(response: Response):
     response.delete_cookie(key=SESSION_COOKIE_NAME, path="/")
+
+
+@router.post("/password", status_code=status.HTTP_204_NO_CONTENT)
+def change_password(
+    payload: ChangePasswordRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Needs the current password as well as the session: a laptop left
+    logged in must not be enough to take the account over for good."""
+    ip = client_ip(request)
+    email = current_user.email
+    # The same limit as logging in, so this can't be used to guess passwords
+    # from a stolen session at unlimited speed.
+    if is_rate_limited(count_email_failures(db, email), count_ip_failures(db, ip)):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many wrong passwords. Please wait and try again.",
+            headers={"Retry-After": str(retry_after_seconds(db, email, ip))},
+        )
+
+    # 400, not 401: a 401 means "not logged in", and the app would sign the
+    # person out for mistyping their current password.
+    if not verify_password(payload.current_password, current_user.hashed_password):
+        record_failure(db, email, ip)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Your current password is not right.")
+    if payload.new_password == payload.current_password:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Choose a password you don't use now.")
+
+    current_user.hashed_password = hash_password(payload.new_password)
+    clear_failures(db, email)
+    db.commit()
 
 
 @router.post("/register", response_model=TokenResponse)
