@@ -4,6 +4,14 @@
 // it can be edited or deleted afterwards like any other.
 export const PRODUCT_TEMPLATES = [
   {
+    id: "smart-switch",
+    name: "Smart switch",
+    category: "controller",
+    description: "One relay switched on and off from Oark: lights, fans, pumps, any single load.",
+    summary: "Relay boards, sockets, lights",
+    data_points: [{ key: "relay", label: "Relay", type: "boolean", access: "write" }],
+  },
+  {
     id: "temperature-humidity",
     name: "Temperature & humidity sensor",
     category: "sensor",

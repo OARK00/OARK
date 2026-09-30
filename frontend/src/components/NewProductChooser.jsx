@@ -16,14 +16,14 @@ const MIN_DESCRIPTION = 8;
 
 // The same magic wand as the menu's AI Product entry: every AI action looks
 // alike, and nothing reads as a loading spinner (the old burst did).
-const SparkIcon = (
+export const SparkIcon = (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
     <path d="M4 20 14 10" />
     <path d="M16 3v3M16 10v1M19.5 6.5 18 8M12.5 6.5 14 8M20 9h-3" />
   </svg>
 );
 
-const TemplateIcon = (
+export const TemplateIcon = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <rect x="3" y="3" width="7" height="7" rx="1.5" />
     <rect x="14" y="3" width="7" height="7" rx="1.5" />
@@ -151,7 +151,7 @@ export function ChooserBody({
           <span className="chooser-option-icon">{TemplateIcon}</span>
           <span className="chooser-option-title">Product Library</span>
           <span className="chooser-option-text">
-            Pick a ready-made product: temperature, energy meter, tank level, machine status, robot car. One click.
+            Pick a ready-made product: smart switch, temperature, energy meter, tank level, robot car. One click.
           </span>
         </button>
 

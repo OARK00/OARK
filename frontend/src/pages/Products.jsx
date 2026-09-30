@@ -4,10 +4,10 @@ import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import AppShell from "../components/AppShell";
 import DraftReview from "../components/DraftReview";
-import NewProductChooser, { ChooserBody } from "../components/NewProductChooser";
+import NewProductChooser, { DescribeBox, SparkIcon, TemplateIcon } from "../components/NewProductChooser";
 import NewProductWizard from "../components/NewProductWizard";
 import TemplatePicker from "../components/TemplatePicker";
-import { categoryIcon } from "../components/icons";
+import { categoryIcon, PlusIcon } from "../components/icons";
 import { CATEGORY_LABELS } from "../constants/devices";
 
 function plural(count, word) {
@@ -27,6 +27,7 @@ export default function Products() {
 
   function closeCreating() {
     setCreating(null);
+    setDraft(null);
     if (searchParams.get("new")) setSearchParams({}, { replace: true });
   }
 
@@ -54,11 +55,33 @@ export default function Products() {
             the user 2026-09-29): AI first and biggest, then the ready-made
             library and full freedom. */}
         <div className="product-create">
-          <ChooserBody
-            onDraft={setDraft}
-            onTemplate={() => setCreating("template")}
-            onManual={() => setCreating("manual")}
-          />
+          <div className="product-paths">
+            <button type="button" className="product-path product-path-ai" onClick={() => setCreating("ai")}>
+              <span className="product-path-tag">Recommended</span>
+              <span className="product-path-icon">{SparkIcon}</span>
+              <span className="product-path-title">Create with AI</span>
+              <span className="product-path-text">
+                Describe your device in one sentence. AI builds the product, and you check it before it&rsquo;s saved.
+              </span>
+              <span className="product-path-action">Describe your device →</span>
+            </button>
+            <button type="button" className="product-path" onClick={() => setCreating("template")}>
+              <span className="product-path-icon">{TemplateIcon}</span>
+              <span className="product-path-title">Product Library</span>
+              <span className="product-path-text">
+                Ready-made products: smart switch, temperature, energy meter, tank level, robot car. One click.
+              </span>
+              <span className="product-path-action">Browse →</span>
+            </button>
+            <button type="button" className="product-path" onClick={() => setCreating("manual")}>
+              <span className="product-path-icon">{PlusIcon}</span>
+              <span className="product-path-title">Build Your Own</span>
+              <span className="product-path-text">
+                Full freedom: every field and control your way, including switches and buttons.
+              </span>
+              <span className="product-path-action">Start →</span>
+            </button>
+          </div>
         </div>
 
         {error && <div className="error">{error}</div>}
@@ -99,14 +122,32 @@ export default function Products() {
         )}
       </section>
 
-      {draft && (
-        <div className="modal-overlay">
-          <div className="modal-card wizard-card wizard-card-wide" role="dialog" aria-modal="true">
-            <DraftReview
-              draft={draft}
-              onBack={() => setDraft(null)}
-              onCreated={(product) => navigate(`/products/${product.id}`)}
-            />
+      {creating === "ai" && (
+        <div className="modal-overlay" onClick={() => !draft && closeCreating()}>
+          <div
+            className={`modal-card wizard-card ${draft ? "wizard-card-wide" : "chooser-card"}`}
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {draft ? (
+              <DraftReview
+                draft={draft}
+                onBack={() => setDraft(null)}
+                onCreated={(product) => navigate(`/products/${product.id}`)}
+              />
+            ) : (
+              <>
+                <h3>Create with AI</h3>
+                <p>Describe your device in one sentence. AI drafts the product, and nothing is saved until you check it.</p>
+                <DescribeBox onDraft={setDraft} />
+                <div className="modal-actions">
+                  <button type="button" className="ghost-button" onClick={closeCreating}>
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
