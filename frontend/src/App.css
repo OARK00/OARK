@@ -4054,9 +4054,38 @@ a.activity-name:hover {
   }
 }
 
-.product-list-title {
+.product-list-title,
+.product-section-title {
   margin: 0 0 0.8rem;
   font-size: 0.95rem;
+}
+
+.product-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0.5rem 0 0.8rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--border);
+}
+
+.product-list-head .product-section-title {
+  margin: 0;
+}
+
+.product-list-head .search-field {
+  max-width: 280px;
+}
+
+.cell-product-description {
+  display: block;
+  max-width: 420px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: var(--muted);
 }
 
 .ai-product-card {

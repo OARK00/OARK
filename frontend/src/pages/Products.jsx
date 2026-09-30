@@ -23,7 +23,17 @@ export default function Products() {
   const [creating, setCreating] = useState(searchParams.get("new") ? "choose" : null);
   // An AI draft started from the options on this page, waiting for review.
   const [draft, setDraft] = useState(null);
+  const [search, setSearch] = useState("");
   const navigate = useNavigate();
+
+  const query = search.trim().toLowerCase();
+  const visibleProducts = (products || []).filter(
+    (p) =>
+      !query ||
+      [p.name, p.description, p.model_number, CATEGORY_LABELS[p.category]]
+        .filter(Boolean)
+        .some((text) => text.toLowerCase().includes(query))
+  );
 
   function closeCreating() {
     setCreating(null);
@@ -55,6 +65,7 @@ export default function Products() {
             the user 2026-09-29): AI first and biggest, then the ready-made
             library and full freedom. */}
         <div className="product-create">
+          <h3 className="product-section-title">Create a new product</h3>
           <div className="product-paths">
             <button type="button" className="product-path product-path-ai" onClick={() => setCreating("ai")}>
               <span className="product-path-tag">Recommended</span>
@@ -86,38 +97,79 @@ export default function Products() {
 
         {error && <div className="error">{error}</div>}
 
-        <h3 className="product-list-title">Your products</h3>
+        {/* Cards above are actions; what already exists is a table, like the
+            Devices page, so the two never read as the same kind of thing. */}
+        <div className="product-list-head">
+          <h3 className="product-section-title">
+            Your products{products ? ` (${products.length})` : ""}
+          </h3>
+          {products?.length > 0 && (
+            <div className="search-field">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
+              </svg>
+              <input
+                type="search"
+                placeholder="Search products"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                aria-label="Search products"
+              />
+            </div>
+          )}
+        </div>
 
-        {products === null && !error ? (
-          <p className="muted">Loading products...</p>
+        {products === null ? (
+          !error && <p className="muted">Loading products...</p>
+        ) : products.length === 0 ? (
+          <p className="muted">No products yet. Create your first one with one of the three options above.</p>
+        ) : visibleProducts.length === 0 ? (
+          <p className="muted">Nothing matches &ldquo;{search}&rdquo;.</p>
         ) : (
-          <div className="product-grid">
-            {products?.map((p) => (
-              <Link key={p.id} to={`/products/${p.id}`} className="product-card">
-                <div className="product-card-top">
-                  <span className={`device-icon device-icon-${p.category || "other"}`}>{categoryIcon(p.category)}</span>
-                  <div className="product-card-identity">
-                    <div className="product-card-name">{p.name}</div>
-                    <div className="product-card-meta">
-                      {CATEGORY_LABELS[p.category] || "Uncategorized"}
-                      {p.model_number && <code>{p.model_number}</code>}
-                    </div>
-                  </div>
-                </div>
-                {p.description && <p className="product-card-description">{p.description}</p>}
-                <div className="product-card-footer">
-                  <span>{plural(p.device_count, "device")}</span>
-                  {p.data_points.length ? (
-                    <span>{plural(p.data_points.length, "data point")}</span>
-                  ) : (
-                    <span className="product-card-warning">No data points yet</span>
-                  )}
-                </div>
-              </Link>
-            ))}
-            {products?.length === 0 && (
-              <p className="muted">No products yet. Create your first one with one of the three options above.</p>
-            )}
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Category</th>
+                  <th>Devices</th>
+                  <th>Data points</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleProducts.map((p) => (
+                  <tr key={p.id}>
+                    <td>
+                      <div className="cell-device">
+                        <span className={`device-icon device-icon-${p.category || "other"}`}>
+                          {categoryIcon(p.category)}
+                        </span>
+                        <div className="cell-device-text">
+                          <Link to={`/products/${p.id}`} className="cell-device-name">
+                            {p.name}
+                          </Link>
+                          {p.description && <span className="cell-product-description">{p.description}</span>}
+                        </div>
+                      </div>
+                    </td>
+                    <td>{CATEGORY_LABELS[p.category] || <span className="muted">Uncategorized</span>}</td>
+                    <td>{plural(p.device_count, "device")}</td>
+                    <td>
+                      {p.data_points.length ? (
+                        plural(p.data_points.length, "data point")
+                      ) : (
+                        <span className="product-card-warning">None yet</span>
+                      )}
+                    </td>
+                    <td className="cell-muted">
+                      {p.created_at ? new Date(p.created_at).toLocaleDateString() : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>
