@@ -14,9 +14,12 @@ const EXAMPLES = [
 
 const MIN_DESCRIPTION = 8;
 
+// The same magic wand as the menu's AI Product entry: every AI action looks
+// alike, and nothing reads as a loading spinner (the old burst did).
 const SparkIcon = (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6" />
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <path d="M4 20 14 10" />
+    <path d="M16 3v3M16 10v1M19.5 6.5 18 8M12.5 6.5 14 8M20 9h-3" />
   </svg>
 );
 
@@ -80,12 +83,13 @@ export function DescribeBox({ onDraft }) {
       <div className="ai-box-head">
         <span className="ai-box-title">
           {SparkIcon}
-          Describe your device
+          Create with AI
         </span>
         {!enabled && !checking && <span className="soon-badge">Soon</span>}
       </div>
       <p className="ai-box-note">
-        Oark will draft its name, category and data points from one sentence. You can edit everything afterwards.
+        Describe your device in one sentence. AI drafts its name, category and data points, and you can edit
+        everything afterwards.
       </p>
       <div className="ai-box-input">
         <textarea
@@ -131,8 +135,8 @@ export function ChooserBody({
   onTemplate,
   onManual,
   onDraft,
-  manualTitle = "Set up manually",
-  manualText = "Full freedom. Connect a test device and Oark reads its fields, or define them yourself.",
+  manualTitle = "Build Your Own",
+  manualText = "Full freedom: define every field and control yourself, or connect a test device and Oark reads its fields.",
 }) {
   return (
     <>
@@ -145,9 +149,9 @@ export function ChooserBody({
       <div className="chooser-options">
         <button type="button" className="chooser-option" onClick={onTemplate}>
           <span className="chooser-option-icon">{TemplateIcon}</span>
-          <span className="chooser-option-title">Start from a template</span>
+          <span className="chooser-option-title">Product Library</span>
           <span className="chooser-option-text">
-            Ready-made for common hardware: temperature, energy, tank level, machine status, robot car. One click.
+            Pick a ready-made product: temperature, energy meter, tank level, machine status, robot car. One click.
           </span>
         </button>
 

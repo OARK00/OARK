@@ -3941,6 +3941,15 @@ a.activity-name:hover {
   max-width: 600px;
 }
 
+.product-create {
+  margin-bottom: 1.5rem;
+}
+
+.product-list-title {
+  margin: 0 0 0.8rem;
+  font-size: 0.95rem;
+}
+
 .ai-product-card {
   max-width: 760px;
   border: 1px solid var(--border);

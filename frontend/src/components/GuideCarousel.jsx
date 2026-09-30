@@ -31,14 +31,14 @@ export const GUIDES = [
   },
   {
     id: "template",
-    title: "Start from a ready-made template",
+    title: "Start from the Product Library",
     steps: [
-      { label: "Pick a template" },
+      { label: "Pick a ready-made product" },
       { label: "Product is created" },
       { label: "Add your devices" },
       { label: "Data arrives labelled" },
     ],
-    action: { label: "Browse templates", kind: "template" },
+    action: { label: "Open the Product Library", kind: "template" },
   },
 ];
 

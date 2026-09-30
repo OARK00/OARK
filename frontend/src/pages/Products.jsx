@@ -3,10 +3,11 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import AppShell from "../components/AppShell";
-import NewProductChooser from "../components/NewProductChooser";
+import DraftReview from "../components/DraftReview";
+import NewProductChooser, { ChooserBody } from "../components/NewProductChooser";
 import NewProductWizard from "../components/NewProductWizard";
 import TemplatePicker from "../components/TemplatePicker";
-import { categoryIcon, PlusIcon } from "../components/icons";
+import { categoryIcon } from "../components/icons";
 import { CATEGORY_LABELS } from "../constants/devices";
 
 function plural(count, word) {
@@ -20,6 +21,8 @@ export default function Products() {
   // null, or which step of creating a product is open. Links elsewhere in
   // the app (Overview, guides) arrive with ?new=1 and land on the chooser.
   const [creating, setCreating] = useState(searchParams.get("new") ? "choose" : null);
+  // An AI draft started from the options on this page, waiting for review.
+  const [draft, setDraft] = useState(null);
   const navigate = useNavigate();
 
   function closeCreating() {
@@ -45,12 +48,22 @@ export default function Products() {
               setup.
             </p>
           </div>
-          <button className="primary-button" onClick={() => setCreating("choose")}>
-            + New product
-          </button>
+        </div>
+
+        {/* The three ways to create a product, always in view (agreed with
+            the user 2026-09-29): AI first and biggest, then the ready-made
+            library and full freedom. */}
+        <div className="product-create">
+          <ChooserBody
+            onDraft={setDraft}
+            onTemplate={() => setCreating("template")}
+            onManual={() => setCreating("manual")}
+          />
         </div>
 
         {error && <div className="error">{error}</div>}
+
+        <h3 className="product-list-title">Your products</h3>
 
         {products === null && !error ? (
           <p className="muted">Loading products...</p>
@@ -79,15 +92,24 @@ export default function Products() {
                 </div>
               </Link>
             ))}
-
-            <button type="button" className="product-card product-card-new" onClick={() => setCreating("choose")}>
-              <span className="product-card-new-icon">{PlusIcon}</span>
-              <span className="product-card-name">New product</span>
-              <span className="muted">From a template, or set it up your own way.</span>
-            </button>
+            {products?.length === 0 && (
+              <p className="muted">No products yet. Create your first one with one of the three options above.</p>
+            )}
           </div>
         )}
       </section>
+
+      {draft && (
+        <div className="modal-overlay">
+          <div className="modal-card wizard-card wizard-card-wide" role="dialog" aria-modal="true">
+            <DraftReview
+              draft={draft}
+              onBack={() => setDraft(null)}
+              onCreated={(product) => navigate(`/products/${product.id}`)}
+            />
+          </div>
+        </div>
+      )}
 
       {creating === "choose" && (
         <NewProductChooser

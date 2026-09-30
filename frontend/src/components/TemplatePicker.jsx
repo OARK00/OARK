@@ -69,7 +69,7 @@ export default function TemplatePicker({ onClose }) {
         aria-labelledby="template-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <h3 id="template-title">Start from a template</h3>
+        <h3 id="template-title">Product Library</h3>
         <p>Each one creates a product with its data points already defined. Edit or delete it afterwards.</p>
 
         <TemplateGrid onCreated={(product) => navigate(`/products/${product.id}`)} />

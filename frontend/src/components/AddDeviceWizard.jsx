@@ -113,7 +113,7 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
                 setProductId(STANDALONE);
                 setView("form");
               }}
-              manualTitle="My own setup"
+              manualTitle="Build Your Own"
               manualText="Full freedom. Name it and pick a category now; Oark reads its fields once it reports."
             />
             {hasProducts && (
@@ -142,7 +142,7 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
 
         {step === 0 && view === "template" && (
           <>
-            <h3 id="wizard-title">Start from a template</h3>
+            <h3 id="wizard-title">Product Library</h3>
             <p>Pick the closest match. It becomes a product you can edit later, and this device uses it.</p>
             <TemplateGrid onCreated={adoptNewProduct} />
             <div className="modal-actions">
@@ -181,7 +181,7 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
                   </span>
                 )}
                 <button type="button" className="link-button small field-link" onClick={() => setView("choose")}>
-                  ← Back to: describe with AI, pick a template, or set it up yourself
+                  ← Back to: Create with AI, Product Library, or Build Your Own
                 </button>
               </label>
               <label className="field">
