@@ -17,6 +17,7 @@ from app.modules.auth.router import router as auth_router
 from app.modules.commands.router import router as commands_router
 from app.modules.commands.sweeper import sweep_commands
 from app.modules.devices.router import router as devices_router
+from app.modules.orgs.router import router as orgs_router
 from app.modules.overview.router import router as overview_router
 from app.modules.products.router import router as products_router
 from app.modules.telemetry.router import router as telemetry_router
@@ -60,6 +61,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+app.include_router(orgs_router)
 app.include_router(devices_router)
 app.include_router(commands_router)
 app.include_router(products_router)

@@ -78,7 +78,7 @@ const navGroups = [
   },
   {
     label: "Manage",
-    items: [{ key: "settings", label: "Settings", icon: icons.settings, disabled: true }],
+    items: [{ key: "settings", label: "Settings", icon: icons.settings, to: "/settings" }],
   },
 ];
 

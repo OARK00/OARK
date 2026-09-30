@@ -8,6 +8,7 @@ import Alerts from "./pages/Alerts";
 import Products from "./pages/Products";
 import AIProduct from "./pages/AIProduct";
 import ProductDetail from "./pages/ProductDetail";
+import Settings from "./pages/Settings";
 import "./App.css";
 
 function RequireAuth({ children }) {
@@ -75,6 +76,14 @@ function App() {
         element={
           <RequireAuth>
             <ProductDetail />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <RequireAuth>
+            <Settings />
           </RequireAuth>
         }
       />
