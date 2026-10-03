@@ -1,6 +1,8 @@
+import uuid
+
+import jwt
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -31,10 +33,12 @@ def get_current_user(
 
     try:
         payload = decode_access_token(token)
-        user_id = payload.get("sub")
-        if user_id is None:
-            raise credentials_error
-    except JWTError:
+        user_id = uuid.UUID(payload["sub"])
+    # Both mean "not logged in": a token PyJWT refuses (InvalidTokenError is
+    # the parent of every such error -- expired, forged, unsigned...), and a
+    # "sub" that is not an id. Anything else, like the database being down,
+    # is a real error and must not quietly sign people out.
+    except (jwt.InvalidTokenError, ValueError):
         raise credentials_error
 
     user = db.get(User, user_id)
