@@ -1,4 +1,7 @@
-fastapi==0.115.0
+fastapi==0.142.2
+# Pinned on its own although FastAPI pulls it in: it is the layer that parses
+# every request, and 0.38.6 (what FastAPI 0.115 allowed) had 14 known vulns.
+starlette==1.7.0
 uvicorn[standard]==0.32.0
 sqlalchemy==2.0.35
 alembic==1.13.3
