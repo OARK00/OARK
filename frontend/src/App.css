@@ -56,6 +56,13 @@ body {
   color: #ffffff;
 }
 
+/* The brand badge (PNG, 3x for sharp high-density screens). */
+.auth-logo {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+
 .auth-side-dark-bottom h2 {
   font-size: 1.9rem;
   line-height: 1.3;

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import Logo from "../components/Logo";
 import { getErrorMessage } from "../api/errors";
+import oarkLogo from "../assets/oark-logo.png";
 
 // One node in the hub diagram: a colored circle with a small icon, a
 // connecting line back to the hub, and a label.
@@ -166,7 +166,7 @@ export default function Login() {
     <div className="auth-page-split">
       <div className="auth-side-dark">
         <div className="auth-side-dark-top">
-          <Logo size={26} wordmark />
+          <img src={oarkLogo} alt="Oark" className="auth-logo" />
         </div>
 
         <svg className="iso-stack" viewBox="0 0 330 245">
