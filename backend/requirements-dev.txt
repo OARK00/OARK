@@ -1,6 +1,8 @@
 -r requirements.txt
-pytest==8.3.3
+pytest==9.1.1
 mypy==1.11.2
+# Checks every package we deploy against known vulnerabilities (CI runs it).
+pip-audit==2.10.1
 # Type stubs for libraries that ship none. Without these, mypy reports the
 # imports as untyped and fails on a clean machine even though it passes on
 # one where they happen to be installed.
