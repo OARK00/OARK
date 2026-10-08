@@ -95,7 +95,7 @@ export default function Sidebar({ active = "devices" }) {
     <aside className="sidebar">
       <div className="sidebar-main">
         <div className="sidebar-brand">
-          <Logo size={28} wordmark />
+          <Logo height={32} />
         </div>
         {navGroups.map((group) => (
           <div key={group.label} className="sidebar-group">

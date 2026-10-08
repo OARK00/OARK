@@ -26,3 +26,8 @@ Thumbs.db
 # Local scratch/debug output
 *.log
 /design/
+
+# Local firmware experiments: they hold Wi-Fi passwords and device secrets
+/esp32_bridge/
+/esp8266_blink/
+/oark_relay_esp8266/

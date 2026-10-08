@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getErrorMessage } from "../api/errors";
-import oarkLogo from "../assets/oark-logo.png";
+import Logo from "../components/Logo";
 
 // One node in the hub diagram: a colored circle with a small icon, a
 // connecting line back to the hub, and a label.
@@ -166,7 +166,7 @@ export default function Login() {
     <div className="auth-page-split">
       <div className="auth-side-dark">
         <div className="auth-side-dark-top">
-          <img src={oarkLogo} alt="Oark" className="auth-logo" />
+          <Logo height={40} />
         </div>
 
         <svg className="iso-stack" viewBox="0 0 330 245">
@@ -175,9 +175,9 @@ export default function Login() {
 
         <div className="auth-side-dark-bottom">
           <h2>
-            Monitor your <span className="highlight">entire fleet</span> in real time.
+            Create your <span className="highlight">smart product</span> INNOVATIVELY
           </h2>
-          <p>Connect devices over MQTT, track live telemetry, and manage everything from one dashboard.</p>
+          <p>Build smarter solutions and empower enterprises to connect their devices seamlessly and securely.</p>
         </div>
       </div>
 

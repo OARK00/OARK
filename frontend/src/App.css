@@ -57,9 +57,8 @@ body {
 }
 
 /* The brand badge (PNG, 3x for sharp high-density screens). */
-.auth-logo {
+.brand-logo {
   display: block;
-  height: 40px;
   width: auto;
 }
 
