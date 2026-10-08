@@ -175,7 +175,7 @@ export default function Login() {
 
         <div className="auth-side-dark-bottom">
           <h2>
-            Create your <span className="highlight">smart product</span> INNOVATIVELY
+            Create your <span className="highlight">smart product</span> in minutes.
           </h2>
           <p>Build smarter solutions and empower enterprises to connect their devices seamlessly and securely.</p>
         </div>
