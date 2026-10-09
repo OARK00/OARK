@@ -37,26 +37,46 @@ export default function Alerts() {
   const [creating, setCreating] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  async function load() {
-    try {
-      const [rulesResponse, eventsResponse] = await Promise.all([
-        api.get("/alerts/rules"),
-        api.get("/alerts/events", { params: { limit: 100 } }),
-      ]);
-      setRules(rulesResponse.data);
-      setEvents(eventsResponse.data);
-      setError(null);
-    } catch (err) {
-      setError(getErrorMessage(err, "Could not load alerts"));
-    } finally {
-      setLoading(false);
-    }
+  async function fetchAlerts() {
+    const [rulesResponse, eventsResponse] = await Promise.all([
+      api.get("/alerts/rules"),
+      api.get("/alerts/events", { params: { limit: 100 } }),
+    ]);
+    return { rules: rulesResponse.data, events: eventsResponse.data };
   }
 
+  function showAlerts(data) {
+    setRules(data.rules);
+    setEvents(data.events);
+    setError(null);
+    setLoading(false);
+  }
+
+  function showLoadError(err) {
+    setError(getErrorMessage(err, "Could not load alerts"));
+    setLoading(false);
+  }
+
+  // After a button changes something.
+  function load() {
+    return fetchAlerts().then(showAlerts, showLoadError);
+  }
+
+  // On open, then every REFRESH_MS. Once the page is closed, late answers
+  // are dropped instead of updating a page that is gone.
   useEffect(() => {
-    load();
-    const id = setInterval(load, REFRESH_MS);
-    return () => clearInterval(id);
+    let active = true;
+    const refresh = () =>
+      fetchAlerts().then(
+        (data) => active && showAlerts(data),
+        (err) => active && showLoadError(err)
+      );
+    refresh();
+    const id = setInterval(refresh, REFRESH_MS);
+    return () => {
+      active = false;
+      clearInterval(id);
+    };
   }, []);
 
   async function toggleRule(rule) {

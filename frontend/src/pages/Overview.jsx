@@ -1,8 +1,8 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import AppShell from "../components/AppShell";
 import AddDeviceWizard from "../components/AddDeviceWizard";
 import GuideCarousel from "../components/GuideCarousel";
@@ -171,20 +171,30 @@ export default function Overview() {
   const { email } = useAuth();
   const navigate = useNavigate();
 
-  async function load() {
-    try {
-      const { data } = await api.get("/overview");
-      setData(data);
-      setError(null);
-    } catch (err) {
-      setError(getErrorMessage(err, "Could not load the overview"));
-    }
+  function showOverview(overview) {
+    setData(overview);
+    setError(null);
   }
 
+  function showLoadError(err) {
+    setError(getErrorMessage(err, "Could not load the overview"));
+  }
+
+  // On open, then every REFRESH_MS. Once the page is closed, late answers
+  // are dropped instead of updating a page that is gone.
   useEffect(() => {
-    load();
-    const id = setInterval(load, REFRESH_MS);
-    return () => clearInterval(id);
+    let isMounted = true;
+    const refresh = () =>
+      api.get("/overview").then(
+        ({ data: overview }) => isMounted && showOverview(overview),
+        (err) => isMounted && showLoadError(err)
+      );
+    refresh();
+    const id = setInterval(refresh, REFRESH_MS);
+    return () => {
+      isMounted = false;
+      clearInterval(id);
+    };
   }, []);
 
   return (

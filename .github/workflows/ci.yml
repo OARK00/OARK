@@ -81,6 +81,9 @@ jobs:
       # customer's browser, so we would rather pause a push than ship a hole.
       - run: npm audit --audit-level=low
 
+      # Any lint warning fails CI, so warnings can never pile up again.
+      - run: npm run lint
+
       - run: npm run build
 
   secrets:

@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import AppShell from "../components/AppShell";
 import AddDeviceWizard from "../components/AddDeviceWizard";
 import ConnectPanel from "../components/DeviceConnect";
-import { categoryIcon, CheckIcon, CopyIcon, KeyIcon, TrashIcon } from "../components/icons";
+import { categoryIcon } from "../components/categoryIcon";
+import { CheckIcon, CopyIcon, KeyIcon, TrashIcon } from "../components/icons";
 import { CATEGORY_LABELS } from "../constants/devices";
 
 const SunIcon = (
@@ -94,20 +95,32 @@ export default function Dashboard() {
 
   const { email } = useAuth();
 
-  async function loadDevices() {
-    setLoading(true);
-    try {
-      const { data } = await api.get("/devices");
-      setDevices(data);
-    } catch (err) {
-      setError(getErrorMessage(err, "Could not load devices"));
-    } finally {
-      setLoading(false);
-    }
+  function showDevices(data) {
+    setDevices(data);
+    setLoading(false);
   }
 
+  function showLoadError(err) {
+    setError(getErrorMessage(err, "Could not load devices"));
+    setLoading(false);
+  }
+
+  // After a button adds, deletes or resets a device.
+  async function loadDevices() {
+    setLoading(true);
+    return api.get("/devices").then(({ data }) => showDevices(data), showLoadError);
+  }
+
+  // On open; an answer that arrives after the page is closed is dropped.
   useEffect(() => {
-    loadDevices();
+    let active = true;
+    api.get("/devices").then(
+      ({ data }) => active && showDevices(data),
+      (err) => active && showLoadError(err)
+    );
+    return () => {
+      active = false;
+    };
   }, []);
 
   const stats = useMemo(() => {

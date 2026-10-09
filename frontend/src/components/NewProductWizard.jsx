@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import { CATEGORY_OPTIONS } from "../constants/devices";
-import ConnectPanel, { useFirstMessage } from "./DeviceConnect";
-import DataPointEditor, { toPayload, toRows, validateRows } from "./DataPointEditor";
+import ConnectPanel from "./DeviceConnect";
+import { useFirstMessage } from "./useFirstMessage";
+import DataPointEditor from "./DataPointEditor";
+import { toPayload, toRows, validateRows } from "./dataPointRows";
 import WizardSteps from "./WizardSteps";
 
 const STEPS = ["Basics", "Test device", "Data points"];
@@ -68,11 +70,17 @@ export default function NewProductWizard({ onClose, onFinish }) {
     }
   }
 
+  // Busy is set by the click itself, not by the effect below, so the page
+  // doesn't render once more just to show "busy".
+  function goToDataPoints() {
+    setBusy(true);
+    setError(null);
+    setStep(2);
+  }
+
   useEffect(() => {
     if (step !== 2 || !product) return;
     let cancelled = false;
-    setBusy(true);
-    setError(null);
     api
       .get(`/products/${product.id}/suggested-data-points`)
       .then(({ data }) => {
@@ -208,7 +216,7 @@ export default function NewProductWizard({ onClose, onFinish }) {
               <button type="button" className="ghost-button" onClick={close}>
                 Skip, define later
               </button>
-              <button type="button" className="primary-button" onClick={() => setStep(2)} disabled={!watch.connected}>
+              <button type="button" className="primary-button" onClick={goToDataPoints} disabled={!watch.connected}>
                 {watch.connected ? "Next: data points" : "Waiting for data…"}
               </button>
             </div>

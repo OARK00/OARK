@@ -49,57 +49,80 @@ export default function DeviceDetail() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
-    try {
-      const [deviceResponse, telemetryResponse] = await Promise.all([
-        api.get(`/devices/${deviceId}`),
-        api.get(`/devices/${deviceId}/telemetry`, { params: { hours: range, limit: 2000 } }),
-      ]);
-      setDevice(deviceResponse.data);
-      // The API returns newest first; a chart reads oldest to newest.
-      setReadings([...telemetryResponse.data].reverse());
-      setError(null);
-
-      // Units live on the product, not the device, so the chart can label
-      // degrees as degrees instead of a bare number.
-      if (deviceResponse.data.product_id) {
-        try {
-          const product = await api.get(`/products/${deviceResponse.data.product_id}`);
-          setDataPoints(product.data.data_points || []);
-        } catch {
-          setDataPoints([]);
-        }
+  const fetchHistory = useCallback(async () => {
+    const [deviceResponse, telemetryResponse] = await Promise.all([
+      api.get(`/devices/${deviceId}`),
+      api.get(`/devices/${deviceId}/telemetry`, { params: { hours: range, limit: 2000 } }),
+    ]);
+    // Units live on the product, not the device, so the chart can label
+    // degrees as degrees instead of a bare number. null = no product.
+    let points = null;
+    if (deviceResponse.data.product_id) {
+      try {
+        const product = await api.get(`/products/${deviceResponse.data.product_id}`);
+        points = product.data.data_points || [];
+      } catch {
+        points = [];
       }
-    } catch (err) {
-      setError(getErrorMessage(err, "Could not load this device"));
-    } finally {
-      setLoading(false);
     }
+    return {
+      device: deviceResponse.data,
+      // The API returns newest first; a chart reads oldest to newest.
+      readings: [...telemetryResponse.data].reverse(),
+      points,
+    };
   }, [deviceId, range]);
 
   // The device and its commands only, without the heavier telemetry history.
-  const loadLive = useCallback(async () => {
-    try {
-      const [deviceResponse, commandsResponse] = await Promise.all([
-        api.get(`/devices/${deviceId}`),
-        api.get(`/devices/${deviceId}/commands`),
-      ]);
-      setDevice(deviceResponse.data);
-      setCommands(commandsResponse.data);
-    } catch {
-      // The next refresh tries again; the full load reports real errors.
-    }
+  const fetchLive = useCallback(async () => {
+    const [deviceResponse, commandsResponse] = await Promise.all([
+      api.get(`/devices/${deviceId}`),
+      api.get(`/devices/${deviceId}/commands`),
+    ]);
+    return { device: deviceResponse.data, commands: commandsResponse.data };
   }, [deviceId]);
 
+  function showHistory(data) {
+    setDevice(data.device);
+    setReadings(data.readings);
+    if (data.points) setDataPoints(data.points);
+    setError(null);
+    setLoading(false);
+  }
+
+  function showHistoryError(err) {
+    setError(getErrorMessage(err, "Could not load this device"));
+    setLoading(false);
+  }
+
+  function showLive(data) {
+    setDevice(data.device);
+    setCommands(data.commands);
+  }
+
+  // After a command is sent, and while one is pending. A failed refresh is
+  // simply retried by the next one; the full history load reports errors.
+  const loadLive = useCallback(() => fetchLive().then(showLive, () => {}), [fetchLive]);
+
+  // On open, every REFRESH_MS, and again when the time range changes. When
+  // the range changes or the page closes, answers still on their way are
+  // dropped: a slow 7-day answer must not overwrite the new 1-hour chart.
   useEffect(() => {
-    load();
-    loadLive();
-    const id = setInterval(() => {
-      load();
-      loadLive();
-    }, REFRESH_MS);
-    return () => clearInterval(id);
-  }, [load, loadLive]);
+    let active = true;
+    const refresh = () => {
+      fetchHistory().then(
+        (data) => active && showHistory(data),
+        (err) => active && showHistoryError(err)
+      );
+      fetchLive().then((data) => active && showLive(data), () => {});
+    };
+    refresh();
+    const id = setInterval(refresh, REFRESH_MS);
+    return () => {
+      active = false;
+      clearInterval(id);
+    };
+  }, [fetchHistory, fetchLive]);
 
   const waiting = commands.some((command) => command.status === "pending");
   useEffect(() => {

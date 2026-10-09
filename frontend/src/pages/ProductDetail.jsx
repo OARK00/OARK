@@ -4,8 +4,9 @@ import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import AddDeviceWizard from "../components/AddDeviceWizard";
 import AppShell from "../components/AppShell";
-import DataPointEditor, { toPayload, toRows, validateRows } from "../components/DataPointEditor";
-import { categoryIcon } from "../components/icons";
+import DataPointEditor from "../components/DataPointEditor";
+import { toPayload, toRows, validateRows } from "../components/dataPointRows";
+import { categoryIcon } from "../components/categoryIcon";
 import { CATEGORY_LABELS } from "../constants/devices";
 import { ACCESS_LABELS, TYPE_LABELS } from "../constants/products";
 
@@ -84,22 +85,40 @@ export default function ProductDetail() {
   const [deleteError, setDeleteError] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
-  const load = useCallback(async () => {
-    try {
-      const [productRes, devicesRes] = await Promise.all([
-        api.get(`/products/${productId}`),
-        api.get("/devices", { params: { product_id: productId } }),
-      ]);
-      setProduct(productRes.data);
-      setDevices(devicesRes.data);
-    } catch (err) {
-      setLoadError(getErrorMessage(err, "Could not load this product"));
-    }
+  const fetchProduct = useCallback(async () => {
+    const [productRes, devicesRes] = await Promise.all([
+      api.get(`/products/${productId}`),
+      api.get("/devices", { params: { product_id: productId } }),
+    ]);
+    return { product: productRes.data, devices: devicesRes.data };
   }, [productId]);
 
+  function showProduct(data) {
+    setProduct(data.product);
+    setDevices(data.devices);
+  }
+
+  function showLoadError(err) {
+    setLoadError(getErrorMessage(err, "Could not load this product"));
+  }
+
+  // After a device is added to this product.
+  function load() {
+    return fetchProduct().then(showProduct, showLoadError);
+  }
+
+  // On open, and when moving to another product. A late answer for the
+  // previous product is dropped so it can't overwrite the new one.
   useEffect(() => {
-    load();
-  }, [load]);
+    let active = true;
+    fetchProduct().then(
+      (data) => active && showProduct(data),
+      (err) => active && showLoadError(err)
+    );
+    return () => {
+      active = false;
+    };
+  }, [fetchProduct]);
 
   async function openEditor() {
     setRows([]);

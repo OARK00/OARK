@@ -7,7 +7,8 @@ import DraftReview from "../components/DraftReview";
 import NewProductChooser, { DescribeBox, SparkIcon, TemplateIcon } from "../components/NewProductChooser";
 import NewProductWizard from "../components/NewProductWizard";
 import TemplatePicker from "../components/TemplatePicker";
-import { categoryIcon, PlusIcon } from "../components/icons";
+import { categoryIcon } from "../components/categoryIcon";
+import { PlusIcon } from "../components/icons";
 import { CATEGORY_LABELS } from "../constants/devices";
 
 function plural(count, word) {

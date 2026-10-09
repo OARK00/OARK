@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { categoryIcon } from "./icons";
+import { categoryIcon } from "./categoryIcon";
 import { CATEGORY_LABELS } from "../constants/devices";
 
 function timeAgo(iso) {

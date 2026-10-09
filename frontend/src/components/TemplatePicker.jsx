@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import { PRODUCT_TEMPLATES } from "../constants/templates";
-import { categoryIcon } from "./icons";
+import { categoryIcon } from "./categoryIcon";
 
 // The template cards on their own, so they can sit inside another window
 // (Add device) as well as in their own popup (New product). Creating from a

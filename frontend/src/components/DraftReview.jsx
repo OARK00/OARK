@@ -2,7 +2,8 @@ import { useState } from "react";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import { CATEGORY_OPTIONS } from "../constants/devices";
-import DataPointEditor, { toPayload, toRows, validateRows } from "./DataPointEditor";
+import DataPointEditor from "./DataPointEditor";
+import { toPayload, toRows, validateRows } from "./dataPointRows";
 
 // The AI's proposal, laid out for a person to check. Nothing has been saved
 // yet: creating goes through the same two calls as every other product, so

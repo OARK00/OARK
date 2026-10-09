@@ -7,7 +7,7 @@ const WAIT_MINUTES = 5;
 // How long "confirmed" / "not confirmed" stays next to a control.
 const OUTCOME_VISIBLE_MS = 60 * 1000;
 
-export function formatCommandValue(value, point) {
+function formatCommandValue(value, point) {
   if (typeof value === "boolean") return value ? "On" : "Off";
   if (typeof value === "number") return point?.unit ? `${value} ${point.unit}` : String(value);
   if (value === undefined || value === null) return "—";

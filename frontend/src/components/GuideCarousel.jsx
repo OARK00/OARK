@@ -6,7 +6,7 @@ const ROTATE_MS = 12000;
 // Each guide is a path through the platform, shown as numbered steps with
 // arrows between them. `doneKeys` lets a step tick itself off from real
 // account data instead of claiming progress the platform can't see.
-export const GUIDES = [
+const GUIDES = [
   {
     id: "device",
     title: "Connect a device you already have",
