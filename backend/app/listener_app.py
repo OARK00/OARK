@@ -15,12 +15,14 @@ from fastapi.responses import JSONResponse
 
 from app.core.database import engine
 from app.core.environment import assert_database_matches
+from app.core.error_tracking import init_error_tracking
 from app.core.health import health_report
 from app.modules.alerts.watcher import watch_for_silence
 from app.modules.commands.sweeper import sweep_commands
 from app.modules.ingestion.mqtt_client import run_mqtt_forever
 
 logging.basicConfig(level=logging.INFO)
+init_error_tracking("listener")
 
 
 @asynccontextmanager

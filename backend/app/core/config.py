@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     gemini_fallback_model: str = "gemini-3.6-flash"
     ai_drafts_per_hour: int = 20
 
+    # Sentry error tracking. Empty = off, which is what local development and
+    # tests want; only the deployed services set it.
+    sentry_dsn: str = ""
+
     # EMQX deployment API, used to give every device its own broker login.
     emqx_api_url: str = ""
     emqx_api_key: str = ""

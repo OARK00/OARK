@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from app.core.config import settings
 from app.core.database import engine
 from app.core.environment import assert_database_matches
+from app.core.error_tracking import init_error_tracking
 from app.core.health import health_report
 from app.modules.alerts.router import router as alerts_router
 from app.modules.alerts.watcher import watch_for_silence
@@ -24,6 +25,7 @@ from app.modules.telemetry.router import router as telemetry_router
 from app.modules.ingestion.mqtt_client import run_mqtt_forever
 
 logging.basicConfig(level=logging.INFO)
+init_error_tracking("api")
 
 
 @asynccontextmanager
