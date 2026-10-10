@@ -180,6 +180,11 @@ export default function Overview() {
     setError(getErrorMessage(err, "Could not load the overview"));
   }
 
+  // After a device is added from this page.
+  function load() {
+    return api.get("/overview").then(({ data: overview }) => showOverview(overview), showLoadError);
+  }
+
   // On open, then every REFRESH_MS. Once the page is closed, late answers
   // are dropped instead of updating a page that is gone.
   useEffect(() => {
