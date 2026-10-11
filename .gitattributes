@@ -1,0 +1,2 @@
+# Shell hooks must keep Unix line endings, or sh cannot run them.
+scripts/hooks/* text eol=lf
