@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api/client";
+import api, { AI_DRAFT_TIMEOUT_MS } from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import DraftReview from "./DraftReview";
 import { PlusIcon } from "./icons";
@@ -69,7 +69,11 @@ export function DescribeBox({ onDraft }) {
     setBusy(true);
     setError(null);
     try {
-      const { data } = await api.post("/products/draft", { description: text.trim() });
+      const { data } = await api.post(
+        "/products/draft",
+        { description: text.trim() },
+        { timeout: AI_DRAFT_TIMEOUT_MS }
+      );
       onDraft(data);
     } catch (err) {
       setError(getErrorMessage(err, "Could not draft that. Try describing what the device measures."));

@@ -38,19 +38,30 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
 
   const watch = useFirstMessage(created?.id);
 
+  // Asking for the products again is just running this effect once more.
+  const [attempt, setAttempt] = useState(0);
+  const [loadError, setLoadError] = useState(null);
+
   useEffect(() => {
+    let active = true;
     api
       .get("/products")
       .then(({ data }) => {
+        if (!active) return;
         setProducts(data);
         if (!initialProductId && data.length) setProductId(data[0].id);
         setView(initialProductId ? "form" : "choose");
       })
-      .catch(() => {
-        setProducts([]);
-        setView("form");
-      });
-  }, [initialProductId]);
+      .catch((err) => active && setLoadError(getErrorMessage(err, "Could not load your products")));
+    return () => {
+      active = false;
+    };
+  }, [initialProductId, attempt]);
+
+  function tryAgain() {
+    setLoadError(null);
+    setAttempt((n) => n + 1);
+  }
 
   function update(field) {
     return (e) => setForm((current) => ({ ...current, [field]: e.target.value }));
@@ -101,7 +112,21 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
       >
         <WizardSteps steps={STEPS} current={step} />
 
-        {step === 0 && view === null && <p className="muted">Loading…</p>}
+        {step === 0 && view === null && !loadError && <p className="muted">Loading…</p>}
+
+        {step === 0 && view === null && loadError && (
+          <>
+            <div className="error">{loadError}</div>
+            <div className="modal-actions">
+              <button type="button" className="ghost-button" onClick={onClose}>
+                Close
+              </button>
+              <button type="button" className="primary-button" onClick={tryAgain}>
+                Try again
+              </button>
+            </div>
+          </>
+        )}
 
         {step === 0 && view === "choose" && (
           <>
