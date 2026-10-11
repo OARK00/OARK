@@ -391,6 +391,38 @@ body {
   box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
 }
 
+/* Every window pops up the same way: the backdrop fades in, the card rises
+   a little and grows to full size. Short on purpose (under a quarter of a
+   second) so it feels quick, never like waiting. */
+.modal-overlay {
+  animation: modal-fade 0.18s ease-out;
+}
+
+.modal-card {
+  animation: modal-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+@keyframes modal-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes modal-pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+}
+
+/* People who switched off animations in their system settings get none. */
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay,
+  .modal-card {
+    animation: none;
+  }
+}
+
 .modal-card h3 {
   margin: 0 0 0.6rem;
   font-size: 1.1rem;
