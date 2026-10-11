@@ -19,6 +19,7 @@ export default function DraftReview({
   const [form, setForm] = useState({
     name: draft.name,
     category: draft.category,
+    modelNumber: draft.model_number || "",
     description: draft.description || "",
   });
   const [rows, setRows] = useState(() => toRows(draft.data_points).map((row) => ({ ...row, suggested: true })));
@@ -42,6 +43,7 @@ export default function DraftReview({
       const { data: product } = await api.post("/products", {
         name: form.name.trim(),
         category: form.category,
+        model_number: form.modelNumber.trim() || null,
         description: form.description.trim() || null,
       });
       const { data: saved } = await api.put(`/products/${product.id}/data-points`, {
@@ -76,6 +78,18 @@ export default function DraftReview({
             </select>
           </label>
         </div>
+        <label className="field">
+          <span>
+            Model number <span className="field-hint">(optional)</span>
+          </span>
+          <input
+            type="text"
+            placeholder="e.g. BM-100"
+            value={form.modelNumber}
+            onChange={update("modelNumber")}
+            maxLength={80}
+          />
+        </label>
         <label className="field">
           <span>
             Description <span className="field-hint">(optional)</span>

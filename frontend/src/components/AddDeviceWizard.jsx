@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import { CATEGORY_OPTIONS } from "../constants/devices";
+import { BUILD_YOUR_OWN } from "../constants/products";
 import ConnectPanel from "./DeviceConnect";
 import { useFirstMessage } from "./useFirstMessage";
 import DraftReview from "./DraftReview";
@@ -11,8 +12,6 @@ import WizardSteps from "./WizardSteps";
 
 const STEPS = ["Device", "Connect"];
 const STANDALONE = "";
-// Build Your Own starts the same product form the AI fills in, just blank.
-const EMPTY_PRODUCT = { name: "", category: "sensor", description: "", data_points: [] };
 
 // Step one has five views:
 //   choose   -- what kind of device is it: Create with AI / Product Library / Build Your Own
@@ -142,9 +141,9 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
 
         {step === 0 && view === "build" && (
           <DraftReview
-            draft={EMPTY_PRODUCT}
-            title="Build Your Own"
-            intro="Full freedom: name the product and add its fields and controls, including buttons. You can also leave the fields for later: Oark suggests them once the device reports."
+            draft={BUILD_YOUR_OWN.draft}
+            title={BUILD_YOUR_OWN.title}
+            intro={BUILD_YOUR_OWN.intro}
             onBack={() => setView("choose")}
             onCreated={adoptNewProduct}
           />

@@ -5,11 +5,11 @@ import { getErrorMessage } from "../api/errors";
 import AppShell from "../components/AppShell";
 import DraftReview from "../components/DraftReview";
 import NewProductChooser, { DescribeBox, SparkIcon, TemplateIcon } from "../components/NewProductChooser";
-import NewProductWizard from "../components/NewProductWizard";
 import TemplatePicker from "../components/TemplatePicker";
 import { categoryIcon } from "../components/categoryIcon";
 import { PlusIcon } from "../components/icons";
 import { CATEGORY_LABELS } from "../constants/devices";
+import { BUILD_YOUR_OWN } from "../constants/products";
 
 function plural(count, word) {
   return `${count} ${word}${count === 1 ? "" : "s"}`;
@@ -213,8 +213,24 @@ export default function Products() {
         />
       )}
       {creating === "template" && <TemplatePicker onClose={closeCreating} />}
+      {/* The same screen as Build Your Own inside Add device. */}
       {creating === "manual" && (
-        <NewProductWizard onClose={closeCreating} onFinish={(id) => navigate(`/products/${id}`)} />
+        <div className="modal-overlay" onClick={closeCreating}>
+          <div
+            className="modal-card wizard-card wizard-card-wide"
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <DraftReview
+              draft={BUILD_YOUR_OWN.draft}
+              title={BUILD_YOUR_OWN.title}
+              intro={BUILD_YOUR_OWN.intro}
+              onBack={closeCreating}
+              onCreated={(product) => navigate(`/products/${product.id}`)}
+            />
+          </div>
+        </div>
       )}
     </AppShell>
   );
