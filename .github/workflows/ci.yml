@@ -9,6 +9,11 @@ on:
   schedule:
     - cron: '0 3 * * 1'
 
+# Every job only reads the code. Without this, jobs get GitHub's default
+# token, which may be allowed to write to the repository.
+permissions:
+  contents: read
+
 jobs:
   backend:
     runs-on: ubuntu-latest
