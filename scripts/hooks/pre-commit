@@ -1,0 +1,31 @@
+#!/bin/sh
+# Runs before every commit: refuses the commit if the staged changes contain
+# something that looks like a password, key or token.
+#
+# CI runs the same scanner over the whole history, but by then the secret is
+# already on GitHub and has to be changed. This stops it on the laptop.
+#
+# One-time setup per clone:   git config core.hooksPath scripts/hooks
+# Needs gitleaks: https://github.com/gitleaks/gitleaks/releases
+#   (on PATH, or at ~/tools/gitleaks/gitleaks.exe)
+
+GITLEAKS="$(command -v gitleaks 2>/dev/null)"
+if [ -z "$GITLEAKS" ] && [ -x "$HOME/tools/gitleaks/gitleaks.exe" ]; then
+  GITLEAKS="$HOME/tools/gitleaks/gitleaks.exe"
+fi
+
+if [ -z "$GITLEAKS" ]; then
+  echo "pre-commit: gitleaks is not installed, so this commit was NOT checked for secrets."
+  echo "            Install it from https://github.com/gitleaks/gitleaks/releases"
+  # Refuse rather than allow: a lock that is silently off is worse than a
+  # two-minute install. (The founder's choice: the system protects us.)
+  exit 1
+fi
+
+if ! "$GITLEAKS" git --pre-commit --staged --redact --no-banner; then
+  echo ""
+  echo "pre-commit: a possible secret was found in what you are about to commit."
+  echo "            Remove it (use an environment variable instead), then commit again."
+  echo "            The value is hidden above on purpose; the file and line are shown."
+  exit 1
+fi
