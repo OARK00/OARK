@@ -3,9 +3,16 @@
 "Helmet", "helmet" and "  Helmet " would look identical in every list, so
 they are one name. Another company's names are none of ours.
 """
+import uuid
+
 import pytest
+from sqlalchemy.exc import IntegrityError
 
 from app.core.names import clean_name, name_key
+from app.models.device import Device
+from app.models.product import Product
+from app.modules.devices import router as devices_router
+from app.modules.products import router as products_router
 
 
 def create_product(client, headers, name):
@@ -92,6 +99,62 @@ def test_a_name_of_only_spaces_is_refused(client, account):
     headers = account()["headers"]
     assert create_device(client, headers, "   ").status_code == 422
     assert create_product(client, headers, "   ").status_code == 422
+
+
+def company_of(client, headers):
+    return uuid.UUID(client.get("/auth/me", headers=headers).json()["org_id"])
+
+
+@pytest.mark.parametrize(
+    "model, extra",
+    [(Product, {}), (Device, {"hashed_secret": "sha256$" + "0" * 64})],
+)
+def test_the_database_itself_refuses_a_duplicate(client, account, db_session, model, extra):
+    """The final guard: rows written straight to the database, past every
+    check the app makes, still cannot share a name within one company."""
+    org_id = company_of(client, account()["headers"])
+    db_session.add(model(org_id=org_id, name="Helmet", **extra))
+    db_session.flush()
+
+    db_session.add(model(org_id=org_id, name="HELMET", **extra))
+    with pytest.raises(IntegrityError):
+        db_session.flush()
+    db_session.rollback()
+
+
+def test_the_database_lets_two_companies_share_a_name(client, account, db_session):
+    for org_name in ("First Co", "Second Co"):
+        db_session.add(Product(org_id=company_of(client, account(org_name)["headers"]), name="Helmet"))
+    db_session.flush()
+
+
+def test_two_requests_at_the_same_moment_get_a_clear_answer(client, account, monkeypatch):
+    """Both pass the app's check; the database refuses the second. That must
+    be "name taken" (409), never a server error (500)."""
+    headers = account()["headers"]
+    monkeypatch.setattr(products_router, "ensure_name_is_free", lambda *args, **kwargs: None)
+    assert create_product(client, headers, "Helmet").status_code == 201
+
+    response = create_product(client, headers, "helmet")
+
+    assert response.status_code == 409
+    assert "already exists" in response.json()["detail"]
+    assert len(client.get("/products", headers=headers).json()) == 1
+
+
+def test_a_device_refused_by_the_database_leaves_no_broker_login(client, account, fake_broker, monkeypatch):
+    headers = account()["headers"]
+    monkeypatch.setattr(devices_router, "ensure_name_is_free", lambda *args, **kwargs: None)
+    assert create_device(client, headers, "Helmet 1").status_code == 201
+    logins_before = list(fake_broker)
+
+    response = create_device(client, headers, "HELMET 1")
+
+    assert response.status_code == 409
+    assert "already exists" in response.json()["detail"]
+    assert len(client.get("/devices", headers=headers).json()) == 1
+    # The database refuses before any broker login is made for the device.
+    assert fake_broker == logins_before
 
 
 def test_names_are_stored_clean(client, account):

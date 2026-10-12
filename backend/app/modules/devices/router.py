@@ -1,12 +1,13 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.broker import BrokerError, create_device_login, delete_device_login, replace_device_login
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.core.names import clean_name, ensure_name_is_free
+from app.core.names import clean_name, ensure_name_is_free, is_name_conflict, name_taken
 from app.core.security import generate_device_secret, hash_device_secret
 from app.models.device import Device, compute_status
 from app.models.product import Product
@@ -90,10 +91,11 @@ def create_device(payload: DeviceCreate, db: Session = Depends(get_db), current_
     ensure_name_is_free(db, Device, current_user.org_id, payload.name, "device")
 
     secret = generate_device_secret()
+    device_name = clean_name(payload.name)
     device = Device(
         org_id=current_user.org_id,
         product_id=payload.product_id,
-        name=clean_name(payload.name),
+        name=device_name,
         category=category,
         description=payload.description,
         model_number=payload.model_number,
@@ -102,7 +104,16 @@ def create_device(payload: DeviceCreate, db: Session = Depends(get_db), current_
         hashed_secret=hash_device_secret(secret),
     )
     db.add(device)
-    db.flush()
+    # The check above runs first, but two requests at the same moment can
+    # both pass it. The database's unique index refuses the second one right
+    # here, before a broker login exists, so there is nothing to clean up.
+    try:
+        db.flush()
+    except IntegrityError as error:
+        db.rollback()
+        if is_name_conflict(error):
+            raise name_taken("device", device_name)
+        raise
 
     # A device row without a broker login could never connect, so both
     # succeed together or neither is kept.

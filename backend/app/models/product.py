@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import DateTime, ForeignKey, String, func
+from sqlalchemy import DateTime, ForeignKey, Index, String, func, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -13,6 +13,8 @@ class Product(Base):
     """A type of device, defined once. Devices are the physical units of it."""
 
     __tablename__ = "products"
+    # One name per organisation, capitals ignored (see app/core/names.py).
+    __table_args__ = (Index("uq_products_org_name", "org_id", text("lower(name)"), unique=True),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     org_id: Mapped[uuid.UUID] = mapped_column(

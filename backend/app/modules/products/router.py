@@ -5,13 +5,14 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.ai import AIUnavailable, is_configured
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.core.names import clean_name, ensure_name_is_free
+from app.core.names import clean_name, ensure_name_is_free, is_name_conflict, name_taken
 from app.models.ai_request import AiRequest
 from app.models.device import Device
 from app.models.product import Product
@@ -157,7 +158,16 @@ def create_product(payload: ProductCreate, db: Session = Depends(get_db), curren
         model_number=payload.model_number,
     )
     db.add(product)
-    db.commit()
+    # The check above runs first, but two requests at the same moment can
+    # both pass it. The database's unique index then refuses the second one;
+    # that must read as "name taken", not as a server error.
+    try:
+        db.commit()
+    except IntegrityError as error:
+        db.rollback()
+        if is_name_conflict(error):
+            raise name_taken("product", clean_name(payload.name))
+        raise
     db.refresh(product)
     return to_response(product, 0)
 

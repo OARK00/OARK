@@ -23,6 +23,19 @@ def name_key(name: str) -> str:
     return clean_name(name).lower()
 
 
+def name_taken(kind: str, name: str) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail=f'A {kind} named "{name}" already exists. Choose another name.',
+    )
+
+
+def is_name_conflict(error: Exception) -> bool:
+    """True when the database refused a row because of the one-name-per-
+    organisation index, and not for some other reason."""
+    return "_org_name" in str(getattr(error, "orig", error))
+
+
 def ensure_name_is_free(db: Session, model: Any, org_id: uuid.UUID, name: str, kind: str) -> None:
     """Refuse with 409 when this company already has a `kind` with this name."""
     if not clean_name(name):
@@ -36,7 +49,4 @@ def ensure_name_is_free(db: Session, model: Any, org_id: uuid.UUID, name: str, k
         .first()
     )
     if taken:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f'A {kind} named "{taken[0]}" already exists. Choose another name.',
-        )
+        raise name_taken(kind, taken[0])

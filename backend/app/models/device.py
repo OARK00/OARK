@@ -3,7 +3,7 @@ import enum
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from sqlalchemy import String, DateTime, ForeignKey, func, Enum, Boolean
+from sqlalchemy import String, DateTime, ForeignKey, Index, func, Enum, Boolean, text
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -41,6 +41,8 @@ def compute_status(last_seen_at: datetime | None) -> DeviceStatus:
 
 class Device(Base):
     __tablename__ = "devices"
+    # One name per organisation, capitals ignored (see app/core/names.py).
+    __table_args__ = (Index("uq_devices_org_name", "org_id", text("lower(name)"), unique=True),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     org_id: Mapped[uuid.UUID] = mapped_column(
