@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import { CATEGORY_OPTIONS } from "../constants/devices";
 import DataPointEditor from "./DataPointEditor";
 import { toPayload, toRows, validateRows } from "./dataPointRows";
+import NameField from "./NameField";
+import { isTaken, takenKeys } from "./names";
 
 // The AI's proposal, laid out for a person to check. Nothing has been saved
 // yet: creating goes through the same two calls as every other product, so
@@ -25,6 +27,23 @@ export default function DraftReview({
   const [rows, setRows] = useState(() => toRows(draft.data_points).map((row) => ({ ...row, suggested: true })));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  // The company's product names, so the name box can warn while typing. If
+  // they can't be loaded the box just doesn't warn: the server still refuses
+  // a duplicate when Create is clicked.
+  const [productKeys, setProductKeys] = useState(() => takenKeys([]));
+
+  useEffect(() => {
+    let active = true;
+    api
+      .get("/products")
+      .then(({ data }) => active && setProductKeys(takenKeys(data.map((product) => product.name))))
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const nameTaken = isTaken(productKeys, form.name);
 
   function update(field) {
     return (event) => setForm((current) => ({ ...current, [field]: event.target.value }));
@@ -63,10 +82,15 @@ export default function DraftReview({
 
       <div className="add-device-form">
         <div className="field-row">
-          <label className="field">
-            Product name
-            <input type="text" value={form.name} onChange={update("name")} required maxLength={80} />
-          </label>
+          <NameField
+            label="Product name"
+            value={form.name}
+            onChange={(name) => setForm((current) => ({ ...current, name }))}
+            keys={productKeys}
+            kind="product"
+            required
+            maxLength={80}
+          />
           <label className="field">
             Category
             <select value={form.category} onChange={update("category")}>
@@ -105,7 +129,7 @@ export default function DraftReview({
         <button type="button" className="ghost-button" onClick={onBack} disabled={saving}>
           ← Back
         </button>
-        <button type="submit" className="primary-button" disabled={saving}>
+        <button type="submit" className="primary-button" disabled={saving || nameTaken}>
           {saving ? "Creating…" : "Create product"}
         </button>
       </div>

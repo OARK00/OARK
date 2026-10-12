@@ -6,6 +6,8 @@ import { BUILD_YOUR_OWN } from "../constants/products";
 import ConnectPanel from "./DeviceConnect";
 import { useFirstMessage } from "./useFirstMessage";
 import DraftReview from "./DraftReview";
+import NameField from "./NameField";
+import { isTaken, suggestNames, takenKeys } from "./names";
 import { ChooserBody } from "./NewProductChooser";
 import { TemplateGrid } from "./TemplatePicker";
 import WizardSteps from "./WizardSteps";
@@ -63,6 +65,22 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
     setAttempt((n) => n + 1);
   }
 
+  // The company's device names, so the name box can warn while typing. If
+  // they can't be loaded the box just doesn't warn: the server still refuses
+  // a duplicate when Create device is clicked.
+  const [deviceKeys, setDeviceKeys] = useState(() => takenKeys([]));
+
+  useEffect(() => {
+    let active = true;
+    api
+      .get("/devices")
+      .then(({ data }) => active && setDeviceKeys(takenKeys(data.map((device) => device.name))))
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
   function update(field) {
     return (e) => setForm((current) => ({ ...current, [field]: e.target.value }));
   }
@@ -106,6 +124,9 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
 
   const selectedProduct = products?.find((p) => p.id === productId);
   const hasProducts = Boolean(products?.length);
+  // For an empty name box: the next free unit of the chosen product, e.g.
+  // "Smart Safety Helmet 1", or 2 if 1 exists. ("... 0" makes counting start at 1.)
+  const nameHints = selectedProduct ? suggestNames(`${selectedProduct.name} 0`, deviceKeys, 1) : [];
 
   return (
     <div className="modal-overlay" onClick={() => !creating && step === 0 && onClose()}>
@@ -226,17 +247,17 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
                   ← Back to: Create with AI, Product Library, or Build Your Own
                 </button>
               </label>
-              <label className="field">
-                Name
-                <input
-                  type="text"
-                  placeholder="e.g. Boiler 2, basement"
-                  value={form.name}
-                  onChange={update("name")}
-                  required
-                  autoFocus
-                />
-              </label>
+              <NameField
+                label="Name"
+                value={form.name}
+                onChange={(name) => setForm((current) => ({ ...current, name }))}
+                keys={deviceKeys}
+                kind="device"
+                hints={nameHints}
+                placeholder="e.g. Boiler 2, basement"
+                required
+                autoFocus
+              />
               {!productId && (
                 <label className="field">
                   Category
@@ -265,7 +286,7 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
               <button type="button" className="ghost-button" onClick={onClose} disabled={creating}>
                 Cancel
               </button>
-              <button type="submit" className="primary-button" disabled={creating}>
+              <button type="submit" className="primary-button" disabled={creating || isTaken(deviceKeys, form.name)}>
                 {creating ? "Creating..." : "Create device"}
               </button>
             </div>

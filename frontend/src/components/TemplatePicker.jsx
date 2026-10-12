@@ -4,26 +4,13 @@ import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import { PRODUCT_TEMPLATES } from "../constants/templates";
 import { categoryIcon } from "./categoryIcon";
+import NameField from "./NameField";
+import { isTaken, nameKey, takenKeys } from "./names";
 
 // The template cards on their own, so they can sit inside another window
 // (Add device) as well as in their own popup (New product). Creating from a
 // template is two calls, deliberately the same two the manual path uses: the
 // template is a starting point, not a special kind of product.
-// Names are one per company (see backend/app/core/names.py): the same rule
-// here, so a card can tell whether its product already exists.
-function nameKey(name) {
-  return name.trim().split(/\s+/).join(" ").toLowerCase();
-}
-
-// A name for a second product of the same kind: "Smart switch 2", or 3, 4...
-// whichever is the first one the company does not have yet. Only a
-// suggestion: the user can type a better one before creating.
-function nextFreeName(base, existing) {
-  let n = 2;
-  // Keep trying the next number while that name is taken.
-  while (existing[nameKey(`${base} ${n}`)]) n = n + 1;
-  return `${base} ${n}`;
-}
 
 export function TemplateGrid({ onCreated, onUseExisting = onCreated }) {
   const [creating, setCreating] = useState(null);
@@ -54,8 +41,10 @@ export function TemplateGrid({ onCreated, onUseExisting = onCreated }) {
     if (creating) return;
     const have = existing[nameKey(template.name)];
     if (have) {
+      // The name box opens on the taken name, so the warning and the free
+      // names under it explain themselves.
       setError(null);
-      setNewName(nextFreeName(template.name, existing));
+      setNewName(template.name);
       setChoice({ template, have });
       return;
     }
@@ -84,53 +73,44 @@ export function TemplateGrid({ onCreated, onUseExisting = onCreated }) {
 
   if (choice) {
     const busy = Boolean(creating);
+    const keys = takenKeys(Object.values(existing).map((product) => product.name));
+    const blocked = busy || !newName.trim() || isTaken(keys, newName);
     return (
-      <div className="template-choice">
+      <form
+        className="template-choice"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!blocked) createFromTemplate(choice.template, newName);
+        }}
+      >
         <p className="template-choice-lead">
-          You already have <b>{choice.have.name}</b>. What would you like to do?
+          <b>{choice.template.name}</b> from the Product Library. Give this product a name.
         </p>
+        <NameField
+          label="Product name"
+          value={newName}
+          onChange={setNewName}
+          keys={keys}
+          kind="product"
+          required
+          maxLength={80}
+          autoFocus
+        />
         {error && <div className="error">{error}</div>}
 
-        <div className="template-choice-option">
-          <div>
-            <div className="template-choice-title">Use it</div>
-            <div className="template-choice-text">Most common: this becomes another unit of the product you have.</div>
-          </div>
-          <button type="button" className="primary-button" onClick={() => onUseExisting(choice.have)} disabled={busy}>
-            Use {choice.have.name}
+        <div className="template-choice-actions">
+          <button type="button" className="link-button" onClick={() => onUseExisting(choice.have)} disabled={busy}>
+            Or use your existing “{choice.have.name}” product →
+          </button>
+          <button type="submit" className="primary-button" disabled={blocked}>
+            {busy ? "Creating…" : "Create product"}
           </button>
         </div>
-
-        <form
-          className="template-choice-option"
-          onSubmit={(event) => {
-            event.preventDefault();
-            createFromTemplate(choice.template, newName);
-          }}
-        >
-          <div>
-            <div className="template-choice-title">Create another one</div>
-            <div className="template-choice-text">A second, separate product with the same data points.</div>
-            <label className="field">
-              Name
-              <input
-                type="text"
-                value={newName}
-                onChange={(event) => setNewName(event.target.value)}
-                required
-                maxLength={80}
-              />
-            </label>
-          </div>
-          <button type="submit" className="ghost-button" disabled={busy || !newName.trim()}>
-            {busy ? "Creating…" : "Create"}
-          </button>
-        </form>
 
         <button type="button" className="link-button" onClick={() => setChoice(null)} disabled={busy}>
           ← Back to the Product Library
         </button>
-      </div>
+      </form>
     );
   }
 

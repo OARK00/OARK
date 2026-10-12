@@ -3316,6 +3316,40 @@ a.activity-name:hover {
   color: var(--accent);
 }
 
+/* A name box that warns while typing and offers free names (NameField). */
+.name-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.field input.input-invalid,
+.field input.input-invalid:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.name-field-warning {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #b91c1c;
+}
+
+.name-field-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.name-field-try {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 /* Picking a Product Library item you already have: use it, or make a second. */
 .template-choice {
   display: flex;
@@ -3327,31 +3361,12 @@ a.activity-name:hover {
   margin: 0;
 }
 
-.template-choice-option {
+.template-choice-actions {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.9rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-}
-
-.template-choice-option > div {
-  flex: 1;
-  min-width: 0;
-}
-
-.template-choice-title {
-  font-weight: 800;
-  font-size: 0.95rem;
-}
-
-.template-choice-text {
-  font-size: 0.82rem;
-  color: var(--muted);
-  margin: 0.15rem 0 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .template-choice .link-button {
