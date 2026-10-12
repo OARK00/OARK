@@ -19,6 +19,39 @@ TABLES = ('products', 'devices')
 TIDY = r"regexp_replace(btrim(name), '\s+', ' ', 'g')"
 
 
+def rename_repeats(conn, table: str) -> int:
+    """Give every repeated name in one organisation a number: the oldest keeps
+    its name, the next becomes "Name 2", then "Name 3". Nothing is deleted, so
+    devices stay attached to the product they were made from.
+
+    Returns how many rows were renamed.
+    """
+    rows = conn.execute(
+        sa.text(f"SELECT id, org_id, name FROM {table} ORDER BY org_id, created_at, id")
+    ).all()
+    taken: dict = {}
+    for _, org_id, name in rows:
+        taken.setdefault(org_id, set()).add(name.lower())
+
+    renamed = 0
+    seen: dict = {}
+    for row_id, org_id, name in rows:
+        first_use = seen.setdefault(org_id, set())
+        if name.lower() not in first_use:
+            first_use.add(name.lower())
+            continue
+        # "Name 2" may itself be in use already; keep counting until one is free.
+        number = 2
+        while f"{name} {number}".lower() in taken[org_id]:
+            number += 1
+        new_name = f"{name} {number}"
+        taken[org_id].add(new_name.lower())
+        first_use.add(new_name.lower())
+        conn.execute(sa.text(f"UPDATE {table} SET name = :name WHERE id = :id"), {"name": new_name, "id": row_id})
+        renamed += 1
+    return renamed
+
+
 def upgrade() -> None:
     conn = op.get_bind()
     for table in TABLES:
@@ -26,9 +59,14 @@ def upgrade() -> None:
         # now does on save (no spaces at the ends, single spaces inside).
         conn.execute(sa.text(f"UPDATE {table} SET name = {TIDY} WHERE name <> {TIDY}"))
 
-        # Checked before anything is created, so a database that still holds
-        # duplicates is left exactly as it was and the reason is readable in
-        # the deploy log. Counts only: names are the customer's data.
+        renamed = rename_repeats(conn, table)
+        if renamed:
+            # Counts only: names are the customer's data.
+            print(f"Renamed {renamed} repeated name(s) in {table}")
+
+        # A last check before anything is created: if a repeat is somehow
+        # still there, the database is left exactly as it was and the reason
+        # is readable in the deploy log.
         duplicates = conn.execute(
             sa.text(
                 f"SELECT count(*) FROM (SELECT 1 FROM {table} "
