@@ -11,6 +11,7 @@ from app.core.ai import AIUnavailable, is_configured
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.deps import get_current_user
+from app.core.names import clean_name, ensure_name_is_free
 from app.models.ai_request import AiRequest
 from app.models.device import Device
 from app.models.product import Product
@@ -147,9 +148,10 @@ def list_products(db: Session = Depends(get_db), current_user: User = Depends(ge
 
 @router.post("", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
 def create_product(payload: ProductCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    ensure_name_is_free(db, Product, current_user.org_id, payload.name, "product")
     product = Product(
         org_id=current_user.org_id,
-        name=payload.name.strip(),
+        name=clean_name(payload.name),
         category=payload.category,
         description=payload.description,
         model_number=payload.model_number,

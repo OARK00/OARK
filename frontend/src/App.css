@@ -3309,7 +3309,8 @@ a.activity-name:hover {
   font-family: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
 }
 
-.template-creating {
+.template-creating,
+.template-existing {
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--accent);

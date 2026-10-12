@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
@@ -9,12 +9,40 @@ import { categoryIcon } from "./categoryIcon";
 // (Add device) as well as in their own popup (New product). Creating from a
 // template is two calls, deliberately the same two the manual path uses: the
 // template is a starting point, not a special kind of product.
-export function TemplateGrid({ onCreated }) {
+// Names are one per company (see backend/app/core/names.py): the same rule
+// here, so a card can tell whether its product already exists.
+function nameKey(name) {
+  return name.trim().split(/\s+/).join(" ").toLowerCase();
+}
+
+export function TemplateGrid({ onCreated, onUseExisting = onCreated }) {
   const [creating, setCreating] = useState(null);
   const [error, setError] = useState(null);
+  // The company's products by name, to offer one that exists instead of
+  // making a copy. If this can't be loaded, picking still works: the server
+  // refuses a duplicate with a clear message.
+  const [existing, setExisting] = useState({});
+
+  useEffect(() => {
+    let active = true;
+    api
+      .get("/products")
+      .then(({ data }) => {
+        if (active) setExisting(Object.fromEntries(data.map((product) => [nameKey(product.name), product])));
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function createFromTemplate(template) {
     if (creating) return;
+    const have = existing[nameKey(template.name)];
+    if (have) {
+      onUseExisting(have);
+      return;
+    }
     setError(null);
     setCreating(template.id);
     try {
@@ -49,6 +77,9 @@ export function TemplateGrid({ onCreated }) {
             <span className="template-name">{template.name}</span>
             <span className="template-summary">{template.summary}</span>
             <span className="template-points">{template.data_points.map((point) => point.label).join(" · ")}</span>
+            {existing[nameKey(template.name)] && (
+              <span className="template-existing">You already have this. Click to use it.</span>
+            )}
             {creating === template.id && <span className="template-creating">Creating…</span>}
           </button>
         ))}

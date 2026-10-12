@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.core.broker import BrokerError, create_device_login, delete_device_login, replace_device_login
 from app.core.database import get_db
 from app.core.deps import get_current_user
+from app.core.names import clean_name, ensure_name_is_free
 from app.core.security import generate_device_secret, hash_device_secret
 from app.models.device import Device, compute_status
 from app.models.product import Product
@@ -85,11 +86,14 @@ def create_device(payload: DeviceCreate, db: Session = Depends(get_db), current_
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
         category = product.category
 
+    # Before the broker login is created: a refused name must leave nothing behind.
+    ensure_name_is_free(db, Device, current_user.org_id, payload.name, "device")
+
     secret = generate_device_secret()
     device = Device(
         org_id=current_user.org_id,
         product_id=payload.product_id,
-        name=payload.name,
+        name=clean_name(payload.name),
         category=category,
         description=payload.description,
         model_number=payload.model_number,

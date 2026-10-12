@@ -67,6 +67,14 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
     return (e) => setForm((current) => ({ ...current, [field]: e.target.value }));
   }
 
+  // A Product Library item the company already has: this device simply
+  // becomes another unit of it, instead of a copy of the product being made.
+  function pickExistingProduct(product) {
+    setProductId(product.id);
+    setJustCreated(null);
+    setView("form");
+  }
+
   function adoptNewProduct(product) {
     setProducts((current) => [...(current || []), product]);
     setProductId(product.id);
@@ -178,7 +186,7 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
           <>
             <h3 id="wizard-title">Product Library</h3>
             <p>Pick the closest match. It becomes a product you can edit later, and this device uses it.</p>
-            <TemplateGrid onCreated={adoptNewProduct} />
+            <TemplateGrid onCreated={adoptNewProduct} onUseExisting={pickExistingProduct} />
             <div className="modal-actions">
               <button type="button" className="ghost-button" onClick={() => setView("choose")}>
                 ← Back
