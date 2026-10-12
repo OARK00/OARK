@@ -1,15 +1,20 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./context/useAuth";
 import Login from "./pages/Login";
-import Overview from "./pages/Overview";
-import Dashboard from "./pages/Dashboard";
-import DeviceDetail from "./pages/DeviceDetail";
-import Alerts from "./pages/Alerts";
-import Products from "./pages/Products";
-import AIProduct from "./pages/AIProduct";
-import ProductDetail from "./pages/ProductDetail";
-import Settings from "./pages/Settings";
 import "./App.css";
+
+// Each page's code is fetched when the page is first opened, instead of all
+// of it before anything can appear. Login stays in the first download: it is
+// what a visitor who is not signed in sees.
+const Overview = lazy(() => import("./pages/Overview"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const DeviceDetail = lazy(() => import("./pages/DeviceDetail"));
+const Alerts = lazy(() => import("./pages/Alerts"));
+const Products = lazy(() => import("./pages/Products"));
+const AIProduct = lazy(() => import("./pages/AIProduct"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail"));
+const Settings = lazy(() => import("./pages/Settings"));
 
 function RequireAuth({ children }) {
   const { email, checking } = useAuth();
@@ -21,6 +26,8 @@ function RequireAuth({ children }) {
 
 function App() {
   return (
+    // While a page's code is being fetched for the first time.
+    <Suspense fallback={<p className="page-loading">Loading…</p>}>
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route
@@ -89,6 +96,7 @@ function App() {
       />
       <Route path="*" element={<Navigate to="/overview" replace />} />
     </Routes>
+    </Suspense>
   );
 }
 

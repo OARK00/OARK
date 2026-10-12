@@ -216,6 +216,9 @@ export default function Overview() {
 
       {error && <div className="error">{error}</div>}
 
+      {/* Never an empty page: while the first answer is on its way, say so. */}
+      {!data && !error && <p className="muted">Loading your overview…</p>}
+
       {data && (
         <div className="overview-grid">
           <div className="overview-main">

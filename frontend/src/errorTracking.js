@@ -1,49 +1,46 @@
-import * as Sentry from "@sentry/react";
-
-// Crash reports to Sentry, with nothing personal or secret in them.
+// Crash reporting without making anyone wait for it.
+//
 // Off unless VITE_SENTRY_DSN is set at build time, so local development
-// never sends anything. Sentry 11 collects user info, cookies, headers,
-// request bodies and local variables BY DEFAULT -- every one is switched off
-// here on purpose; only the error and where it happened may leave Oark.
+// never sends anything. When it is on, the Sentry library (sentrySetup.js)
+// is fetched only after the page is on screen. Errors that happen before it
+// arrives are kept in a short queue here and handed over when it does, so
+// the first second of the app is not a blind spot.
 const dsn = import.meta.env.VITE_SENTRY_DSN;
+const MAX_WAITING = 20;
 
-function scrub(event) {
-  delete event.user;
-  if (event.request) {
-    delete event.request.headers;
-    delete event.request.cookies;
-    delete event.request.data;
-    delete event.request.query_string;
-  }
-  return event;
+let report = null;
+const waiting = [];
+
+function note(error) {
+  if (!error) return;
+  if (report) report(error);
+  else if (waiting.length < MAX_WAITING) waiting.push(error);
 }
 
-export const errorTrackingOn = Boolean(dsn);
-
-if (errorTrackingOn) {
-  Sentry.init({
-    dsn,
-    environment: import.meta.env.MODE,
-    dataCollection: {
-      userInfo: false,
-      cookies: false,
-      httpHeaders: false,
-      httpBodies: [],
-      urlQueryParams: false,
-      stackFrameVariables: false,
-    },
-    // Errors only: no performance tracing and no session replay.
-    tracesSampleRate: 0,
-    beforeSend: scrub,
-  });
+function onWindowError(event) {
+  note(event.error || event.reason);
 }
 
-// React's own error hooks (createRoot options). Without them, errors that
-// React catches while drawing a page would never reach Sentry.
-export const reactErrorHooks = errorTrackingOn
-  ? {
-      onUncaughtError: Sentry.reactErrorHandler(),
-      onCaughtError: Sentry.reactErrorHandler(),
-      onRecoverableError: Sentry.reactErrorHandler(),
-    }
-  : {};
+// React's own error hooks (createRoot options): without them, errors React
+// catches while drawing a page would never be reported.
+export const reactErrorHooks = dsn ? { onUncaughtError: note, onCaughtError: note, onRecoverableError: note } : {};
+
+export function startErrorTracking() {
+  if (!dsn) return;
+  window.addEventListener("error", onWindowError);
+  window.addEventListener("unhandledrejection", onWindowError);
+
+  import("./sentrySetup")
+    .then((sentry) => {
+      sentry.start(dsn);
+      // From here Sentry listens to the window itself; ours would report twice.
+      window.removeEventListener("error", onWindowError);
+      window.removeEventListener("unhandledrejection", onWindowError);
+      report = sentry.report;
+      waiting.splice(0).forEach(report);
+    })
+    .catch(() => {
+      // The library could not be fetched (offline, blocked). The app works
+      // without crash reports; there is nobody to report this to.
+    });
+}
