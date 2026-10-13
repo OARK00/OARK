@@ -152,7 +152,10 @@ export default function DeviceDetail() {
   const currentValues = Object.entries(device?.reported_state || {});
 
   return (
-    <AppShell active="devices">
+    <AppShell
+      active="devices"
+      firmwareTo={device?.product_id ? `/products/${device.product_id}/firmware?device=${device.id}` : undefined}
+    >
       <div className="page-head">
         <div>
           <div className="crumbs">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import AppShell from "../components/AppShell";
@@ -40,6 +40,8 @@ function download(name, text) {
 
 export default function Firmware() {
   const { productId } = useParams();
+  // Opened from a device's page: start with that device chosen.
+  const fromDevice = useSearchParams()[0].get("device");
   const [product, setProduct] = useState(null);
   const [devices, setDevices] = useState([]);
   const [loadError, setLoadError] = useState(null);
@@ -62,14 +64,17 @@ export default function Firmware() {
         setProduct(productRes.data);
         setDevices(devicesRes.data);
         setSaved(sketchRes.data.code);
-        setCode(sketchRes.data.code ?? arduinoSketch(ID_PLACEHOLDER, SECRET_PLACEHOLDER, productRes.data.data_points));
+        const opened = sketchRes.data.code ?? arduinoSketch(ID_PLACEHOLDER, SECRET_PLACEHOLDER, productRes.data.data_points);
+        // Only a device of this product: the address bar is not trusted.
+        const device = devicesRes.data.find((d) => d.id === fromDevice);
+        setCode(device ? withDeviceId(opened, device.id) : opened);
       },
       (err) => active && setLoadError(getErrorMessage(err, "Could not load this product's firmware"))
     );
     return () => {
       active = false;
     };
-  }, [productId]);
+  }, [productId, fromDevice]);
 
   if (loadError) {
     return (
@@ -149,7 +154,7 @@ export default function Firmware() {
   const controls = points.length - readings;
 
   return (
-    <AppShell active="products">
+    <AppShell active="firmware" firmwareTo={`/products/${productId}/firmware`}>
       <nav className="breadcrumb" aria-label="Breadcrumb">
         <Link to="/products">Products</Link>
         <span aria-hidden="true">/</span>
