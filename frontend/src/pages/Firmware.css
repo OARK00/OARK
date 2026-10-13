@@ -1,0 +1,218 @@
+/* The Firmware page: header with actions, code editor beside a summary,
+   and the build / serial area below. */
+
+.fw-studio {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.fw-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.fw-title {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.fw-title h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.fw-title p {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.fw-counts {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.fw-counts span {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.fw-counts b {
+  color: var(--text);
+}
+
+.fw-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fw-device {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.fw-device select {
+  max-width: 11rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.fw-save {
+  padding: 0.5rem 1.1rem;
+}
+
+.fw-save:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.fw-info {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #065f46;
+  font-size: 0.82rem;
+}
+
+.fw-notice {
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 0.85rem;
+}
+
+.fw-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 17rem;
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.code-editor {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.code-editor .cm-editor {
+  height: 28rem;
+  font-size: 0.82rem;
+}
+
+.code-editor .cm-editor.cm-focused {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.code-editor .cm-scroller {
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+
+.fw-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-alt);
+  font-size: 0.85rem;
+}
+
+.fw-side h2,
+.fw-soon h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.fw-side p {
+  margin: 0;
+}
+
+.fw-points {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.fw-points li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.15rem 0.5rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.fw-points code {
+  grid-column: 1;
+  color: var(--muted);
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.fw-points .access-pill {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+.fw-saved-state {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.fw-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.fw-soon {
+  padding: 1rem;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+.fw-soon .soon-badge {
+  margin-left: 0;
+}
+
+.fw-soon p {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .fw-body,
+  .fw-bottom {
+    grid-template-columns: 1fr;
+  }
+}

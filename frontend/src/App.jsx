@@ -14,6 +14,7 @@ const Alerts = lazy(() => import("./pages/Alerts"));
 const Products = lazy(() => import("./pages/Products"));
 const AIProduct = lazy(() => import("./pages/AIProduct"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
+const Firmware = lazy(() => import("./pages/Firmware"));
 const Settings = lazy(() => import("./pages/Settings"));
 
 function RequireAuth({ children }) {
@@ -83,6 +84,14 @@ function App() {
         element={
           <RequireAuth>
             <ProductDetail />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/products/:productId/firmware"
+        element={
+          <RequireAuth>
+            <Firmware />
           </RequireAuth>
         }
       />

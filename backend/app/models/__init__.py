@@ -8,6 +8,7 @@ from app.models.login_attempt import LoginAttempt
 from app.models.alert import AlertEvent, AlertRule
 from app.models.ai_request import AiRequest
 from app.models.command import DeviceCommand
+from app.models.sketch import ProductSketch
 
 __all__ = [
     "AiRequest",
@@ -17,6 +18,7 @@ __all__ = [
     "Organization",
     "User",
     "Product",
+    "ProductSketch",
     "Device",
     "TelemetryReading",
     "EnvironmentLabel",

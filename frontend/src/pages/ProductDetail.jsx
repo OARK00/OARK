@@ -218,6 +218,9 @@ export default function ProductDetail() {
           <button type="button" className="ghost-button" onClick={() => setConfirmDelete(true)}>
             Delete product
           </button>
+          <Link to={`/products/${product.id}/firmware`} className="ghost-button button-link">
+            Firmware
+          </Link>
           <button type="button" className="primary-button" onClick={() => setShowAddDevice(true)}>
             + Add device
           </button>

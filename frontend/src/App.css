@@ -301,6 +301,12 @@ body {
   color: var(--accent);
 }
 
+/* A link that should look like a button (it goes to another page). */
+.button-link {
+  display: inline-block;
+  text-decoration: none;
+}
+
 .link-button {
   background: none;
   border: none;
