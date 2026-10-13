@@ -5,6 +5,7 @@ import { getErrorMessage } from "../api/errors";
 import AppShell from "../components/AppShell";
 import CodeEditor from "../components/CodeEditor";
 import { arduinoSketch } from "../components/firmwareSnippets";
+import SerialMonitor from "../components/SerialMonitor";
 import { ACCESS_LABELS } from "../constants/products";
 import "./Firmware.css";
 
@@ -254,12 +255,7 @@ export default function Firmware() {
               Build this code on Oark and send it to a board. Until then: Download .ino and open it in the Arduino IDE.
             </p>
           </section>
-          <section className="fw-soon" aria-label="Serial monitor">
-            <h2>
-              Serial monitor <span className="soon-badge">Soon</span>
-            </h2>
-            <p className="muted">See what a board on USB prints, here in the browser.</p>
-          </section>
+          <SerialMonitor />
         </div>
       </section>
     </AppShell>
