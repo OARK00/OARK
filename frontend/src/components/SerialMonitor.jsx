@@ -4,6 +4,8 @@ import { cleanChunk, keepRecent } from "./serialText";
 const BAUD_RATES = [9600, 19200, 38400, 57600, 74880, 115200, 230400, 460800, 921600];
 // What Oark's generated code uses: Serial.begin(115200).
 const DEFAULT_BAUD = 115200;
+// How long the restart pin is held: long enough for the chip to notice.
+const RESET_PULSE_MS = 100;
 
 // What a board on USB prints, shown in the browser. The browser talks to the
 // board directly (Web Serial); nothing goes through Oark's servers. Only
@@ -83,6 +85,21 @@ export default function SerialMonitor() {
     reader.current?.cancel().catch(() => {});
   }
 
+  // Restarts the board the way the Arduino IDE does, so nobody has to press
+  // its button: on ESP32 and ESP8266 boards the USB chip's RTS line is wired
+  // to the restart pin (EN). DTR stays off so the board starts its normal
+  // program and not its upload mode.
+  async function resetBoard() {
+    setMessage(null);
+    try {
+      await port.setSignals({ dataTerminalReady: false, requestToSend: true });
+      await new Promise((resolve) => setTimeout(resolve, RESET_PULSE_MS));
+      await port.setSignals({ dataTerminalReady: false, requestToSend: false });
+    } catch {
+      setMessage("Could not restart the board from here. Press its EN or RST button instead.");
+    }
+  }
+
   async function send(e) {
     e.preventDefault();
     const writer = port.writable.getWriter();
@@ -125,9 +142,14 @@ export default function SerialMonitor() {
           </select>
         </label>
         {running ? (
-          <button type="button" className="ghost-button" onClick={stop}>
-            Stop
-          </button>
+          <>
+            <button type="button" className="ghost-button" onClick={resetBoard} title="Restart the board, like pressing its EN button">
+              Reset board
+            </button>
+            <button type="button" className="ghost-button" onClick={stop}>
+              Stop
+            </button>
+          </>
         ) : (
           <button type="button" className="primary-button serial-start" onClick={start} disabled={!port}>
             Start
@@ -151,7 +173,7 @@ export default function SerialMonitor() {
       <pre className="serial-screen" ref={screen} aria-live="off" tabIndex={0}>
         {output ||
           (running
-            ? "Listening… nothing received yet. Check that the baud rate matches Serial.begin() in your code."
+            ? "Listening… nothing received yet. Press Reset board to see its start-up lines. If you see strange symbols, check that the baud rate matches Serial.begin() in your code."
             : port
               ? "Port selected. Press Start."
               : "No serial output yet. Connect a board with USB, then choose Select port.")}
