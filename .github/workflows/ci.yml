@@ -91,6 +91,28 @@ jobs:
 
       - run: npm run build
 
+  # The separate service that turns firmware code into firmware. Its tests
+  # use a pretend compiler, so this job is quick; the real compilers are
+  # exercised when its image is built.
+  compile-service:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: compile-service
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: compile-service/requirements-dev.txt
+
+      - run: pip install -r requirements-dev.txt
+      - run: pip-audit -r requirements-dev.txt --progress-spinner off
+      - run: pytest
+
   secrets:
     runs-on: ubuntu-latest
     steps:

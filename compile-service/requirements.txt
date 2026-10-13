@@ -1,0 +1,5 @@
+# The same versions as the Oark backend, so one audit covers both.
+fastapi==0.142.2
+starlette==1.7.0
+uvicorn==0.32.0
+pydantic==2.9.2
