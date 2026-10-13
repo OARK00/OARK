@@ -253,6 +253,12 @@
   font-size: 0.85rem;
 }
 
+/* A button that cannot be used yet must look that way. */
+.serial .ghost-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .serial-start {
   padding: 0.45rem 1rem;
 }

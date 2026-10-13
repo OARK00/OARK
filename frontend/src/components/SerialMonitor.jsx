@@ -141,15 +141,20 @@ export default function SerialMonitor() {
             ))}
           </select>
         </label>
+        {/* Always shown, so it can be found before Start; it needs an open port to work. */}
+        <button
+          type="button"
+          className="ghost-button"
+          onClick={resetBoard}
+          disabled={!running}
+          title={running ? "Restart the board, like pressing its EN button" : "Press Start first"}
+        >
+          Reset board
+        </button>
         {running ? (
-          <>
-            <button type="button" className="ghost-button" onClick={resetBoard} title="Restart the board, like pressing its EN button">
-              Reset board
-            </button>
-            <button type="button" className="ghost-button" onClick={stop}>
-              Stop
-            </button>
-          </>
+          <button type="button" className="ghost-button" onClick={stop}>
+            Stop
+          </button>
         ) : (
           <button type="button" className="primary-button serial-start" onClick={start} disabled={!port}>
             Start
