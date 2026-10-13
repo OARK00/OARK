@@ -37,7 +37,9 @@ RUN arduino-cli config init \
 # The slow part of a build, done once here instead of on every person's first
 # compile (minutes -> seconds). Same sketch path and build folders that
 # compiler.py uses, or the Arduino CLI would throw this work away.
-COPY --chown=builder:builder prewarm/sketch.ino /home/builder/work/sketch/sketch.ino
+# (Kept as .txt in the repository: a .ino file makes GitHub's code scanner
+# try, and fail, to build the repository as a C++ project.)
+COPY --chown=builder:builder prewarm/sketch.ino.txt /home/builder/work/sketch/sketch.ino
 RUN arduino-cli compile --fqbn esp32:esp32:esp32 --build-path "$OARK_WARM_DIR/esp32" /home/builder/work/sketch \
     && arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2 --build-path "$OARK_WARM_DIR/esp8266" /home/builder/work/sketch \
     && rm -rf /home/builder/work "$OARK_WARM_DIR/esp32/sketch" "$OARK_WARM_DIR/esp8266/sketch"
