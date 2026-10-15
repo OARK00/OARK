@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Literal
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response, status
 from pydantic import BaseModel, field_validator
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -153,3 +153,25 @@ def get_compile(
     if job is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Compile not found")
     return to_response(job)
+
+
+@router.get("/{job_id}/firmware")
+def download_firmware(
+    product_id: uuid.UUID,
+    job_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """The compiled firmware itself, for the page to upload to a board over USB."""
+    product = get_org_product(db, product_id, current_user)
+    job = db.query(CompileJob).filter(CompileJob.id == job_id, CompileJob.product_id == product.id).first()
+    if job is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Compile not found")
+    if job.firmware is None:
+        # Failed compiles have none, and only the newest good one is kept.
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="This firmware is no longer kept. Press Verify again.")
+    return Response(
+        content=job.firmware,
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="oark-{job.board}-firmware.bin"'},
+    )

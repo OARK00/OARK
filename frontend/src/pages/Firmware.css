@@ -316,6 +316,66 @@
   cursor: default;
 }
 
+.compile-upload {
+  padding: 0.45rem 1rem;
+}
+
+.compile-upload:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.upload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 0.85rem;
+}
+
+.upload p {
+  margin: 0;
+}
+
+.upload-succeeded {
+  background: #ecfdf5;
+  color: #065f46;
+  font-weight: 600;
+}
+
+.upload-failed {
+  background: #fef2f2;
+  color: var(--danger);
+}
+
+.upload-bar {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.upload-bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s ease;
+}
+
+.upload-log {
+  margin: 0;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: #0f172a;
+  color: #cbd5e1;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 0.72rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .compile-status {
   margin: 0;
   font-size: 0.85rem;

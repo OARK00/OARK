@@ -89,6 +89,9 @@ jobs:
       # Any lint warning fails CI, so warnings can never pile up again.
       - run: npm run lint
 
+      # Small checks of values that can harm hardware if wrong (upload addresses).
+      - run: npm test
+
       - run: npm run build
 
   # The separate service that turns firmware code into firmware. Its tests

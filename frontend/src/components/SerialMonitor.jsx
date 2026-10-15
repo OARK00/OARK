@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useImperativeHandle, useRef, useState } from "react";
 import { cleanChunk, keepRecent } from "./serialText";
 
 const BAUD_RATES = [9600, 19200, 38400, 57600, 74880, 115200, 230400, 460800, 921600];
@@ -11,9 +11,12 @@ const RESET_PULSE_MS = 100;
 // board directly (Web Serial); nothing goes through Oark's servers. Only
 // Chrome and Edge on a computer have it, and the person must pick the port
 // in the browser's own box each time.
-export default function SerialMonitor() {
+//
+// The port belongs to the page (props), because uploading firmware needs the
+// same port: `ref.release()` stops the monitor and resolves once the port is
+// closed, and `locked` keeps it from being reopened during an upload.
+export default function SerialMonitor({ port, onPortChange, locked = false, ref }) {
   const supported = typeof navigator !== "undefined" && "serial" in navigator;
-  const [port, setPort] = useState(null);
   const [baud, setBaud] = useState(DEFAULT_BAUD);
   const [running, setRunning] = useState(false);
   const [output, setOutput] = useState("");
@@ -22,6 +25,21 @@ export default function SerialMonitor() {
   const [toSend, setToSend] = useState("");
   const reader = useRef(null);
   const screen = useRef(null);
+  // Waiting for the port to close (see release).
+  const closeWaiters = useRef([]);
+
+  useImperativeHandle(ref, () => ({
+    release() {
+      return new Promise((resolve) => {
+        if (!reader.current) {
+          resolve();
+          return;
+        }
+        closeWaiters.current.push(resolve);
+        reader.current.cancel().catch(() => {});
+      });
+    },
+  }));
 
   // Leaving the page while reading: end the loop, which closes the port.
   useEffect(() => {
@@ -37,7 +55,7 @@ export default function SerialMonitor() {
   async function selectPort() {
     setMessage(null);
     try {
-      setPort(await navigator.serial.requestPort());
+      onPortChange(await navigator.serial.requestPort());
     } catch (err) {
       // NotFoundError: the person closed the box without choosing.
       if (err.name !== "NotFoundError") setMessage("Could not show the list of ports.");
@@ -63,6 +81,7 @@ export default function SerialMonitor() {
       portReader.releaseLock();
       await openPort.close().catch(() => {});
       setRunning(false);
+      closeWaiters.current.splice(0).forEach((resolve) => resolve());
     }
   }
 
@@ -128,7 +147,7 @@ export default function SerialMonitor() {
     <section className="serial" aria-label="Serial monitor">
       <div className="serial-bar">
         <h2>Serial monitor</h2>
-        <button type="button" className="ghost-button" onClick={selectPort} disabled={running}>
+        <button type="button" className="ghost-button" onClick={selectPort} disabled={running || locked}>
           {port ? "Change port" : "Select port"}
         </button>
         <label className="serial-baud">
@@ -156,7 +175,7 @@ export default function SerialMonitor() {
             Stop
           </button>
         ) : (
-          <button type="button" className="primary-button serial-start" onClick={start} disabled={!port}>
+          <button type="button" className="primary-button serial-start" onClick={start} disabled={!port || locked}>
             Start
           </button>
         )}
@@ -177,7 +196,9 @@ export default function SerialMonitor() {
 
       <pre className="serial-screen" ref={screen} aria-live="off" tabIndex={0}>
         {output ||
-          (running
+          (locked
+            ? "Paused while the firmware is uploaded. Press Start afterwards to see the board start up."
+            : running
             ? "Listening… nothing received yet. Press Reset board to see its start-up lines. If you see strange symbols, check that the baud rate matches Serial.begin() in your code."
             : port
               ? "Port selected. Press Start."

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
@@ -53,6 +53,10 @@ export default function Firmware() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState(null);
   const [error, setError] = useState(null);
+  // One USB port for the page: the serial monitor and Upload take turns.
+  const [port, setPort] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const monitor = useRef(null);
 
   useEffect(() => {
     let active = true;
@@ -261,8 +265,15 @@ export default function Firmware() {
         </div>
 
         <div className="fw-bottom">
-          <CompilePanel productId={productId} code={code} />
-          <SerialMonitor />
+          <CompilePanel
+            productId={productId}
+            code={code}
+            port={port}
+            onPortChange={setPort}
+            releaseMonitor={() => monitor.current?.release()}
+            onUploadingChange={setUploading}
+          />
+          <SerialMonitor ref={monitor} port={port} onPortChange={setPort} locked={uploading} />
         </div>
       </section>
     </AppShell>

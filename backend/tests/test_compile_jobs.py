@@ -142,6 +142,61 @@ def test_another_product_s_firmware_is_not_touched(client, account, service, db_
     assert firmware_of(db_session, helmet_job) == FIRMWARE
 
 
+def test_the_firmware_can_be_downloaded_for_uploading(client, account, service):
+    headers = account()["headers"]
+    product = create_product(client, headers)
+    job_id = start(client, headers, product).json()["id"]
+
+    response = client.get(f"/products/{product}/compile/{job_id}/firmware", headers=headers)
+
+    assert response.status_code == 200
+    assert response.content == FIRMWARE
+    assert response.headers["content-type"] == "application/octet-stream"
+
+
+def test_another_company_cannot_download_the_firmware(client, account, service):
+    owner = account(org_name="Factory A")["headers"]
+    stranger = account(org_name="Factory B")["headers"]
+    product = create_product(client, owner)
+    job_id = start(client, owner, product).json()["id"]
+
+    assert client.get(f"/products/{product}/compile/{job_id}/firmware", headers=stranger).status_code == 404
+    their_product = create_product(client, stranger, "Theirs")
+    assert client.get(f"/products/{their_product}/compile/{job_id}/firmware", headers=stranger).status_code == 404
+
+
+def test_nobody_downloads_firmware_without_logging_in(client, account, service):
+    headers = account()["headers"]
+    product = create_product(client, headers)
+    job_id = start(client, headers, product).json()["id"]
+    client.cookies.clear()
+
+    assert client.get(f"/products/{product}/compile/{job_id}/firmware").status_code == 401
+
+
+def test_a_failed_compile_has_no_firmware_to_download(client, account, service):
+    headers = account()["headers"]
+    product = create_product(client, headers)
+    service.answer = compile_service.CompileOutcome(ok=False, output="error")
+    job_id = start(client, headers, product).json()["id"]
+
+    response = client.get(f"/products/{product}/compile/{job_id}/firmware", headers=headers)
+
+    assert response.status_code == 404
+
+
+def test_an_older_firmware_that_was_replaced_says_so(client, account, service):
+    headers = account()["headers"]
+    product = create_product(client, headers)
+    old = start(client, headers, product).json()["id"]
+    start(client, headers, product)
+
+    response = client.get(f"/products/{product}/compile/{old}/firmware", headers=headers)
+
+    assert response.status_code == 404
+    assert "Verify again" in response.json()["detail"]
+
+
 def test_the_code_itself_is_not_kept(client, account, service, db_session):
     headers = account()["headers"]
     product = create_product(client, headers)
