@@ -9,11 +9,13 @@ from app.models.alert import AlertEvent, AlertRule
 from app.models.ai_request import AiRequest
 from app.models.command import DeviceCommand
 from app.models.sketch import ProductSketch
+from app.models.compile_job import CompileJob
 
 __all__ = [
     "AiRequest",
     "AlertEvent",
     "AlertRule",
+    "CompileJob",
     "DeviceCommand",
     "Organization",
     "User",

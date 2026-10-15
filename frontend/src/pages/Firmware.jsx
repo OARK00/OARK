@@ -5,6 +5,7 @@ import { getErrorMessage } from "../api/errors";
 import AppShell from "../components/AppShell";
 import CodeEditor from "../components/CodeEditor";
 import { arduinoSketch } from "../components/firmwareSnippets";
+import CompilePanel from "../components/CompilePanel";
 import SerialMonitor from "../components/SerialMonitor";
 import { ACCESS_LABELS } from "../constants/products";
 import "./Firmware.css";
@@ -247,14 +248,7 @@ export default function Firmware() {
         </div>
 
         <div className="fw-bottom">
-          <section className="fw-soon" aria-label="Compile and upload">
-            <h2>
-              Compile &amp; upload <span className="soon-badge">Soon</span>
-            </h2>
-            <p className="muted">
-              Build this code on Oark and send it to a board. Until then: Download .ino and open it in the Arduino IDE.
-            </p>
-          </section>
+          <CompilePanel productId={productId} code={code} />
           <SerialMonitor />
         </div>
       </section>

@@ -210,6 +210,88 @@
   font-size: 0.85rem;
 }
 
+/* Compile (Verify) */
+
+.compile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.compile h2 {
+  margin: 0 auto 0 0;
+  font-size: 0.95rem;
+}
+
+.compile-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.compile-board {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.compile-board select {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.compile-verify {
+  padding: 0.45rem 1.1rem;
+}
+
+.compile-verify:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.compile-status {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.compile-succeeded {
+  color: #047857;
+  font-weight: 600;
+}
+
+.compile-failed {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.compile-output {
+  max-height: 14rem;
+  margin: 0;
+  padding: 0.75rem;
+  overflow: auto;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 /* Serial monitor */
 
 .serial {

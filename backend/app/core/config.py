@@ -46,6 +46,15 @@ class Settings(BaseSettings):
     # tests want; only the deployed services set it.
     sentry_dsn: str = ""
 
+    # The compile service (compile-service/, on Google Cloud Run). Empty = the
+    # Verify button says compiling is not set up, which is what local
+    # development and tests want. The credentials are the JSON key of a Google
+    # robot account that may only call that service; they live only in
+    # Render's environment, never in a file in the repository.
+    compile_service_url: str = ""
+    compile_service_credentials: str = ""
+    compiles_per_hour: int = 20
+
     # EMQX deployment API, used to give every device its own broker login.
     emqx_api_url: str = ""
     emqx_api_key: str = ""

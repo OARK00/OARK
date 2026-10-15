@@ -18,6 +18,7 @@ from app.modules.auth.router import router as auth_router
 from app.modules.commands.router import router as commands_router
 from app.modules.commands.sweeper import sweep_commands
 from app.modules.devices.router import router as devices_router
+from app.modules.firmware.compile_router import router as compile_router
 from app.modules.firmware.router import router as firmware_router
 from app.modules.orgs.router import router as orgs_router
 from app.modules.overview.router import router as overview_router
@@ -68,6 +69,7 @@ app.include_router(devices_router)
 app.include_router(commands_router)
 app.include_router(products_router)
 app.include_router(firmware_router)
+app.include_router(compile_router)
 app.include_router(overview_router)
 app.include_router(alerts_router)
 app.include_router(telemetry_router)

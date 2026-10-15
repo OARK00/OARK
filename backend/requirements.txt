@@ -14,4 +14,8 @@ passlib==1.7.4
 bcrypt==4.0.1
 aiomqtt==2.3.0
 httpx==0.27.2
+# Google sign-in for calling the compile service on Cloud Run. requests is
+# what google-auth uses to fetch its tokens; pinned so it cannot drift.
+google-auth==2.62.0
+requests==2.34.2
 sentry-sdk==2.71.0
