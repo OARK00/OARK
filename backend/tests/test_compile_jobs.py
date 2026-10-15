@@ -89,6 +89,59 @@ def test_the_firmware_is_kept_for_uploading_later(client, account, service, db_s
     assert db_session.get(CompileJob, uuid.UUID(job_id)).firmware == FIRMWARE
 
 
+def firmware_of(db_session, job_id):
+    db_session.expire_all()
+    return db_session.get(CompileJob, uuid.UUID(job_id)).firmware
+
+
+def test_only_the_newest_firmware_of_a_product_is_kept(client, account, service, db_session):
+    headers = account()["headers"]
+    product = create_product(client, headers)
+    service.answer = compile_service.CompileOutcome(ok=True, output="first", firmware=b"first-firmware")
+    first = start(client, headers, product).json()["id"]
+    service.answer = compile_service.CompileOutcome(ok=True, output="second", firmware=b"second-firmware")
+    second = start(client, headers, product).json()["id"]
+
+    assert firmware_of(db_session, first) is None
+    assert firmware_of(db_session, second) == b"second-firmware"
+    # The size stays as history, and the page still shows it.
+    old = client.get(f"/products/{product}/compile/{first}", headers=headers).json()
+    assert old["firmware_bytes"] == len(b"first-firmware")
+
+
+def test_a_failed_compile_keeps_the_last_good_firmware(client, account, service, db_session):
+    headers = account()["headers"]
+    product = create_product(client, headers)
+    good = start(client, headers, product).json()["id"]
+    service.answer = compile_service.CompileOutcome(ok=False, output="error: expected ';'")
+
+    start(client, headers, product)
+
+    assert firmware_of(db_session, good) == FIRMWARE
+
+
+def test_an_unreachable_service_keeps_the_last_good_firmware(client, account, service, db_session):
+    headers = account()["headers"]
+    product = create_product(client, headers)
+    good = start(client, headers, product).json()["id"]
+    service.unavailable = True
+
+    start(client, headers, product)
+
+    assert firmware_of(db_session, good) == FIRMWARE
+
+
+def test_another_product_s_firmware_is_not_touched(client, account, service, db_session):
+    headers = account()["headers"]
+    helmet = create_product(client, headers, "Helmet")
+    switch = create_product(client, headers, "Switch")
+    helmet_job = start(client, headers, helmet).json()["id"]
+
+    start(client, headers, switch)
+
+    assert firmware_of(db_session, helmet_job) == FIRMWARE
+
+
 def test_the_code_itself_is_not_kept(client, account, service, db_session):
     headers = account()["headers"]
     product = create_product(client, headers)

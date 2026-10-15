@@ -93,6 +93,16 @@ def run_job(job_id: uuid.UUID, code: str, board: str) -> None:
             job.output = outcome.output
             job.firmware = outcome.firmware
             job.firmware_bytes = len(outcome.firmware) if outcome.firmware else None
+            if outcome.ok:
+                # Each firmware is about 1 MB. Only the newest good one per
+                # product is needed (it is what gets uploaded to a board), so
+                # the older ones are dropped. A failed compile drops nothing:
+                # the last good firmware stays. firmware_bytes is kept as history.
+                db.query(CompileJob).filter(
+                    CompileJob.product_id == job.product_id,
+                    CompileJob.id != job.id,
+                    CompileJob.firmware.isnot(None),
+                ).update({CompileJob.firmware: None}, synchronize_session=False)
         except compile_service.CompileServiceUnavailable as error:
             logger.warning("Compile job %s could not reach the compile service: %s", job_id, error)
             job.status = "failed"
