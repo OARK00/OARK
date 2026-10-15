@@ -1,5 +1,6 @@
 // Data-point rows: the editor's form strings <-> the API's data points.
 // Kept apart from DataPointEditor.jsx so that file exports only a component.
+import { pinKind, pinsFor } from "../constants/esp32Pins";
 
 const MAX_BUTTONS = 8;
 const MAX_BUTTON_VALUE = 32;
@@ -30,6 +31,10 @@ export function toRows(points) {
     widget: p.widget ?? "",
     options: (p.options || []).join(", "),
     releaseValue: p.release_value ?? "",
+    // Not edited in this form (the Firmware page sets them), but carried
+    // through, or saving data points here would erase the wiring.
+    pin: p.pin ?? null,
+    activeLow: p.active_low ?? false,
     include: true,
     manual: false,
     sampleCount: p.sample_count ?? null,
@@ -37,6 +42,10 @@ export function toRows(points) {
     observedMin: p.observed_min ?? null,
     observedMax: p.observed_max ?? null,
   }));
+}
+
+function pinStillFits(row) {
+  return row.pin != null && pinKind(row) !== null && pinsFor(pinKind(row)).includes(row.pin);
 }
 
 export function toPayload(rows) {
@@ -57,6 +66,10 @@ export function toPayload(rows) {
         widget: buttons ? "buttons" : null,
         options: buttons ? options : null,
         release_value: buttons && options.includes(r.releaseValue) ? r.releaseValue : null,
+        // A pin only fits some kinds of data point; if the type or access was
+        // changed here, the old pin no longer applies and is dropped.
+        pin: pinStillFits(r) ? r.pin ?? null : null,
+        active_low: pinStillFits(r) && r.type === "boolean" && r.access === "write" ? Boolean(r.activeLow) : false,
       };
     });
 }

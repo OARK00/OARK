@@ -6,8 +6,8 @@ import AppShell from "../components/AppShell";
 import CodeEditor from "../components/CodeEditor";
 import { arduinoSketch } from "../components/firmwareSnippets";
 import CompilePanel from "../components/CompilePanel";
+import PinPanel from "../components/PinPanel";
 import SerialMonitor from "../components/SerialMonitor";
-import { ACCESS_LABELS } from "../constants/products";
 import "./Firmware.css";
 
 // Shown where a real value goes. The secret is never filled in here: Oark
@@ -136,6 +136,23 @@ export default function Firmware() {
     }
   }
 
+  async function savePins(newPoints) {
+    setError(null);
+    try {
+      const { data } = await api.put(`/products/${productId}/data-points`, { data_points: newPoints });
+      setProduct(data);
+      if (saved === null && !edited) {
+        // Showing the generated code: rebuild it with the new wiring.
+        setCode(withDeviceId(arduinoSketch(ID_PLACEHOLDER, SECRET_PLACEHOLDER, data.data_points), chosenDevice));
+        say("Pins saved. The code now uses them.");
+      } else {
+        say("Pins saved. Your own code was not changed: choose Reset to generated code to use the new pins.");
+      }
+    } catch (err) {
+      setError(getErrorMessage(err, "Could not save the pins"));
+    }
+  }
+
   async function reset() {
     if (!window.confirm("Replace this code with the code Oark generates from the data points?")) return;
     setBusy(true);
@@ -220,22 +237,18 @@ export default function Firmware() {
           <CodeEditor value={code} onChange={setCode} label={`Firmware code for ${product.name}`} />
 
           <aside className="fw-side">
-            <h2>In this code</h2>
-            <p className="muted">What the code sends and receives, from this product's data points.</p>
+            <h2>Pins</h2>
+            <p className="muted">Choose the ESP32 GPIO each data point is wired to. Every {product.name} uses the same wiring.</p>
             {points.length === 0 ? (
               <p className="muted">
                 No data points yet, so the code sends one example reading. <Link to={`/products/${productId}`}>Define data points</Link>
               </p>
             ) : (
-              <ul className="fw-points">
-                {points.map((point) => (
-                  <li key={point.key}>
-                    <span>{point.label}</span>
-                    <code>{point.key}</code>
-                    <span className={`access-pill access-${point.access}`}>{ACCESS_LABELS[point.access]}</span>
-                  </li>
-                ))}
-              </ul>
+              <PinPanel
+                key={points.map((p) => `${p.key}:${p.pin ?? ""}:${p.active_low ? 1 : 0}`).join("|")}
+                points={points}
+                onSave={savePins}
+              />
             )}
             <button type="button" className="link-button" onClick={reset} disabled={busy || (saved === null && !edited)}>
               Reset to generated code

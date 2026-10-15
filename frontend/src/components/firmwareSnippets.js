@@ -45,6 +45,16 @@ ${branches}
   }`;
 }
 
+// "impactDetected" -> "IMPACT_DETECTED_PIN"
+function pinConstant(point) {
+  return `${point.name.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toUpperCase()}_PIN`;
+}
+
+// The value written to an output pin for "on", honouring "on when LOW".
+function outputLevels(point) {
+  return point.active_low ? "LOW : HIGH" : "HIGH : LOW";
+}
+
 function initialValue(point) {
   if (point.release_value) return cString(point.release_value);
   return CPP_DEFAULTS[point.type] || "0";
@@ -59,13 +69,35 @@ export function arduinoSketch(deviceId, secret, dataPoints) {
   // never arrives (browser closed mid-press, Wi-Fi drop).
   const holds = controls.filter((p) => p.release_value);
 
-  const readingLines = readings
-    .map((p) => `  data[${cString(p.key)}] = ${CPP_DEFAULTS[p.type] || "0"};   // replace with your ${p.label || p.key} reading`)
-    .join("\n");
+  const pinned = points.filter((p) => p.pin != null);
+  const pinBlock = pinned.length
+    ? `
+// Wiring, from the pins chosen on Oark's Firmware page.
+${pinned
+  .map((p) => {
+    const note = p.access === "write" ? (p.active_low ? "output, on when LOW" : "output, on when HIGH") : p.type === "number" ? "analog reading, 0-4095" : "digital reading";
+    return `const int ${pinConstant(p)} = ${p.pin};   // ${p.label || p.key}: ${note}`;
+  })
+  .join("\n")}
+`
+    : "";
+  const pinSetup = pinned
+    .filter((p) => p.type === "boolean")
+    .map((p) => `\n  pinMode(${pinConstant(p)}, ${p.access === "write" ? "OUTPUT" : "INPUT"});`)
+    .join("");
 
-  const plainControls = controls.filter((p) => !withButtons.includes(p));
+  const readingLine = (p) => {
+    if (p.pin != null && p.type === "boolean") return `  data[${cString(p.key)}] = digitalRead(${pinConstant(p)}) == HIGH;`;
+    if (p.pin != null && p.type === "number") return `  data[${cString(p.key)}] = analogRead(${pinConstant(p)});   // 0-4095; convert to ${p.unit || "your unit"} if needed`;
+    return `  data[${cString(p.key)}] = ${CPP_DEFAULTS[p.type] || "0"};   // replace with your ${p.label || p.key} reading`;
+  };
+  const readingLines = readings.map(readingLine).join("\n");
+
+  const pinnedControls = controls.filter((p) => p.pin != null && p.type === "boolean");
+  const plainControls = controls.filter((p) => !withButtons.includes(p) && !pinnedControls.includes(p));
   const applyBody = [
     ...withButtons.map(optionBranches),
+    ...pinnedControls.map((p) => `  digitalWrite(${pinConstant(p)}, ${p.name} ? ${outputLevels(p)});`),
     plainControls.length
       ? `  // Drive your hardware from the values above, for example:
   // digitalWrite(RELAY_PIN, ${plainControls.find((p) => p.type === "boolean")?.name || "someSwitch"} ? HIGH : LOW);`
@@ -143,7 +175,7 @@ const char* WIFI_PASSWORD = "your-wifi-password";
 // From Oark. The secret is shown only once -- keep it in the device only.
 const char* DEVICE_ID     = "${deviceId}";
 const char* DEVICE_SECRET = "${secret}";
-
+${pinBlock}
 WiFiClientSecure net;
 PubSubClient mqtt(net);
 char telemetryTopic[96];
@@ -179,7 +211,7 @@ void setup() {
   Serial.begin(115200);
   snprintf(telemetryTopic, sizeof(telemetryTopic), "oark/devices/%s/telemetry", DEVICE_ID);
   snprintf(commandsTopic, sizeof(commandsTopic), "oark/devices/%s/commands", DEVICE_ID);
-${controlParts.setup}
+${pinSetup}${controlParts.setup}
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) delay(500);
 
