@@ -1,11 +1,25 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import AppShell from "../components/AppShell";
+import DeviceAlerts from "../components/DeviceAlerts";
 import DeviceControls, { CommandHistory } from "../components/DeviceControls";
+import DeviceSettings from "../components/DeviceSettings";
+import FirmwareStudio from "../components/FirmwareStudio";
 import LineChart from "../components/LineChart";
 import { CATEGORY_LABELS } from "../constants/devices";
+
+// The device's own sections. Firmware only for a device with a product: the
+// code is generated from the product's data points and pins.
+const TABS = [
+  { key: "overview", label: "Overview" },
+  { key: "controls", label: "Controls" },
+  { key: "history", label: "History" },
+  { key: "firmware", label: "Firmware" },
+  { key: "alerts", label: "Alerts" },
+  { key: "settings", label: "Settings" },
+];
 
 const RANGES = [
   { hours: 1, label: "1 hour" },
@@ -40,6 +54,10 @@ function numericKeys(readings) {
 
 export default function DeviceDetail() {
   const { deviceId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get("tab") || "overview";
+  // Tabs opened at least once. They stay mounted (hidden) from then on.
+  const [opened, setOpened] = useState(() => new Set([tab]));
   const [device, setDevice] = useState(null);
   const [dataPoints, setDataPoints] = useState([]);
   const [readings, setReadings] = useState([]);
@@ -151,11 +169,18 @@ export default function DeviceDetail() {
 
   const currentValues = Object.entries(device?.reported_state || {});
 
+  const tabs = TABS.filter((item) => item.key !== "firmware" || device?.product_id);
+  const shown = tabs.some((item) => item.key === tab) ? tab : "overview";
+  const visited = { has: (key) => opened.has(key) || shown === key };
+
+  function openTab(key) {
+    setOpened((current) => (current.has(key) ? current : new Set([...current, key])));
+    // Kept in the address, so a refresh or a shared link opens the same tab.
+    setSearchParams(key === "overview" ? {} : { tab: key }, { replace: true });
+  }
+
   return (
-    <AppShell
-      active="devices"
-      firmwareTo={device?.product_id ? `/products/${device.product_id}/firmware?device=${device.id}` : undefined}
-    >
+    <AppShell active="devices">
       <div className="page-head">
         <div>
           <div className="crumbs">
@@ -190,146 +215,201 @@ export default function DeviceDetail() {
       {error && <div className="error">{error}</div>}
 
       {device && (
-        <div className="detail-grid">
-          <div className="detail-main">
-            {controls.length > 0 && (
-              <DeviceControls device={device} points={controls} commands={commands} onChange={loadLive} />
-            )}
-
-            <div className="chart-card">
-              <div className="card-head">
-                <h3>History</h3>
-                <div className="range-tabs">
-                  {RANGES.map((option) => (
-                    <button
-                      key={option.hours}
-                      type="button"
-                      className={`range-tab${range === option.hours ? " active" : ""}`}
-                      onClick={() => setRange(option.hours)}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {keys.length > 1 && (
-                <div className="key-chips">
-                  {keys.map((key) => (
-                    <button
-                      key={key}
-                      type="button"
-                      className={`key-chip${key === activeKey ? " active" : ""}`}
-                      onClick={() => setSelectedKey(key)}
-                    >
-                      {key}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {loading ? (
-                <p className="chart-empty">Loading…</p>
-              ) : keys.length === 0 ? (
-                <p className="chart-empty">
-                  No numeric values reported in this period. Text and true/false values appear in the table below.
-                </p>
-              ) : (
-                <LineChart points={points} unit={unit} />
-              )}
-            </div>
-
-            <div className="activity-card">
-              <div className="card-head">
-                <h3>Readings</h3>
-                <span className="card-head-note">{readings.length} in this period</span>
-              </div>
-              {readings.length === 0 ? (
-                <p className="activity-empty">Nothing received in this period.</p>
-              ) : (
-                <ul className="activity-list">
-                  {[...readings]
-                    .reverse()
-                    .slice(0, 25)
-                    .map((reading) => (
-                      <li key={reading.id} className="reading-row">
-                        <span className="reading-time">
-                          {new Date(reading.recorded_at).toLocaleString([], {
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            second: "2-digit",
-                          })}
-                        </span>
-                        <span className="activity-values">
-                          {Object.entries(reading.data || {}).map(([key, value]) => (
-                            <span key={key} className="activity-value">
-                              {key} <b>{typeof value === "object" ? JSON.stringify(value) : String(value)}</b>
-                            </span>
-                          ))}
-                        </span>
-                      </li>
-                    ))}
-                </ul>
-              )}
-            </div>
-
-            {(controls.length > 0 || commands.length > 0) && (
-              <CommandHistory commands={commands} points={dataPoints} />
-            )}
+        <>
+          <div className="device-tabs" role="tablist" aria-label={`${device.name} sections`}>
+            {tabs.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                role="tab"
+                id={`device-tab-${item.key}`}
+                aria-selected={shown === item.key}
+                aria-controls={`device-panel-${item.key}`}
+                className={`device-tab${shown === item.key ? " active" : ""}`}
+                onClick={() => openTab(item.key)}
+              >
+                {item.label}
+                {item.key === "controls" && waiting && <span className="device-tab-dot" title="A command is waiting for the device" />}
+              </button>
+            ))}
           </div>
 
-          <aside className="detail-side">
-            <div className="side-card">
-              <div className="card-head">
-                <h3>Latest values</h3>
+          {/* Every visited tab stays mounted and is only hidden, so the
+              Firmware tab keeps its code and open USB port while you switch
+              to Controls and back. */}
+          <section role="tabpanel" id="device-panel-overview" aria-labelledby="device-tab-overview" hidden={shown !== "overview"}>
+            <div className="detail-grid">
+              <div className="detail-main">
+                <div className="side-card">
+                  <div className="card-head">
+                    <h3>Latest values</h3>
+                  </div>
+                  {currentValues.length === 0 ? (
+                    <p className="activity-empty">This device has not reported yet.</p>
+                  ) : (
+                    <ul className="value-list">
+                      {currentValues.map(([key, value]) => (
+                        <li key={key}>
+                          <span className="value-key">{key}</span>
+                          <span className="value-number">
+                            {typeof value === "object" ? JSON.stringify(value) : String(value)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
-              {currentValues.length === 0 ? (
-                <p className="activity-empty">This device has not reported yet.</p>
-              ) : (
-                <ul className="value-list">
-                  {currentValues.map(([key, value]) => (
-                    <li key={key}>
-                      <span className="value-key">{key}</span>
-                      <span className="value-number">
-                        {typeof value === "object" ? JSON.stringify(value) : String(value)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <aside className="detail-side">
+                <div className="side-card">
+                  <div className="card-head">
+                    <h3>Device</h3>
+                  </div>
+                  <dl className="meta-list">
+                    <dt>ID</dt>
+                    <dd className="meta-mono">{device.id}</dd>
+                    {device.model_number && (
+                      <>
+                        <dt>Model</dt>
+                        <dd>{device.model_number}</dd>
+                      </>
+                    )}
+                    {device.firmware_version && (
+                      <>
+                        <dt>Firmware</dt>
+                        <dd>{device.firmware_version}</dd>
+                      </>
+                    )}
+                    {device.description && (
+                      <>
+                        <dt>Notes</dt>
+                        <dd>{device.description}</dd>
+                      </>
+                    )}
+                  </dl>
+                </div>
+              </aside>
             </div>
+          </section>
 
-            <div className="side-card">
-              <div className="card-head">
-                <h3>Device</h3>
-              </div>
-              <dl className="meta-list">
-                <dt>ID</dt>
-                <dd className="meta-mono">{device.id}</dd>
-                {device.model_number && (
-                  <>
-                    <dt>Model</dt>
-                    <dd>{device.model_number}</dd>
-                  </>
-                )}
-                {device.firmware_version && (
-                  <>
-                    <dt>Firmware</dt>
-                    <dd>{device.firmware_version}</dd>
-                  </>
-                )}
-                {device.description && (
-                  <>
-                    <dt>Notes</dt>
-                    <dd>{device.description}</dd>
-                  </>
-                )}
-              </dl>
+          <section role="tabpanel" id="device-panel-controls" aria-labelledby="device-tab-controls" hidden={shown !== "controls"}>
+            <div className="tab-stack">
+              {controls.length > 0 ? (
+                <DeviceControls device={device} points={controls} commands={commands} onChange={loadLive} />
+              ) : (
+                <section className="panel">
+                  <p className="muted">
+                    {device.product_id
+                      ? "This product has no controls. Add a data point that Oark can change (for example an on/off switch) on the product page."
+                      : "This device has no product, so Oark does not know what it can control."}
+                  </p>
+                </section>
+              )}
+              {(controls.length > 0 || commands.length > 0) && <CommandHistory commands={commands} points={dataPoints} />}
             </div>
-          </aside>
-        </div>
+          </section>
+
+          <section role="tabpanel" id="device-panel-history" aria-labelledby="device-tab-history" hidden={shown !== "history"}>
+            <div className="tab-stack">
+              <div className="chart-card">
+                <div className="card-head">
+                  <h3>History</h3>
+                  <div className="range-tabs">
+                    {RANGES.map((option) => (
+                      <button
+                        key={option.hours}
+                        type="button"
+                        className={`range-tab${range === option.hours ? " active" : ""}`}
+                        onClick={() => setRange(option.hours)}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {keys.length > 1 && (
+                  <div className="key-chips">
+                    {keys.map((key) => (
+                      <button
+                        key={key}
+                        type="button"
+                        className={`key-chip${key === activeKey ? " active" : ""}`}
+                        onClick={() => setSelectedKey(key)}
+                      >
+                        {key}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {loading ? (
+                  <p className="chart-empty">Loading…</p>
+                ) : keys.length === 0 ? (
+                  <p className="chart-empty">
+                    No numeric values reported in this period. Text and true/false values appear in the table below.
+                  </p>
+                ) : (
+                  <LineChart points={points} unit={unit} />
+                )}
+              </div>
+
+              <div className="activity-card">
+                <div className="card-head">
+                  <h3>Readings</h3>
+                  <span className="card-head-note">{readings.length} in this period</span>
+                </div>
+                {readings.length === 0 ? (
+                  <p className="activity-empty">Nothing received in this period.</p>
+                ) : (
+                  <ul className="activity-list">
+                    {[...readings]
+                      .reverse()
+                      .slice(0, 25)
+                      .map((reading) => (
+                        <li key={reading.id} className="reading-row">
+                          <span className="reading-time">
+                            {new Date(reading.recorded_at).toLocaleString([], {
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              second: "2-digit",
+                            })}
+                          </span>
+                          <span className="activity-values">
+                            {Object.entries(reading.data || {}).map(([key, value]) => (
+                              <span key={key} className="activity-value">
+                                {key} <b>{typeof value === "object" ? JSON.stringify(value) : String(value)}</b>
+                              </span>
+                            ))}
+                          </span>
+                        </li>
+                      ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {device.product_id && visited.has("firmware") && (
+            <section role="tabpanel" id="device-panel-firmware" aria-labelledby="device-tab-firmware" hidden={shown !== "firmware"}>
+              <FirmwareStudio productId={device.product_id} deviceId={device.id} lockDevice />
+            </section>
+          )}
+
+          {visited.has("alerts") && (
+            <section role="tabpanel" id="device-panel-alerts" aria-labelledby="device-tab-alerts" hidden={shown !== "alerts"}>
+              <DeviceAlerts device={device} />
+            </section>
+          )}
+
+          {visited.has("settings") && (
+            <section role="tabpanel" id="device-panel-settings" aria-labelledby="device-tab-settings" hidden={shown !== "settings"}>
+              <DeviceSettings device={device} />
+            </section>
+          )}
+        </>
       )}
     </AppShell>
   );

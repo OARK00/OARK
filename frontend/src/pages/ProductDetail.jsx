@@ -193,7 +193,7 @@ export default function ProductDetail() {
   const points = product.data_points;
 
   return (
-    <AppShell active="products" firmwareTo={`/products/${product.id}/firmware`}>
+    <AppShell active="products">
       <nav className="breadcrumb" aria-label="Breadcrumb">
         <Link to="/products">Products</Link>
         <span aria-hidden="true">/</span>

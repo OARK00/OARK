@@ -125,6 +125,10 @@ def delete_rule(
 def list_events(
     limit: int = Query(default=50, le=200),
     unacknowledged: bool = Query(default=False),
+    # One device's events, for its own page. Still limited to this
+    # organisation by the filter below, so another company's device id
+    # simply finds nothing.
+    device_id: uuid.UUID | None = Query(default=None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -134,6 +138,8 @@ def list_events(
         .join(Device, Device.id == AlertEvent.device_id)
         .filter(AlertEvent.org_id == current_user.org_id)
     )
+    if device_id is not None:
+        query = query.filter(AlertEvent.device_id == device_id)
     if unacknowledged:
         query = query.filter(AlertEvent.acknowledged_at.is_(None))
 

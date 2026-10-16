@@ -209,3 +209,44 @@ def test_events_can_be_acknowledged(client, account, db_session):
     assert after == []
     # The event itself is kept: history, not a notification to clear away.
     assert len(client.get("/alerts/events", headers=created["headers"]).json()) == 1
+
+
+def test_events_can_be_listed_for_one_device(client, account, db_session):
+    created = account()
+    headers = created["headers"]
+    cold = client.post("/devices", json={"name": "Cold store"}, headers=headers).json()
+    boiler = client.post("/devices", json={"name": "Boiler"}, headers=headers).json()
+    rule = client.post(
+        "/alerts/rules",
+        json={"name": "Too warm", "condition": "above", "data_key": "temperature", "threshold": 8},
+        headers=headers,
+    ).json()
+    org_id = client.get("/auth/me", headers=headers).json()["org_id"]
+    for device, message in ((cold, "cold store warm"), (boiler, "boiler warm"), (boiler, "boiler warm again")):
+        db_session.add(AlertEvent(org_id=org_id, rule_id=rule["id"], device_id=device["id"], message=message, value=9.0))
+    db_session.commit()
+
+    only_boiler = client.get("/alerts/events", params={"device_id": boiler["id"]}, headers=headers).json()
+
+    assert sorted(event["message"] for event in only_boiler) == ["boiler warm", "boiler warm again"]
+    assert all(event["device_id"] == boiler["id"] for event in only_boiler)
+    assert len(client.get("/alerts/events", headers=headers).json()) == 3
+
+
+def test_another_company_s_device_events_stay_hidden(client, account, db_session):
+    owner = account(org_name="Factory A")
+    stranger = account(org_name="Factory B")
+    device = client.post("/devices", json={"name": "Cold store"}, headers=owner["headers"]).json()
+    rule = client.post(
+        "/alerts/rules",
+        json={"name": "Too warm", "condition": "above", "data_key": "temperature", "threshold": 8},
+        headers=owner["headers"],
+    ).json()
+    org_id = client.get("/auth/me", headers=owner["headers"]).json()["org_id"]
+    db_session.add(AlertEvent(org_id=org_id, rule_id=rule["id"], device_id=device["id"], message="warm", value=9.0))
+    db_session.commit()
+
+    seen = client.get("/alerts/events", params={"device_id": device["id"]}, headers=stranger["headers"])
+
+    assert seen.status_code == 200
+    assert seen.json() == []

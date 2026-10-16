@@ -48,11 +48,6 @@ const icons = {
       <path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01" />
     </svg>
   ),
-  firmware: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m8 7-5 5 5 5M16 7l5 5-5 5M13.5 5l-3 14" />
-    </svg>
-  ),
   settings: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <circle cx="12" cy="12" r="3" />
@@ -87,21 +82,12 @@ const navGroups = [
   },
 ];
 
-// Shown only while a product or a device is open: the entry belongs to that
-// one product, so there is nowhere for it to go from the other pages.
-function withDevelopGroup(groups, firmwareTo) {
-  if (!firmwareTo) return groups;
-  const develop = {
-    label: "Develop",
-    items: [{ key: "firmware", label: "Firmware code", icon: icons.firmware, to: firmwareTo }],
-  };
-  return [groups[0], develop, ...groups.slice(1)];
-}
-
-export default function Sidebar({ active = "devices", firmwareTo }) {
+// The same for the whole company on every page. Things that belong to one
+// device (its firmware, history, settings) are tabs on that device's page.
+export default function Sidebar({ active = "devices" }) {
   const { email, logout } = useAuth();
   const navigate = useNavigate();
-  const groups = withDevelopGroup(navGroups, firmwareTo);
+  const groups = navGroups;
 
   function handleLogout() {
     logout();
