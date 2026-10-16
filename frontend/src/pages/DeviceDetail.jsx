@@ -8,6 +8,7 @@ import DeviceControls, { CommandHistory } from "../components/DeviceControls";
 import DeviceSettings from "../components/DeviceSettings";
 import FirmwareStudio from "../components/FirmwareStudio";
 import LineChart from "../components/LineChart";
+import { categoryIcon } from "../components/categoryIcon";
 import { CATEGORY_LABELS } from "../constants/devices";
 
 // The device's own sections. Firmware only for a device with a product: the
@@ -181,41 +182,37 @@ export default function DeviceDetail() {
 
   return (
     <AppShell active="devices">
-      <div className="page-head">
-        <div>
-          <div className="crumbs">
-            <Link to="/dashboard">Devices</Link> <span>/</span> <span>{device?.name || "…"}</span>
-          </div>
-          <h2>{device?.name || "Loading…"}</h2>
-          {device && (
-            <p className="page-head-note">
-              <span className={`status-pill status-${device.status}`}>
-                <span className="status-dot" />
-                {device.status}
-              </span>
-              <span className="page-head-sep">·</span>
-              last seen {timeAgo(device.last_seen_at)}
-              {device.product_name && (
-                <>
-                  <span className="page-head-sep">·</span>
-                  <Link to={`/products/${device.product_id}`}>{device.product_name}</Link>
-                </>
-              )}
-              {device.category && (
-                <>
-                  <span className="page-head-sep">·</span>
-                  {CATEGORY_LABELS[device.category] || device.category}
-                </>
-              )}
-            </p>
-          )}
-        </div>
+      <div className="crumbs device-crumbs">
+        <Link to="/dashboard">Devices</Link> <span>/</span> <span>{device?.name || "…"}</span>
       </div>
 
+      {!device && !error && <p className="muted">Loading device…</p>}
       {error && <div className="error">{error}</div>}
 
       {device && (
         <>
+          {/* The coloured band says "you are inside this one device"; the
+              tabs sit on its bottom edge. Same Oark colours as everywhere. */}
+          <header className={`device-hero device-hero-${device.status}`}>
+            <div className="device-hero-main">
+              <span className={`device-icon device-icon-lg device-icon-${device.category || "other"}`}>
+                {categoryIcon(device.category)}
+              </span>
+              <div className="device-hero-text">
+                <h2>{device.name}</h2>
+                <p className="page-head-note">
+                  {device.product_name && <Link to={`/products/${device.product_id}`}>{device.product_name}</Link>}
+                  {device.product_name && device.category && <span className="page-head-sep">·</span>}
+                  {device.category && (CATEGORY_LABELS[device.category] || device.category)}
+                  {(device.product_name || device.category) && <span className="page-head-sep">·</span>}
+                  last seen {timeAgo(device.last_seen_at)}
+                </p>
+              </div>
+              <span className={`status-pill status-${device.status} device-hero-status`}>
+                <span className="status-dot" />
+                {device.status}
+              </span>
+            </div>
           <div className="device-tabs" role="tablist" aria-label={`${device.name} sections`}>
             {tabs.map((item) => (
               <button
@@ -233,6 +230,7 @@ export default function DeviceDetail() {
               </button>
             ))}
           </div>
+          </header>
 
           {/* Every visited tab stays mounted and is only hidden, so the
               Firmware tab keeps its code and open USB port while you switch

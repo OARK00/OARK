@@ -2472,13 +2472,70 @@ a.product-card:hover {
   text-transform: capitalize;
 }
 
-/* Device page tabs: Overview · Controls · History · Firmware · Alerts · Settings */
+/* Device page: a soft teal band with the device's name and status, and the
+   tabs (Overview · Controls · History · Firmware · Alerts · Settings) on its
+   bottom edge. A thin line at its top takes the status colour. */
+.device-crumbs {
+  margin-bottom: 0.6rem;
+}
+
+.device-hero {
+  margin-bottom: 1rem;
+  border: 1px solid #cdeae6;
+  border-top: 3px solid #94a3b8;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f0fbf9 0%, #e3f5f2 100%);
+  overflow: hidden;
+}
+
+.device-hero-online {
+  border-top-color: #10b981;
+}
+
+.device-hero-stale {
+  border-top-color: #f59e0b;
+}
+
+.device-hero-main {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1.1rem 1.25rem 0.9rem;
+}
+
+.device-hero-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.device-hero-text h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  overflow-wrap: anywhere;
+}
+
+.device-hero-text .page-head-note {
+  margin: 0.2rem 0 0;
+}
+
+.device-hero-status {
+  align-self: flex-start;
+  font-size: 0.78rem;
+  padding: 0.2rem 0.65rem;
+}
+
+.device-hero .device-icon {
+  background: #ffffff;
+}
+
 .device-tabs {
   display: flex;
   gap: 0.25rem;
-  margin: 0.25rem 0 1rem;
-  border-bottom: 1px solid var(--border);
+  padding: 0 0.75rem;
+  border-top: 1px solid #cdeae6;
+  background: rgba(255, 255, 255, 0.55);
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: thin;
 }
 
@@ -2490,7 +2547,6 @@ a.product-card:hover {
   padding: 0.65rem 1rem;
   border: none;
   border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
   background: none;
   color: var(--muted);
   font-family: inherit;
