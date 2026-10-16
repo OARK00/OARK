@@ -69,7 +69,9 @@ function download(name, text) {
 // device's page the device is fixed (`deviceId` + `lockDevice`), and the
 // studio stays mounted while other tabs are shown, so the code and the open
 // USB port survive switching tabs.
-export default function FirmwareStudio({ productId, deviceId = null, lockDevice = false, onLoaded, testPanel = null }) {
+// onProductChange: told about the product after pins are saved here, so a
+// page that also shows the product (its data points table) stays current.
+export default function FirmwareStudio({ productId, deviceId = null, lockDevice = false, onLoaded, onProductChange, testPanel = null }) {
   const [remember, setRemember] = useState(() => rememberedWifi() !== null);
   const [product, setProduct] = useState(null);
   const [devices, setDevices] = useState([]);
@@ -180,6 +182,7 @@ export default function FirmwareStudio({ productId, deviceId = null, lockDevice 
     try {
       const { data } = await api.put(`/products/${productId}/data-points`, { data_points: newPoints });
       setProduct(data);
+      onProductChange?.(data);
       if (saved === null && !edited) {
         // Showing the generated code: rebuild it with the new wiring.
         setCode(withTypedValues(arduinoSketch(ID_PLACEHOLDER, SECRET_PLACEHOLDER, data.data_points), typedValues(code)));
@@ -285,7 +288,7 @@ export default function FirmwareStudio({ productId, deviceId = null, lockDevice 
           <p className="muted">Choose the ESP32 GPIO each data point is wired to. Every {product.name} uses the same wiring.</p>
           {points.length === 0 ? (
             <p className="muted">
-              No data points yet, so the code sends one example reading. <Link to={`/products/${productId}`}>Define data points</Link>
+              No data points yet, so the code sends one example reading. <Link to={`/products/${productId}?tab=data`}>Define data points</Link>
             </p>
           ) : (
             <PinPanel

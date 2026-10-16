@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import AddDeviceWizard from "../components/AddDeviceWizard";
 import AppShell from "../components/AppShell";
 import DataPointEditor from "../components/DataPointEditor";
+import FirmwareStudio from "../components/FirmwareStudio";
+import ProductAlerts from "../components/ProductAlerts";
 import { toPayload, toRows, validateRows } from "../components/dataPointRows";
 import { categoryIcon } from "../components/categoryIcon";
 import { CATEGORY_LABELS } from "../constants/devices";
@@ -70,9 +72,29 @@ function DeviceReadings({ device, points }) {
   );
 }
 
+// The product's sections, in the order a product is built: what it measures,
+// how it is wired and programmed, its real units, and what watches them.
+const PRODUCT_TABS = [
+  { key: "overview", label: "Overview" },
+  { key: "data", label: "Data points" },
+  { key: "code", label: "Pins & code" },
+  { key: "devices", label: "Devices" },
+  { key: "alerts", label: "Alerts" },
+];
+
 export default function ProductDetail() {
   const { productId } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requested = searchParams.get("tab") || "overview";
+  const shown = PRODUCT_TABS.some((item) => item.key === requested) ? requested : "overview";
+  // Tabs opened at least once stay mounted (hidden) from then on.
+  const [opened, setOpened] = useState(() => new Set([shown]));
+
+  function openTab(key) {
+    setOpened((current) => (current.has(key) ? current : new Set([...current, key])));
+    setSearchParams(key === "overview" ? {} : { tab: key }, { replace: true });
+  }
   const [product, setProduct] = useState(null);
   const [devices, setDevices] = useState([]);
   const [loadError, setLoadError] = useState(null);
@@ -200,137 +222,212 @@ export default function ProductDetail() {
         <span aria-current="page">{product.name}</span>
       </nav>
 
-      <section className="panel product-header">
-        <div className="product-header-main">
+      {/* Same shape as a device's page: a coloured band with the product,
+          and its parts as tabs. Visited tabs stay mounted (hidden), so the
+          code tab keeps its editor and USB port while you look elsewhere. */}
+      <header className="device-hero product-hero">
+        <div className="device-hero-main">
           <span className={`device-icon device-icon-lg device-icon-${product.category || "other"}`}>
             {categoryIcon(product.category)}
           </span>
-          <div>
-            <h1>{product.name}</h1>
-            <div className="product-card-meta">
+          <div className="device-hero-text">
+            <h2>{product.name}</h2>
+            <p className="page-head-note">
               {CATEGORY_LABELS[product.category] || "Uncategorized"}
-              {product.model_number && <code>{product.model_number}</code>}
+              {product.model_number && (
+                <>
+                  <span className="page-head-sep">·</span>
+                  <code>{product.model_number}</code>
+                </>
+              )}
+              <span className="page-head-sep">·</span>
+              {devices.length} {devices.length === 1 ? "device" : "devices"}, {online} online
+            </p>
+          </div>
+          <div className="product-header-actions">
+            <button type="button" className="ghost-button" onClick={() => setConfirmDelete(true)}>
+              Delete product
+            </button>
+            <button type="button" className="primary-button" onClick={() => setShowAddDevice(true)}>
+              + Add device
+            </button>
+          </div>
+        </div>
+        <div className="device-tabs" role="tablist" aria-label={`${product.name} sections`}>
+          {PRODUCT_TABS.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              role="tab"
+              id={`product-tab-${item.key}`}
+              aria-selected={shown === item.key}
+              aria-controls={`product-panel-${item.key}`}
+              className={`device-tab${shown === item.key ? " active" : ""}`}
+              onClick={() => openTab(item.key)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      <section role="tabpanel" id="product-panel-overview" aria-labelledby="product-tab-overview" hidden={shown !== "overview"}>
+        <div className="tab-stack">
+          {product.description && (
+            <section className="panel">
+              <p className="product-header-description">{product.description}</p>
+            </section>
+          )}
+          <div className="inline-stats">
+            <div className="inline-stat">
+              <div>
+                <span className="inline-stat-value">{devices.length}</span>
+                <span className="inline-stat-label">Devices</span>
+              </div>
             </div>
-            {product.description && <p className="product-header-description">{product.description}</p>}
+            <div className="inline-stat inline-stat-online">
+              <div>
+                <span className="inline-stat-value">{online}</span>
+                <span className="inline-stat-label">Online now</span>
+              </div>
+            </div>
+            <div className="inline-stat">
+              <div>
+                <span className="inline-stat-value">{points.length}</span>
+                <span className="inline-stat-label">Data points</span>
+              </div>
+            </div>
+            <div className="inline-stat">
+              <div>
+                <span className="inline-stat-value">{points.filter((p) => p.access === "write").length}</span>
+                <span className="inline-stat-label">Controllable</span>
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="product-header-actions">
-          <button type="button" className="ghost-button" onClick={() => setConfirmDelete(true)}>
-            Delete product
-          </button>
-          <Link to={`/products/${product.id}/firmware`} className="ghost-button button-link">
-            Firmware
-          </Link>
-          <button type="button" className="primary-button" onClick={() => setShowAddDevice(true)}>
-            + Add device
-          </button>
-        </div>
-      </section>
-
-      <div className="inline-stats">
-        <div className="inline-stat">
-          <div>
-            <span className="inline-stat-value">{devices.length}</span>
-            <span className="inline-stat-label">Devices</span>
-          </div>
-        </div>
-        <div className="inline-stat inline-stat-online">
-          <div>
-            <span className="inline-stat-value">{online}</span>
-            <span className="inline-stat-label">Online now</span>
-          </div>
-        </div>
-        <div className="inline-stat">
-          <div>
-            <span className="inline-stat-value">{points.length}</span>
-            <span className="inline-stat-label">Data points</span>
-          </div>
-        </div>
-        <div className="inline-stat">
-          <div>
-            <span className="inline-stat-value">{points.filter((p) => p.access === "write").length}</span>
-            <span className="inline-stat-label">Controllable</span>
-          </div>
-        </div>
-      </div>
-
-      <section className="panel">
-        <div className="panel-header">
-          <div>
-            <h2>Data points</h2>
-            <p className="panel-subtitle">What every {product.name} sends. New readings are checked against these.</p>
-          </div>
-          <button type="button" className="ghost-button" onClick={openEditor}>
-            {points.length ? "Edit data points" : "Define data points"}
-          </button>
-        </div>
-
-        {points.length === 0 ? (
-          <p className="muted">
-            None yet. Connect a device, then choose <b>Define data points</b>: Oark suggests them from what it sends.
-          </p>
-        ) : (
-          <div className="table-scroll">
-            <table className="dp-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Key</th>
-                  <th>Type</th>
-                  <th>Limits</th>
-                  <th>Access</th>
-                </tr>
-              </thead>
-              <tbody>
-                {points.map((p) => (
-                  <tr key={p.key}>
-                    <td className="dp-table-name">{p.label}</td>
-                    <td>
-                      <code>{p.key}</code>
-                    </td>
-                    <td>
-                      {TYPE_LABELS[p.type]}
-                      {p.unit && <span className="muted"> · {p.unit}</span>}
-                    </td>
-                    <td>{limitsText(p)}</td>
-                    <td>
-                      <span className={`access-pill access-${p.access}`}>{ACCESS_LABELS[p.access]}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
-      <section className="panel">
-        <div className="panel-header">
-          <div>
-            <h2>Devices</h2>
-            <p className="panel-subtitle">Latest reading from each unit, checked against the data points above.</p>
-          </div>
-        </div>
-
-        {devices.length === 0 ? (
-          <p className="muted">No devices use this product yet.</p>
-        ) : (
-          <ul className="product-devices">
-            {devices.map((d) => (
-              <li key={d.id} className="product-device">
-                <div className="product-device-head">
-                  <div className="product-device-name">{d.name}</div>
-                  <span className={`status status-${d.status}`}>
-                    <span className="status-dot" />
-                    {d.status}
-                  </span>
-                </div>
-                <DeviceReadings device={d} points={points} />
+          <section className="panel">
+            <h2>How this product works</h2>
+            <ol className="product-steps">
+              <li>
+                <b>Data points</b>: what every {product.name} measures and what Oark can switch.
               </li>
-            ))}
-          </ul>
-        )}
+              <li>
+                <b>Pins &amp; code</b>: which GPIO each one uses, and the firmware built from that.
+              </li>
+              <li>
+                <b>Devices</b>: each real unit, with its own ID and secret, running that firmware.
+              </li>
+            </ol>
+          </section>
+        </div>
       </section>
+
+      <section role="tabpanel" id="product-panel-data" aria-labelledby="product-tab-data" hidden={shown !== "data"}>
+        <section className="panel">
+          <div className="panel-header">
+            <div>
+              <h2>Data points</h2>
+              <p className="panel-subtitle">What every {product.name} sends. New readings are checked against these.</p>
+            </div>
+            <button type="button" className="ghost-button" onClick={openEditor}>
+              {points.length ? "Edit data points" : "Define data points"}
+            </button>
+          </div>
+
+          {points.length === 0 ? (
+            <p className="muted">
+              None yet. Connect a device, then choose <b>Define data points</b>: Oark suggests them from what it sends.
+            </p>
+          ) : (
+            <div className="table-scroll">
+              <table className="dp-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Key</th>
+                    <th>Type</th>
+                    <th>Limits</th>
+                    <th>Access</th>
+                    <th>GPIO</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {points.map((p) => (
+                    <tr key={p.key}>
+                      <td className="dp-table-name">{p.label}</td>
+                      <td>
+                        <code>{p.key}</code>
+                      </td>
+                      <td>
+                        {TYPE_LABELS[p.type]}
+                        {p.unit && <span className="muted"> · {p.unit}</span>}
+                      </td>
+                      <td>{limitsText(p)}</td>
+                      <td>
+                        <span className={`access-pill access-${p.access}`}>{ACCESS_LABELS[p.access]}</span>
+                      </td>
+                      <td>{p.pin != null ? `GPIO ${p.pin}${p.active_low ? " (on when LOW)" : ""}` : <span className="muted">—</span>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </section>
+
+      {opened.has("code") || shown === "code" ? (
+        <section role="tabpanel" id="product-panel-code" aria-labelledby="product-tab-code" hidden={shown !== "code"}>
+          {/* Rebuilt only when the data points themselves change (added,
+              removed, retyped), not when pins are saved from inside it, so
+              saving pins never closes the editor or the USB port. */}
+          <FirmwareStudio
+            key={points.map((p) => `${p.key}:${p.type}:${p.access}`).join("|")}
+            productId={product.id}
+            onProductChange={setProduct}
+          />
+        </section>
+      ) : null}
+
+      <section role="tabpanel" id="product-panel-devices" aria-labelledby="product-tab-devices" hidden={shown !== "devices"}>
+        <section className="panel">
+          <div className="panel-header">
+            <div>
+              <h2>Devices</h2>
+              <p className="panel-subtitle">Latest reading from each unit, checked against the data points.</p>
+            </div>
+            <button type="button" className="primary-button" onClick={() => setShowAddDevice(true)}>
+              + Add device
+            </button>
+          </div>
+
+          {devices.length === 0 ? (
+            <p className="muted">No devices use this product yet. Each real unit you build is added here as a device.</p>
+          ) : (
+            <ul className="product-devices">
+              {devices.map((d) => (
+                <li key={d.id} className="product-device">
+                  <div className="product-device-head">
+                    <Link to={`/devices/${d.id}`} className="product-device-name">
+                      {d.name}
+                    </Link>
+                    <span className={`status status-${d.status}`}>
+                      <span className="status-dot" />
+                      {d.status}
+                    </span>
+                  </div>
+                  <DeviceReadings device={d} points={points} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </section>
+
+      {opened.has("alerts") || shown === "alerts" ? (
+        <section role="tabpanel" id="product-panel-alerts" aria-labelledby="product-tab-alerts" hidden={shown !== "alerts"}>
+          <ProductAlerts product={product} devices={devices} />
+        </section>
+      ) : null}
 
       {editing && (
         <div className="modal-overlay">

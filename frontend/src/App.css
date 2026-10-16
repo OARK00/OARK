@@ -2633,6 +2633,24 @@ a.product-card:hover {
   border-color: #fecaca;
 }
 
+/* The product's band uses the device header's look, without a status. */
+.product-hero {
+  border-top-color: var(--accent);
+}
+
+.product-hero .product-header-actions {
+  align-self: flex-start;
+}
+
+.product-steps {
+  margin: 0.6rem 0 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
 .detail-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 280px;
