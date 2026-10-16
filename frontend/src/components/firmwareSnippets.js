@@ -23,7 +23,7 @@ function cString(text) {
 
 function withNames(dataPoints) {
   const points = dataPoints && dataPoints.length > 0 ? dataPoints : EXAMPLE_POINTS;
-  const taken = new Set(["mqtt", "net", "report", "applyOutputs", "onCommand", "connectOark", "lastReport"]);
+  const taken = new Set(["mqtt", "net", "report", "applyOutputs", "onCommand", "connectOark", "connectWifi", "lastReport"]);
   return points.map((point) => ({ ...point, name: cppName(point.key, taken) }));
 }
 
@@ -143,6 +143,9 @@ void onCommand(char* topic, byte* payload, unsigned int length) {${holds.length 
   JsonDocument doc;
   if (deserializeJson(doc, payload, length)) return;   // not JSON: ignore it
   JsonObject desired = doc["desired"];
+  Serial.print("Command from Oark: ");
+  serializeJson(desired, Serial);
+  Serial.println();
 ${controls
   .map((p) => {
     const read = p.type === "string" ? `desired[${cString(p.key)}].as<const char*>()` : `desired[${cString(p.key)}]`;
@@ -199,21 +202,53 @@ void connectOark() {
   while (!mqtt.connected()) {
     Serial.print("Connecting to Oark... ");
     if (mqtt.connect(DEVICE_ID, DEVICE_ID, DEVICE_SECRET)) {
-      Serial.println("connected");${controlParts.subscribe}
+      Serial.println("connected. Waiting for commands.");${controlParts.subscribe}
     } else {
-      Serial.println(mqtt.state());
+      // The reason, in words: these two cover almost every first try.
+      int code = mqtt.state();
+      Serial.print("failed (code ");
+      Serial.print(code);
+      if (code == 4 || code == 5) Serial.println("): Oark refused this device. Check DEVICE_ID and DEVICE_SECRET.");
+      else if (code == -2) Serial.println("): cannot reach Oark. Does this Wi-Fi have internet?");
+      else Serial.println(").");
       delay(3000);
     }
   }
 }
 
+// Joins the Wi-Fi, saying what it is doing: without these lines a board that
+// cannot connect waits here forever without printing anything.
+void connectWifi() {
+  Serial.print("Connecting to Wi-Fi ");
+  Serial.print(WIFI_SSID);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  unsigned long since = millis();
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+    if (millis() - since > 20000) {   // every 20 s without Wi-Fi: say why, keep trying
+      Serial.println();
+      Serial.println("Still no Wi-Fi. Check the name and password, and that it is a 2.4 GHz network (the ESP32 cannot use 5 GHz).");
+      since = millis();
+    }
+  }
+  Serial.println();
+  Serial.print("Wi-Fi connected. IP address: ");
+  Serial.println(WiFi.localIP());
+}
+
 void setup() {
   Serial.begin(115200);
+  delay(200);   // give the serial monitor a moment to catch the first lines
+  Serial.println();
+  Serial.println("Oark device starting");
+  if (strlen(DEVICE_SECRET) == 0 || strcmp(DEVICE_SECRET, "your-device-secret") == 0) {
+    Serial.println("DEVICE_SECRET is not filled in: paste this device's secret, or Oark will refuse it.");
+  }
   snprintf(telemetryTopic, sizeof(telemetryTopic), "oark/devices/%s/telemetry", DEVICE_ID);
   snprintf(commandsTopic, sizeof(commandsTopic), "oark/devices/%s/commands", DEVICE_ID);
 ${pinSetup}${controlParts.setup}
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  while (WiFi.status() != WL_CONNECTED) delay(500);
+  connectWifi();
 
   net.setInsecure();   // TLS without checking the broker's certificate
   connectOark();

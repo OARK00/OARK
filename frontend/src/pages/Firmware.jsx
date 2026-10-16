@@ -21,6 +21,24 @@ function withDeviceId(code, deviceId) {
   return code.replace(ID_LINE, `$1${deviceId || ID_PLACEHOLDER}$2`);
 }
 
+// The values a person types into the code for one board. They are carried
+// into newly generated code (after Reset or new pins), so nobody types them
+// twice, and they do not count as "changes" to the product's code.
+const TYPED_VALUES = ["WIFI_SSID", "WIFI_PASSWORD", "DEVICE_ID", "DEVICE_SECRET"];
+const valueLine = (name) => new RegExp(`(\\b${name}\\s*=\\s*")([^"\\n]*)(")`);
+
+function typedValues(code) {
+  return Object.fromEntries(TYPED_VALUES.map((name) => [name, code.match(valueLine(name))?.[2]]).filter(([, value]) => value !== undefined));
+}
+
+function withTypedValues(code, values) {
+  return Object.entries(values).reduce((text, [name, value]) => text.replace(valueLine(name), (_, start, _old, end) => `${start}${value}${end}`), code);
+}
+
+function withoutTypedValues(code) {
+  return withTypedValues(code, Object.fromEntries(TYPED_VALUES.map((name) => [name, ""])));
+}
+
 function deviceIdIn(code) {
   const found = code.match(/DEVICE_ID\s*=\s*"([^"\n]*)"/);
   return found && found[1] !== ID_PLACEHOLDER ? found[1] : "";
@@ -106,8 +124,9 @@ export default function Firmware() {
   const points = product.data_points;
   const generated = arduinoSketch(ID_PLACEHOLDER, SECRET_PLACEHOLDER, points);
   // Compared without the device ID: choosing a device is not an edit.
-  const baseline = withDeviceId(saved ?? generated, "");
-  const edited = withDeviceId(code, "") !== baseline;
+  // Compared without the typed values: choosing a device or typing the Wi-Fi
+  // is not an edit of the product's code.
+  const edited = withoutTypedValues(code) !== withoutTypedValues(saved ?? generated);
   const chosenDevice = deviceIdIn(code);
 
   function say(message) {
@@ -147,7 +166,7 @@ export default function Firmware() {
       setProduct(data);
       if (saved === null && !edited) {
         // Showing the generated code: rebuild it with the new wiring.
-        setCode(withDeviceId(arduinoSketch(ID_PLACEHOLDER, SECRET_PLACEHOLDER, data.data_points), chosenDevice));
+        setCode(withTypedValues(arduinoSketch(ID_PLACEHOLDER, SECRET_PLACEHOLDER, data.data_points), typedValues(code)));
         say("Pins saved. The code now uses them.");
       } else {
         say("Pins saved. Your own code was not changed: choose Reset to generated code to use the new pins.");
@@ -158,13 +177,13 @@ export default function Firmware() {
   }
 
   async function reset() {
-    if (!window.confirm("Replace this code with the code Oark generates from the data points?")) return;
+    if (!window.confirm("Replace this code with the code Oark generates from the data points and pins? The Wi-Fi details and device secret you typed are kept.")) return;
     setBusy(true);
     setError(null);
     try {
       if (saved !== null) await api.delete(`/products/${productId}/sketch`);
       setSaved(null);
-      setCode(withDeviceId(generated, chosenDevice));
+      setCode(withTypedValues(generated, typedValues(code)));
       say("Back to the generated code.");
     } catch (err) {
       setError(getErrorMessage(err, "Could not reset the code"));
