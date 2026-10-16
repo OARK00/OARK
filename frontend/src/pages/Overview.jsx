@@ -58,14 +58,18 @@ function Hero({ email, onAddDevice }) {
           Connect devices over MQTT, watch live telemetry, and manage every unit from one place. Each device
           gets its own credentials, so one leak can never speak for the rest.
         </p>
-        <div className="hero-actions">
-          <button type="button" className="primary-button" onClick={onAddDevice}>
-            Add a device
-          </button>
-          <Link to="/products?new=1" className="ghost-button">
-            Define a product
+        {/* The two things people mix up, side by side with what each one means. */}
+        <div className="start-choices">
+          <Link to="/products?new=1" className="start-choice">
+            <b>+ New product</b>
+            <span>Define a kind of device once: what it measures and what Oark can switch.</span>
           </Link>
+          <button type="button" className="start-choice" onClick={onAddDevice}>
+            <b>+ Add device</b>
+            <span>Register one real unit of a product and get its ID and secret.</span>
+          </button>
         </div>
+        <p className="start-hint">First time? Create a product first, then add its devices.</p>
       </div>
       <div className="hero-art" aria-hidden="true">
         <svg viewBox="0 0 200 120" width="100%" height="120">
@@ -209,9 +213,14 @@ export default function Overview() {
           <h2>Overview</h2>
           <p className="page-head-note">Your fleet at a glance, updated every 30 seconds.</p>
         </div>
-        <button className="primary-button" onClick={() => setAdding(true)}>
-          + Add device
-        </button>
+        <div className="page-head-actions">
+          <Link to="/products?new=1" className="ghost-button button-link" title="Define a kind of device: what it measures and controls">
+            + New product
+          </Link>
+          <button className="primary-button" onClick={() => setAdding(true)} title="Register one real unit of a product">
+            + Add device
+          </button>
+        </div>
       </div>
 
       {error && <div className="error">{error}</div>}
