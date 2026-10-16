@@ -392,7 +392,16 @@ export default function DeviceDetail() {
 
           {device.product_id && visited.has("firmware") && (
             <section role="tabpanel" id="device-panel-firmware" aria-labelledby="device-tab-firmware" hidden={shown !== "firmware"}>
-              <FirmwareStudio productId={device.product_id} deviceId={device.id} lockDevice />
+              <FirmwareStudio
+                productId={device.product_id}
+                deviceId={device.id}
+                lockDevice
+                testPanel={
+                  controls.length > 0 ? (
+                    <DeviceControls device={device} points={controls} commands={commands} onChange={loadLive} />
+                  ) : null
+                }
+              />
             </section>
           )}
 

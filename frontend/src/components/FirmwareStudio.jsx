@@ -7,6 +7,7 @@ import CompilePanel from "./CompilePanel";
 import { arduinoSketch } from "./firmwareSnippets";
 import PinPanel from "./PinPanel";
 import SerialMonitor from "./SerialMonitor";
+import { rememberedWifi, storeWifi, wifiToRemember } from "./wifiMemory";
 import "../pages/Firmware.css";
 
 // Shown where a real value goes. The secret is never filled in here: Oark
@@ -38,6 +39,11 @@ function withoutTypedValues(code) {
   return withTypedValues(code, Object.fromEntries(TYPED_VALUES.map((name) => [name, ""])));
 }
 
+function withRememberedWifi(code) {
+  const wifi = rememberedWifi();
+  return wifi ? withTypedValues(code, { WIFI_SSID: wifi.ssid, WIFI_PASSWORD: wifi.password }) : code;
+}
+
 function deviceIdIn(code) {
   const found = code.match(/DEVICE_ID\s*=\s*"([^"\n]*)"/);
   return found && found[1] !== ID_PLACEHOLDER ? found[1] : "";
@@ -63,7 +69,8 @@ function download(name, text) {
 // device's page the device is fixed (`deviceId` + `lockDevice`), and the
 // studio stays mounted while other tabs are shown, so the code and the open
 // USB port survive switching tabs.
-export default function FirmwareStudio({ productId, deviceId = null, lockDevice = false, onLoaded }) {
+export default function FirmwareStudio({ productId, deviceId = null, lockDevice = false, onLoaded, testPanel = null }) {
+  const [remember, setRemember] = useState(() => rememberedWifi() !== null);
   const [product, setProduct] = useState(null);
   const [devices, setDevices] = useState([]);
   const [loadError, setLoadError] = useState(null);
@@ -83,6 +90,18 @@ export default function FirmwareStudio({ productId, deviceId = null, lockDevice 
     latestOnLoaded.current = onLoaded;
   }, [onLoaded]);
 
+  // While remembering is on, keep the stored Wi-Fi in step with what is typed.
+  useEffect(() => {
+    if (!remember || !code) return;
+    const wifi = wifiToRemember(typedValues(code));
+    if (wifi) storeWifi(wifi);
+  }, [code, remember]);
+
+  function toggleRemember(on) {
+    setRemember(on);
+    storeWifi(on ? wifiToRemember(typedValues(code)) : null);
+  }
+
   useEffect(() => {
     let active = true;
     Promise.all([
@@ -99,7 +118,7 @@ export default function FirmwareStudio({ productId, deviceId = null, lockDevice 
         const opened = sketchRes.data.code ?? arduinoSketch(ID_PLACEHOLDER, SECRET_PLACEHOLDER, productRes.data.data_points);
         // Only a device of this product: the address bar is not trusted.
         const device = devicesRes.data.find((d) => d.id === deviceId);
-        setCode(device ? withDeviceId(opened, device.id) : opened);
+        setCode(withRememberedWifi(device ? withDeviceId(opened, device.id) : opened));
       },
       (err) => active && setLoadError(getErrorMessage(err, "Could not load this product's firmware"))
     );
@@ -245,6 +264,13 @@ export default function FirmwareStudio({ productId, deviceId = null, lockDevice 
         The device secret is never kept here: paste it in place of <code>{SECRET_PLACEHOLDER}</code> before you upload.
       </p>
 
+      <label className="fw-remember">
+        <input type="checkbox" checked={remember} onChange={(e) => toggleRemember(e.target.checked)} />
+        <span>
+          Remember Wi-Fi on this computer <span className="muted">(kept in this browser only, never sent to Oark; not on shared computers)</span>
+        </span>
+      </label>
+
       {(error || notice) && (
         <div className={error ? "error" : "fw-notice"} role="status">
           {error || notice}
@@ -277,6 +303,13 @@ export default function FirmwareStudio({ productId, deviceId = null, lockDevice 
           </p>
         </aside>
       </div>
+
+      {testPanel && (
+        <div className="fw-test">
+          <p className="fw-test-note">Test: switch the device from here after uploading, and watch the serial monitor below.</p>
+          {testPanel}
+        </div>
+      )}
 
       <div className="fw-bottom">
         <CompilePanel

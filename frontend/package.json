@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint --deny-warnings",
-    "test": "node --test tests/flasher.test.js",
+    "test": "node --test tests/flasher.test.js tests/wifiMemory.test.js",
     "preview": "vite preview"
   },
   "dependencies": {
