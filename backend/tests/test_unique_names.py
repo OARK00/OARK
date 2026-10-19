@@ -13,6 +13,7 @@ from app.models.device import Device
 from app.models.product import Product
 from app.modules.devices import router as devices_router
 from app.modules.products import router as products_router
+from app.modules.products.test_product import get_or_create_test_product
 
 
 def create_product(client, headers, name):
@@ -113,12 +114,17 @@ def test_the_database_itself_refuses_a_duplicate(client, account, db_session, mo
     """The final guard: rows written straight to the database, past every
     check the app makes, still cannot share a name within one company."""
     org_id = company_of(client, account()["headers"])
+    if model is Device:
+        # Every device belongs to a product, or the database refuses it for that reason instead.
+        extra = {**extra, "product_id": get_or_create_test_product(db_session, org_id).id}
     db_session.add(model(org_id=org_id, name="Helmet", **extra))
     db_session.flush()
 
     db_session.add(model(org_id=org_id, name="HELMET", **extra))
-    with pytest.raises(IntegrityError):
+    with pytest.raises(IntegrityError) as refused:
         db_session.flush()
+    # Refused by the one-name-per-company index, not by some other rule.
+    assert "_org_name" in str(refused.value)
     db_session.rollback()
 
 

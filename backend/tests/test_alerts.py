@@ -8,6 +8,7 @@ from app.models.alert import AlertEvent, AlertRule
 from app.models.device import Device
 from app.models.organization import Organization
 from app.modules.alerts.engine import check_silent_devices, evaluate_reading, value_breaches
+from app.modules.products.test_product import get_or_create_test_product
 
 
 @pytest.fixture()
@@ -16,7 +17,10 @@ def org_device(db_session):
     db_session.add(org)
     db_session.flush()
     device = Device(
-        org_id=org.id, name="Cold store A", hashed_secret=hash_device_secret(generate_device_secret())
+        org_id=org.id,
+        product_id=get_or_create_test_product(db_session, org.id).id,
+        name="Cold store A",
+        hashed_secret=hash_device_secret(generate_device_secret()),
     )
     db_session.add(device)
     db_session.flush()
@@ -106,7 +110,12 @@ def test_a_disabled_rule_is_silent(db_session, org_device):
 
 def test_a_rule_scoped_to_another_device_does_not_fire(db_session, org_device):
     org, device = org_device
-    other = Device(org_id=org.id, name="Boiler", hashed_secret=hash_device_secret(generate_device_secret()))
+    other = Device(
+        org_id=org.id,
+        product_id=get_or_create_test_product(db_session, org.id).id,
+        name="Boiler",
+        hashed_secret=hash_device_secret(generate_device_secret()),
+    )
     db_session.add(other)
     db_session.flush()
     make_rule(db_session, org, device_id=other.id)

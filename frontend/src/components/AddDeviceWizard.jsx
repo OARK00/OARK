@@ -13,7 +13,10 @@ import { TemplateGrid } from "./TemplatePicker";
 import WizardSteps from "./WizardSteps";
 
 const STEPS = ["Device", "Connect"];
+// "Test device": no product chosen. The server puts it into the company's
+// "Test devices" product, so every device still belongs to a product.
 const STANDALONE = "";
+const TEST_PRODUCT_NAME = "Test devices";
 
 // Step one has five views:
 //   choose   -- what kind of device is it: Create with AI / Product Library / Build Your Own
@@ -181,6 +184,21 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
                 Or add another unit of a product you already have ({products.length}) →
               </button>
             )}
+            <div className="chooser-or" aria-hidden="true">
+              or
+            </div>
+            <button
+              type="button"
+              className="test-device-choice"
+              onClick={() => {
+                setProductId(products?.find((p) => p.name.toLowerCase() === TEST_PRODUCT_NAME.toLowerCase())?.id || STANDALONE);
+                setJustCreated(null);
+                setView("form");
+              }}
+            >
+              <b>Test device</b>
+              <span>Try a board quickly. It goes into your &ldquo;{TEST_PRODUCT_NAME}&rdquo; product, so you can skip designing one for now.</span>
+            </button>
             <div className="modal-actions">
               <button type="button" className="ghost-button" onClick={onClose}>
                 Cancel
@@ -234,8 +252,15 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
                       {p.model_number ? ` (${p.model_number})` : ""}
                     </option>
                   ))}
-                  <option value={STANDALONE}>No product: standalone device</option>
+                  {!products?.some((p) => p.name.toLowerCase() === TEST_PRODUCT_NAME.toLowerCase()) && (
+                    <option value={STANDALONE}>Test device (goes into &ldquo;{TEST_PRODUCT_NAME}&rdquo;)</option>
+                  )}
                 </select>
+                {!productId && (
+                  <span className="field-note">
+                    For trying a board quickly. Oark creates a &ldquo;{TEST_PRODUCT_NAME}&rdquo; product for it.
+                  </span>
+                )}
                 {selectedProduct && (
                   <span className="field-note">
                     {selectedProduct.data_points.length

@@ -13,6 +13,7 @@ from app.models.device import Device, compute_status
 from app.models.product import Product
 from app.models.user import User
 from app.modules.devices.schemas import DeviceCreate, DeviceCreateResponse, DeviceResponse
+from app.modules.products.test_product import get_or_create_test_product
 
 router = APIRouter(prefix="/devices", tags=["devices"])
 
@@ -76,7 +77,10 @@ def get_device(device_id: uuid.UUID, db: Session = Depends(get_db), current_user
 
 @router.post("", response_model=DeviceCreateResponse, status_code=status.HTTP_201_CREATED)
 def create_device(payload: DeviceCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    category = payload.category
+    # Before anything is created: a refused name must leave nothing behind
+    # (no broker login, and no "Test devices" product made for nothing).
+    ensure_name_is_free(db, Device, current_user.org_id, payload.name, "device")
+
     if payload.product_id:
         product = (
             db.query(Product)
@@ -86,15 +90,18 @@ def create_device(payload: DeviceCreate, db: Session = Depends(get_db), current_
         if not product:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
         category = product.category
-
-    # Before the broker login is created: a refused name must leave nothing behind.
-    ensure_name_is_free(db, Device, current_user.org_id, payload.name, "device")
+    else:
+        # "Test device": every device belongs to a product, so one made
+        # without a product goes into the company's "Test devices" product.
+        # It keeps the category it was given, for its icon.
+        product = get_or_create_test_product(db, current_user.org_id)
+        category = payload.category or product.category
 
     secret = generate_device_secret()
     device_name = clean_name(payload.name)
     device = Device(
         org_id=current_user.org_id,
-        product_id=payload.product_id,
+        product_id=product.id,
         name=device_name,
         category=category,
         description=payload.description,

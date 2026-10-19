@@ -12,6 +12,7 @@ from app.models.device import Device
 from app.models.organization import Organization
 from app.models.telemetry import TelemetryReading
 from app.modules.ingestion.handler import handle_telemetry_message
+from app.modules.products.test_product import get_or_create_test_product
 
 
 @pytest.fixture()
@@ -21,7 +22,12 @@ def device_with_secret(db_session):
     db_session.flush()
 
     secret = generate_device_secret()
-    device = Device(org_id=org.id, name="Boiler sensor", hashed_secret=hash_device_secret(secret))
+    device = Device(
+        org_id=org.id,
+        product_id=get_or_create_test_product(db_session, org.id).id,
+        name="Boiler sensor",
+        hashed_secret=hash_device_secret(secret),
+    )
     db_session.add(device)
     db_session.flush()
     return device, secret
@@ -58,7 +64,10 @@ def test_a_device_cannot_speak_for_another_device(db_session, device_with_secret
     victim, _ = device_with_secret
     impostor_secret = generate_device_secret()
     impostor = Device(
-        org_id=victim.org_id, name="Impostor", hashed_secret=hash_device_secret(impostor_secret)
+        org_id=victim.org_id,
+        product_id=victim.product_id,
+        name="Impostor",
+        hashed_secret=hash_device_secret(impostor_secret),
     )
     db_session.add(impostor)
     db_session.flush()

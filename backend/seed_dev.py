@@ -21,6 +21,7 @@ from app.models.device import Device  # noqa: E402
 from app.models.product import Product  # noqa: E402
 from app.models.telemetry import TelemetryReading  # noqa: E402
 from app.models.user import User  # noqa: E402
+from app.modules.products.test_product import get_or_create_test_product  # noqa: E402
 
 if settings.app_env != "development":
     sys.exit(f"Refused: seeding is for development only, this is '{settings.app_env}'")
@@ -88,7 +89,9 @@ def main() -> None:
         last_seen = now - timedelta(minutes=minutes_ago)
         device = Device(
             org_id=user.org_id,
-            product_id=product.id if category == "sensor" else None,
+            # Every device belongs to a product; the non-sensors go where a
+            # quick "Test device" would.
+            product_id=product.id if category == "sensor" else get_or_create_test_product(db, user.org_id).id,
             name=name,
             category=category,
             hashed_secret=hash_device_secret(generate_device_secret()),

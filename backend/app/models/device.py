@@ -49,8 +49,11 @@ class Device(Base):
         UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True
     )
     # Nullable: devices created before products existed stay standalone.
-    product_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("products.id", ondelete="SET NULL"), nullable=True, index=True
+    # Every device is a unit of a product (a quick test one goes into the
+    # company's "Test devices" product). RESTRICT: a product with devices
+    # cannot be deleted out from under them.
+    product_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("products.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     product: Mapped[Product | None] = relationship("Product")
     name: Mapped[str] = mapped_column(String, nullable=False)
