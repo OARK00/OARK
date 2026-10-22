@@ -181,12 +181,16 @@ export default function DeviceDetail() {
     setSearchParams(key === "overview" ? {} : { tab: key }, { replace: true });
   }
 
+  // A quick-try unit lives under Test devices; a real one under its product.
+  // The menu highlight and the breadcrumb both follow this.
+  const isTestDevice = !device || isTestProductName(device.product_name);
+
   return (
-    <AppShell active="devices">
+    <AppShell active={isTestDevice ? "devices" : "products"}>
       <div className="crumbs device-crumbs">
         {/* Back to where this device is listed: the Test devices page for a
             quick try, otherwise its own product's Devices tab. */}
-        {!device || isTestProductName(device.product_name) ? (
+        {isTestDevice ? (
           <Link to="/dashboard">Test devices</Link>
         ) : (
           <>
