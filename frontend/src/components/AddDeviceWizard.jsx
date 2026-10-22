@@ -3,6 +3,7 @@ import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import { CATEGORY_OPTIONS } from "../constants/devices";
 import { BUILD_YOUR_OWN } from "../constants/products";
+import { isTestProductName, TEST_PRODUCT_NAME } from "../constants/testProduct";
 import ConnectPanel from "./DeviceConnect";
 import { useFirstMessage } from "./useFirstMessage";
 import DraftReview from "./DraftReview";
@@ -16,7 +17,6 @@ const STEPS = ["Device", "Connect"];
 // "Test device": no product chosen. The server puts it into the company's
 // "Test devices" product, so every device still belongs to a product.
 const STANDALONE = "";
-const TEST_PRODUCT_NAME = "Test devices";
 
 // Step one has five views:
 //   choose   -- what kind of device is it: Create with AI / Product Library / Build Your Own
@@ -29,7 +29,9 @@ const TEST_PRODUCT_NAME = "Test devices";
 // the platforms Oark is modelled on. Adding one more unit of a product that
 // already exists is a link under them. Only when the caller already knows
 // the product (Add device from a product's page) does it open on the form.
-export default function AddDeviceWizard({ onClose, onCreated, initialProductId = STANDALONE }) {
+// startAsTest: opened from the "Test devices" page, so it goes straight to
+// naming a test device.
+export default function AddDeviceWizard({ onClose, onCreated, initialProductId = STANDALONE, startAsTest = false }) {
   const [step, setStep] = useState(0);
   const [view, setView] = useState(null);
   const [products, setProducts] = useState(null);
@@ -54,6 +56,11 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
       .then(({ data }) => {
         if (!active) return;
         setProducts(data);
+        if (startAsTest) {
+          setProductId(data.find((p) => isTestProductName(p.name))?.id || STANDALONE);
+          setView("form");
+          return;
+        }
         if (!initialProductId && data.length) setProductId(data[0].id);
         setView(initialProductId ? "form" : "choose");
       })
@@ -61,7 +68,7 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
     return () => {
       active = false;
     };
-  }, [initialProductId, attempt]);
+  }, [initialProductId, startAsTest, attempt]);
 
   function tryAgain() {
     setLoadError(null);
@@ -191,7 +198,7 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
               type="button"
               className="test-device-choice"
               onClick={() => {
-                setProductId(products?.find((p) => p.name.toLowerCase() === TEST_PRODUCT_NAME.toLowerCase())?.id || STANDALONE);
+                setProductId(products?.find((p) => isTestProductName(p.name))?.id || STANDALONE);
                 setJustCreated(null);
                 setView("form");
               }}
@@ -252,7 +259,7 @@ export default function AddDeviceWizard({ onClose, onCreated, initialProductId =
                       {p.model_number ? ` (${p.model_number})` : ""}
                     </option>
                   ))}
-                  {!products?.some((p) => p.name.toLowerCase() === TEST_PRODUCT_NAME.toLowerCase()) && (
+                  {!products?.some((p) => isTestProductName(p.name)) && (
                     <option value={STANDALONE}>Test device (goes into &ldquo;{TEST_PRODUCT_NAME}&rdquo;)</option>
                   )}
                 </select>

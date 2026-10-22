@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/client";
 import { getErrorMessage } from "../api/errors";
 import ConnectPanel from "./DeviceConnect";
+import { isTestProductName } from "../constants/testProduct";
 
 // The device page's Settings tab: its ID, a new secret, and deleting it.
 // The same actions as the icons in the Devices table.
@@ -42,7 +43,8 @@ export default function DeviceSettings({ device }) {
     setError(null);
     try {
       await api.delete(`/devices/${device.id}`);
-      navigate("/dashboard");
+      // Back to the list it was in.
+      navigate(isTestProductName(device.product_name) ? "/dashboard" : `/products/${device.product_id}?tab=devices`);
     } catch (err) {
       setError(getErrorMessage(err, "Could not delete device"));
       setBusy(false);

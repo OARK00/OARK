@@ -70,8 +70,8 @@ export default function WorkspaceConsole({ data, onAddDevice }) {
               <button type="button" className="primary-button" onClick={onAddDevice}>
                 Add a device
               </button>
-              <Link to="/dashboard" className="ghost-button">
-                All devices
+              <Link to="/products" className="ghost-button">
+                Devices by product
               </Link>
             </div>
           </div>

@@ -9,6 +9,7 @@ import ConnectPanel from "../components/DeviceConnect";
 import { categoryIcon } from "../components/categoryIcon";
 import { CheckIcon, CopyIcon, KeyIcon, TrashIcon } from "../components/icons";
 import { CATEGORY_LABELS } from "../constants/devices";
+import { isTestProductName } from "../constants/testProduct";
 
 const SunIcon = (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -95,8 +96,9 @@ export default function Dashboard() {
 
   const { email } = useAuth();
 
+  // This page is "Test devices": only the units in the Test devices product.
   function showDevices(data) {
-    setDevices(data);
+    setDevices(data.filter((d) => isTestProductName(d.product_name)));
     setLoading(false);
   }
 
@@ -267,7 +269,7 @@ export default function Dashboard() {
           <section className="panel">
             <div className="panel-header">
               <div className="panel-title-group">
-                <h2>Fleet</h2>
+                <h2>Test devices</h2>
                 <span className="panel-count">
                   {visibleDevices.length === devices.length
                     ? `${devices.length} ${devices.length === 1 ? "device" : "devices"}`
@@ -275,9 +277,13 @@ export default function Dashboard() {
                 </span>
               </div>
               <button className="primary-button" onClick={() => setShowAddDevice(true)}>
-                + Add device
+                + Add test device
               </button>
             </div>
+            <p className="panel-subtitle test-devices-note">
+              Boards you are trying out. Real units of a product are in{" "}
+              <Link to="/products">Products</Link> → the product → Devices.
+            </p>
 
             {devices.length > 0 && (
               <div className="table-toolbar">
@@ -332,13 +338,13 @@ export default function Dashboard() {
                 <div className="empty-state-art" aria-hidden="true">
                   {categoryIcon("sensor")}
                 </div>
-                <h3>No devices yet</h3>
+                <h3>No test devices yet</h3>
                 <p>
-                  A device is one physical unit reporting to Oark. Adding one gives you credentials and a
-                  ready-to-paste sketch.
+                  A test device is a board you try quickly, without designing a product first. It gets its own
+                  credentials and ready-to-paste code.
                 </p>
                 <button className="primary-button" onClick={() => setShowAddDevice(true)}>
-                  + Add your first device
+                  + Add a test device
                 </button>
               </div>
             ) : visibleDevices.length === 0 ? (
@@ -457,6 +463,7 @@ export default function Dashboard() {
 
       {showAddDevice && (
         <AddDeviceWizard
+          startAsTest
           onCreated={loadDevices}
           onClose={() => {
             setShowAddDevice(false);

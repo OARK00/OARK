@@ -63,7 +63,9 @@ const navGroups = [
     label: "Monitor",
     items: [
       { key: "overview", label: "Overview", icon: icons.overview, to: "/overview" },
-      { key: "devices", label: "Devices", icon: icons.devices, to: "/dashboard" },
+      // Only quick-test units (the "Test devices" product). Real units are
+      // found inside their own product (user's decision 2026-10-20).
+      { key: "devices", label: "Test devices", icon: icons.devices, to: "/dashboard" },
       { key: "products", label: "Products", icon: icons.products, to: "/products" },
       { key: "ai-product", label: "AI Product", icon: icons.aiProduct, to: "/ai-product" },
       { key: "alerts", label: "Alerts", icon: icons.alerts, to: "/alerts" },

@@ -10,6 +10,7 @@ import FirmwareStudio from "../components/FirmwareStudio";
 import LineChart from "../components/LineChart";
 import { categoryIcon } from "../components/categoryIcon";
 import { CATEGORY_LABELS } from "../constants/devices";
+import { isTestProductName } from "../constants/testProduct";
 
 // The device's own sections. Firmware only for a device with a product: the
 // code is generated from the product's data points and pins.
@@ -183,7 +184,17 @@ export default function DeviceDetail() {
   return (
     <AppShell active="devices">
       <div className="crumbs device-crumbs">
-        <Link to="/dashboard">Devices</Link> <span>/</span> <span>{device?.name || "…"}</span>
+        {/* Back to where this device is listed: the Test devices page for a
+            quick try, otherwise its own product's Devices tab. */}
+        {!device || isTestProductName(device.product_name) ? (
+          <Link to="/dashboard">Test devices</Link>
+        ) : (
+          <>
+            <Link to="/products">Products</Link> <span>/</span>{" "}
+            <Link to={`/products/${device.product_id}?tab=devices`}>{device.product_name}</Link>
+          </>
+        )}{" "}
+        <span>/</span> <span>{device?.name || "…"}</span>
       </div>
 
       {!device && !error && <p className="muted">Loading device…</p>}

@@ -132,8 +132,8 @@ function RecentActivity({ devices }) {
     <div className="activity-card">
       <div className="card-head">
         <h3>Recent activity</h3>
-        <Link to="/dashboard" className="card-head-link">
-          All devices
+        <Link to="/products" className="card-head-link">
+          Devices by product
         </Link>
       </div>
       {devices.length === 0 ? (

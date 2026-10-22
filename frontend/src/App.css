@@ -2633,6 +2633,10 @@ a.product-card:hover {
   border-color: #fecaca;
 }
 
+.test-devices-note {
+  margin: -0.4rem 0 1rem;
+}
+
 /* The product's band uses the device header's look, without a status. */
 .product-hero {
   border-top-color: var(--accent);
