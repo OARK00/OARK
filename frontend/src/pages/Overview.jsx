@@ -14,9 +14,10 @@ const REFRESH_MS = 30000;
 // Platform news, the way Tuya's overview carries announcements: the page
 // stays useful on an account that has no data of its own yet.
 const WHATS_NEW = [
-  { date: "22 Sep", text: "Device history charts over 1 hour, 24 hours or 7 days" },
-  { date: "22 Sep", text: "Login protection: repeated wrong passwords are now blocked" },
-  { date: "21 Sep", text: "Every device gets its own broker credentials" },
+  { date: "19 Oct", text: "Test devices: try a board quickly, before you design a product for it" },
+  { date: "16 Oct", text: "Upload firmware to an ESP32 over USB, straight from the browser" },
+  { date: "16 Oct", text: "Device and product pages with tabs: controls, history, firmware, alerts" },
+  { date: "15 Oct", text: "Choose the ESP32 pin for each data point, and compile in the cloud" },
 ];
 
 function timeAgo(iso) {

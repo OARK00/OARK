@@ -13,7 +13,7 @@ const GUIDES = [
     steps: [
       { label: "Add a device", doneKey: "device_added" },
       { label: "Copy its credentials" },
-      { label: "Flash the sketch" },
+      { label: "Upload from the browser" },
       { label: "See it report", doneKey: "first_message" },
     ],
     action: { label: "Add a device", kind: "add-device" },

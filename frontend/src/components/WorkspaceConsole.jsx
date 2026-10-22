@@ -51,7 +51,6 @@ export default function WorkspaceConsole({ data, onAddDevice }) {
             onClick={() => setTab(item.id)}
           >
             {item.label}
-            {item.id === "alerts" && <span className="soon-badge">Soon</span>}
           </button>
         ))}
       </div>
@@ -161,10 +160,17 @@ export default function WorkspaceConsole({ data, onAddDevice }) {
 
       {tab === "alerts" && (
         <div className="console-body">
-          <p className="activity-empty">
-            Alerts will watch your data and tell you when something crosses a limit — a cold store warming up, a
-            device that stopped reporting — by email first, then SMS.
-          </p>
+          <div className="console-head">
+            <p className="activity-empty">
+              Alert rules watch your data and tell you when something crosses a limit — a cold store warming up, a
+              device that stopped reporting.
+            </p>
+            <div className="console-actions">
+              <Link to="/alerts" className="primary-button console-link-button">
+                Open Alerts
+              </Link>
+            </div>
+          </div>
         </div>
       )}
     </div>
